@@ -314,13 +314,20 @@ namespace EndlessSurvival.Vehicle
                 exitGo.transform.localPosition = new Vector3(-1.8f, 0.2f, 0.3f);
             }
 
-            // 7. Camera Follow Target
+            // 7. Camera Follow Target with Mouse Orbit
             Transform camTarget = transform.Find("VehicleCameraTarget");
             if (camTarget == null)
             {
                 GameObject camTargetGo = new GameObject("VehicleCameraTarget");
                 camTargetGo.transform.SetParent(transform, false);
                 camTargetGo.transform.localPosition = new Vector3(0f, 1.4f, -0.5f);
+                camTarget = camTargetGo.transform;
+            }
+
+            if (camTarget.GetComponent<VehicleCameraOrbit>() == null)
+            {
+                var orbit = camTarget.gameObject.AddComponent<VehicleCameraOrbit>();
+                orbit.parentVehicle = this;
             }
 
             SetupPhysicsProperties();

@@ -99,12 +99,10 @@ namespace EndlessSurvival.Vehicle
         {
 #if ENABLE_INPUT_SYSTEM
             var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.fKey.wasPressedThisFrame)
-            {
-                return true;
-            }
-#endif
+            return keyboard != null && keyboard.fKey.wasPressedThisFrame;
+#else
             return Input.GetKeyDown(legacyInteractKey);
+#endif
         }
 
         private void CheckPlayerProximity()
@@ -121,7 +119,18 @@ namespace EndlessSurvival.Vehicle
 
             if (_currentPlayer == null) return;
 
-            float dist = Vector3.Distance(transform.position, _currentPlayer.transform.position);
+            Collider col = GetComponent<Collider>();
+            float dist;
+            if (col != null)
+            {
+                Vector3 closestPoint = col.ClosestPoint(_currentPlayer.transform.position);
+                dist = Vector3.Distance(closestPoint, _currentPlayer.transform.position);
+            }
+            else
+            {
+                dist = Vector3.Distance(transform.position, _currentPlayer.transform.position);
+            }
+
             bool wasNear = _isPlayerNear;
             _isPlayerNear = (dist <= interactionDistance);
 
@@ -186,16 +195,20 @@ namespace EndlessSurvival.Vehicle
             // 1. Disable driving
             vehicleController.SetDriving(false);
 
-            // 2. Reposition player at exit point and re-enable
+            // 2. Reposition player safely at exit point and re-enable
             _currentPlayer.transform.SetParent(null);
-            Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - transform.right * 2f;
+            Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - transform.right * 2.4f;
             Quaternion spawnRot = exitPoint != null ? exitPoint.rotation : transform.rotation;
+
+            var characterController = _currentPlayer.GetComponent<CharacterController>();
+            if (characterController != null) characterController.enabled = false;
 
             _currentPlayer.transform.position = spawnPos;
             _currentPlayer.transform.rotation = spawnRot;
+            Physics.SyncTransforms();
+
             _currentPlayer.SetActive(true);
 
-            var characterController = _currentPlayer.GetComponent<CharacterController>();
             if (characterController != null) characterController.enabled = true;
 
             // 3. Restore camera back to player
@@ -210,6 +223,42 @@ namespace EndlessSurvival.Vehicle
             }
 
             OnDriveStateChanged?.Invoke(false);
+        }
+
+        private void OnGUI()
+        {
+            if (_isPlayerNear && !IsPlayerInside)
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.box);
+                style.fontSize = 18;
+                style.fontStyle = FontStyle.Bold;
+                style.normal.textColor = Color.white;
+                style.alignment = TextAnchor.MiddleCenter;
+
+                float width = 280f;
+                float height = 45f;
+                float x = (Screen.width - width) / 2f;
+                float y = Screen.height - 130f;
+
+                GUI.Box(new Rect(x, y, width, height), "Press [F] to Drive Jeep", style);
+            }
+            else if (IsPlayerInside)
+            {
+                GUIStyle style = new GUIStyle(GUI.skin.box);
+                style.fontSize = 14;
+                style.fontStyle = FontStyle.Bold;
+                style.normal.textColor = Color.white;
+                style.alignment = TextAnchor.MiddleCenter;
+
+                float width = 360f;
+                float height = 55f;
+                float x = (Screen.width - width) / 2f;
+                float y = Screen.height - 100f;
+
+                int speed = Mathf.RoundToInt(vehicleController != null ? vehicleController.CurrentSpeedKmh : 0f);
+                string text = $"WASD: Drive | Space: Brake | [F]: Exit\nSpeed: {speed} km/h";
+                GUI.Box(new Rect(x, y, width, height), text, style);
+            }
         }
 
         private void OnDrawGizmosSelected()
