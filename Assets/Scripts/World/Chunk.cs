@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using EndlessSurvival.World.Road;
 
 namespace EndlessSurvival.World
 {
@@ -31,8 +32,11 @@ namespace EndlessSurvival.World
         [Tooltip("Biome classification for this chunk")]
         public ChunkBiomeType biomeType = ChunkBiomeType.Forest;
 
-        [Tooltip("Road layout type for this chunk")]
+        [Tooltip("Road layout type for this chunk (Straight, Curved, Chicane, etc.)")]
         public ChunkRoadType roadType = ChunkRoadType.Straight;
+
+        [Tooltip("Road cross-section style (Kaldırımlı, Bariyerli, Otoyol, Açık Kırsal, vb.)")]
+        public RoadCrossSectionPreset crossSectionType = RoadCrossSectionPreset.FullHighway;
 
         [Tooltip("Relative probability weight when randomly selecting chunks (higher = more frequent)")]
         [Range(1, 100)]
@@ -46,10 +50,13 @@ namespace EndlessSurvival.World
         [Tooltip("Length of the chunk along the forward Z axis (standard 500 units)")]
         public float chunkLength = 500f;
 
-        [Tooltip("Socket where the road enters this chunk (usually local Z = 0)")]
+        [Tooltip("Baseline road & ground elevation above sea level in meters (Y=0 is sea level, Y=20 is road level)")]
+        public float baseElevation = 20f;
+
+        [Tooltip("Socket where the road enters this chunk (usually local Y = 20, Z = 0)")]
         public Transform entrySocket;
 
-        [Tooltip("Socket where the road exits this chunk (usually local Z = 500)")]
+        [Tooltip("Socket where the road exits this chunk (usually local Y = 20, Z = 500)")]
         public Transform exitSocket;
 
         [Header("Triggers & Blockades")]

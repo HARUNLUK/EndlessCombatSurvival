@@ -12,8 +12,11 @@ namespace EndlessSurvival.World
     {
         public static ChunkManager Instance { get; private set; }
 
-        [Header("Chunk Prefabs Pool")]
-        [Tooltip("Pool of authored 500x500 chunk prefabs")]
+        [Header("Chunk Prefab")]
+        [Tooltip("The single base 500x500 chunk prefab used for endless generation")]
+        public Chunk chunkPrefab;
+
+        [Tooltip("Optional list fallback")]
         public List<Chunk> chunkPrefabs = new List<Chunk>();
 
         [Header("Streaming Settings")]
@@ -53,13 +56,13 @@ namespace EndlessSurvival.World
 
         private void Start()
         {
-            if (chunkPrefabs != null && chunkPrefabs.Count > 0)
+            if (chunkPrefab != null || (chunkPrefabs != null && chunkPrefabs.Count > 0))
             {
                 SpawnInitialChunks();
             }
             else
             {
-                Debug.LogWarning("[ChunkManager] No chunk prefabs assigned.");
+                Debug.LogWarning("[ChunkManager] No chunk prefab assigned.");
             }
         }
 
@@ -101,12 +104,9 @@ namespace EndlessSurvival.World
             }
 
             Chunk newChunk = Instantiate(prefab, spawnPos, spawnRot, transform);
-            if (chunkPrefabs.Count <= 1)
-            {
-                ApplyDynamicRoadVariation(newChunk);
-            }
+            ApplyDynamicRoadVariation(newChunk);
 
-            newChunk.name = $"Chunk_{_totalSpawnedCount}_{newChunk.biomeType}_{newChunk.roadType}";
+            newChunk.name = $"Chunk_{_totalSpawnedCount}_{newChunk.biomeType}_{newChunk.roadType}_{newChunk.crossSectionType}";
             newChunk.Initialize(this, _totalSpawnedCount);
 
             _activeChunks.Add(newChunk);
@@ -115,13 +115,26 @@ namespace EndlessSurvival.World
             return newChunk;
         }
 
-        private static readonly ChunkRoadType[] VariedRoadTypes = new[]
+        private struct RoadVariationDefinition
         {
-            ChunkRoadType.Straight,
-            ChunkRoadType.CurvedRight,
-            ChunkRoadType.Straight,
-            ChunkRoadType.CurvedLeft,
-            ChunkRoadType.HazardZone
+            public ChunkRoadType roadType;
+            public RoadCrossSectionPreset crossSection;
+
+            public RoadVariationDefinition(ChunkRoadType roadType, RoadCrossSectionPreset crossSection)
+            {
+                this.roadType = roadType;
+                this.crossSection = crossSection;
+            }
+        }
+
+        private static readonly RoadVariationDefinition[] RoadVariations = new[]
+        {
+            new RoadVariationDefinition(ChunkRoadType.Straight, RoadCrossSectionPreset.SidewalkOnly),      // Kaldırımlı Düz
+            new RoadVariationDefinition(ChunkRoadType.CurvedRight, RoadCrossSectionPreset.GuardrailOnly),   // Bariyerli Viraj
+            new RoadVariationDefinition(ChunkRoadType.Straight, RoadCrossSectionPreset.GuardrailOnly),     // Bariyerli Düz
+            new RoadVariationDefinition(ChunkRoadType.CurvedLeft, RoadCrossSectionPreset.FullHighway),     // Hem Kaldırımlı Hem Bariyerli Viraj
+            new RoadVariationDefinition(ChunkRoadType.HazardZone, RoadCrossSectionPreset.HazardFortified),  // Tehlike Bölgesi Şikan & Çift Bariyer
+            new RoadVariationDefinition(ChunkRoadType.Straight, RoadCrossSectionPreset.OpenRoad),          // Sade Açık Kırsal Düz
         };
 
         private void ApplyDynamicRoadVariation(Chunk chunk)
@@ -130,10 +143,11 @@ namespace EndlessSurvival.World
             var spline = chunk.GetComponentInChildren<RoadSpline>();
             if (roadGen == null || spline == null) return;
 
-            ChunkRoadType targetType = VariedRoadTypes[_totalSpawnedCount % VariedRoadTypes.Length];
-            chunk.roadType = targetType;
+            RoadVariationDefinition variation = RoadVariations[_totalSpawnedCount % RoadVariations.Length];
+            chunk.roadType = variation.roadType;
+            chunk.crossSectionType = variation.crossSection;
 
-            switch (targetType)
+            switch (variation.roadType)
             {
                 case ChunkRoadType.CurvedRight:
                     spline.SetSCurvePreset(45f);
@@ -150,7 +164,7 @@ namespace EndlessSurvival.World
                     break;
             }
 
-            roadGen.BuildRoadMesh();
+            roadGen.ApplyCrossSectionPreset(variation.crossSection);
         }
 
         /// <summary>
@@ -182,6 +196,7 @@ namespace EndlessSurvival.World
         /// </summary>
         private Chunk SelectNextPrefab()
         {
+            if (chunkPrefab != null) return chunkPrefab;
             if (chunkPrefabs == null || chunkPrefabs.Count == 0) return null;
             if (chunkPrefabs.Count == 1) return chunkPrefabs[0];
 

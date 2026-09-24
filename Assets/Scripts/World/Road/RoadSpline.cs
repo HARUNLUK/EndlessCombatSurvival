@@ -18,65 +18,82 @@ namespace EndlessSurvival.World.Road
         [Range(20, 200)]
         public int resolution = 100;
 
+        [Header("Baseline Elevation")]
+        [Tooltip("Baseline road elevation in meters above sea level (Y=0 is sea level, Y=20 is road level)")]
+        public float baseElevation = 20f;
+
         private void Reset()
         {
             SetStraightPreset();
         }
 
+        [ContextMenu("Curve Preset: Straight (Düz Yol)")]
         public void SetStraightPreset()
         {
             waypoints = new List<Vector3>
             {
-                new Vector3(0f, 0f, 0f),
-                new Vector3(0f, 0f, 60f),
-                new Vector3(0f, 0f, 250f),
-                new Vector3(0f, 0f, 440f),
-                new Vector3(0f, 0f, 500f)
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 60f),
+                new Vector3(0f, baseElevation, 250f),
+                new Vector3(0f, baseElevation, 440f),
+                new Vector3(0f, baseElevation, 500f)
             };
         }
+
+        [ContextMenu("Curve Preset: S-Curve Right (Sağ Viraj)")]
+        public void SetSCurveRightPreset() => SetSCurvePreset(45f);
+
+        [ContextMenu("Curve Preset: S-Curve Left (Sol Viraj)")]
+        public void SetSCurveLeftPreset() => SetSCurvePreset(-45f);
 
         public void SetSCurvePreset(float lateralShift = 45f)
         {
             waypoints = new List<Vector3>
             {
-                new Vector3(0f, 0f, 0f),
-                new Vector3(0f, 0f, 60f),
-                new Vector3(lateralShift * 0.7f, 0f, 130f),
-                new Vector3(lateralShift, 0f, 200f),
-                new Vector3(0f, 0f, 250f),
-                new Vector3(-lateralShift, 0f, 300f),
-                new Vector3(-lateralShift * 0.7f, 0f, 370f),
-                new Vector3(0f, 0f, 440f),
-                new Vector3(0f, 0f, 500f)
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 60f),
+                new Vector3(lateralShift * 0.7f, baseElevation, 130f),
+                new Vector3(lateralShift, baseElevation, 200f),
+                new Vector3(0f, baseElevation, 250f),
+                new Vector3(-lateralShift, baseElevation, 300f),
+                new Vector3(-lateralShift * 0.7f, baseElevation, 370f),
+                new Vector3(0f, baseElevation, 440f),
+                new Vector3(0f, baseElevation, 500f)
             };
         }
+
+        [ContextMenu("Curve Preset: Elevation Hill (Tümsek / Eğim)")]
+        public void SetElevationHillPreset() => SetElevationHillPreset(12f);
 
         public void SetElevationHillPreset(float hillHeight = 12f)
         {
             waypoints = new List<Vector3>
             {
-                new Vector3(0f, 0f, 0f),
-                new Vector3(0f, 0f, 60f),
-                new Vector3(0f, hillHeight, 180f),
-                new Vector3(0f, hillHeight, 320f),
-                new Vector3(0f, 0f, 440f),
-                new Vector3(0f, 0f, 500f)
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 60f),
+                new Vector3(0f, baseElevation + hillHeight, 180f),
+                new Vector3(0f, baseElevation + hillHeight, 320f),
+                new Vector3(0f, baseElevation, 440f),
+                new Vector3(0f, baseElevation, 500f)
             };
         }
+
+        [ContextMenu("Curve Preset: Chicane (Şikan / Tehlikeli Hat)")]
+        public void SetChicanePreset() => SetChicanePreset(35f);
 
         public void SetChicanePreset(float shift = 35f)
         {
             waypoints = new List<Vector3>
             {
-                new Vector3(0f, 0f, 0f),
-                new Vector3(0f, 0f, 60f),
-                new Vector3(shift, 0f, 150f),
-                new Vector3(0f, 0f, 200f),
-                new Vector3(-shift, 0f, 260f),
-                new Vector3(0f, 0f, 320f),
-                new Vector3(shift * 0.6f, 0f, 380f),
-                new Vector3(0f, 0f, 440f),
-                new Vector3(0f, 0f, 500f)
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 60f),
+                new Vector3(shift, baseElevation, 150f),
+                new Vector3(0f, baseElevation, 200f),
+                new Vector3(-shift, baseElevation, 260f),
+                new Vector3(0f, baseElevation, 320f),
+                new Vector3(shift * 0.6f, baseElevation, 380f),
+                new Vector3(0f, baseElevation, 440f),
+                new Vector3(0f, baseElevation, 500f)
             };
         }
 

@@ -8,7 +8,8 @@ namespace EndlessSurvival.World.Editor
 {
     public static class SetupSceneChunkManager
     {
-        [MenuItem("Endless Survival/Setup ChunkManager in Scene")]
+        [MenuItem("Endless Survival/Setup ChunkManager in Scene", false, 2)]
+        [MenuItem("Tools/Endless Survival/Setup ChunkManager in Scene", false, 2)]
         public static void SetupInActiveScene()
         {
             ChunkManager mgr = Object.FindAnyObjectByType<ChunkManager>();
@@ -39,6 +40,7 @@ namespace EndlessSurvival.World.Editor
                 }
             }
 
+            mgr.chunkPrefab = prefabs.Count > 0 ? prefabs[0] : null;
             mgr.chunkPrefabs = prefabs;
             mgr.initialChunkCount = 2;
             mgr.maxChunksBehind = 1;

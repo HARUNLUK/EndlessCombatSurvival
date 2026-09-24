@@ -13,15 +13,16 @@ namespace EndlessSurvival.World.Editor
     /// </summary>
     public static class ChunkPrefabGenerator
     {
-        [MenuItem("Endless Survival/Generate All Chunk Prefabs")]
-        public static void MenuItemGenerateAllChunkPrefabs()
+        [MenuItem("Endless Survival/Generate Base Chunk Prefab", false, 1)]
+        [MenuItem("Tools/Endless Survival/Generate Base Chunk Prefab", false, 1)]
+        public static void MenuItemGenerateBaseChunkPrefab()
         {
             GenerateAndSaveChunkPrefabs();
         }
 
         public static void GenerateAndSaveChunkPrefabs()
         {
-            Debug.Log("[ChunkPrefabGenerator] Generating categorized URP 500x500 chunk prefabs with Spline roads...");
+            Debug.Log("[ChunkPrefabGenerator] Generating single URP 500x500 base chunk prefab with Spline road...");
 
             string chunkFolderPath = "Assets/Prefabs/Chunks";
             string texFolderPath = "Assets/Prefabs/Chunks/Textures";
@@ -53,37 +54,36 @@ namespace EndlessSurvival.World.Editor
             TerrainLayer layerCity = GetOrCreateTerrainLayer(tlFolderPath, "Layer_RuinedCity", texCity);
             TerrainLayer layerWasteland = GetOrCreateTerrainLayer(tlFolderPath, "Layer_Wasteland", texWasteland);
 
-            // 3. Prepare road and blockade materials
-            Material roadMat = GetOrCreateURPMaterial(matFolderPath, "Mat_Road_Dark", new Color(0.18f, 0.18f, 0.18f));
+            // 3. Prepare road, curb, sidewalk, guardrail, and blockade materials with textures
+            Texture2D texAsphalt = RoadGenerator.GetOrCreateAsphaltTexture();
+            Texture2D texCurb = RoadGenerator.GetOrCreateCurbTexture();
+            Texture2D texSidewalk = RoadGenerator.GetOrCreateSidewalkTexture();
+            Texture2D texGuardrail = RoadGenerator.GetOrCreateGuardrailTexture();
+
+            Material roadMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Road_Dark", texAsphalt, Color.white);
+            Material curbMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Road_Curb", texCurb, Color.white);
+            Material sidewalkMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Road_Sidewalk", texSidewalk, Color.white);
+            Material guardrailMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Guardrail_Metal", texGuardrail, Color.white);
+            if (guardrailMat.HasProperty("_Metallic")) guardrailMat.SetFloat("_Metallic", 0.85f);
+            if (guardrailMat.HasProperty("_Smoothness")) guardrailMat.SetFloat("_Smoothness", 0.55f);
+
             Material forestMat = GetOrCreateURPMaterial(matFolderPath, "Mat_Chunk_Forest", new Color(0.24f, 0.42f, 0.22f));
             Material desertMat = GetOrCreateURPMaterial(matFolderPath, "Mat_Chunk_Desert", new Color(0.62f, 0.52f, 0.32f));
             Material cityMat = GetOrCreateURPMaterial(matFolderPath, "Mat_Chunk_RuinedCity", new Color(0.32f, 0.32f, 0.36f));
             Material wastelandMat = GetOrCreateURPMaterial(matFolderPath, "Mat_Chunk_Wasteland", new Color(0.42f, 0.35f, 0.26f));
             Material blockadeMat = GetOrCreateURPMaterial(matFolderPath, "Mat_Chunk_Blockade", new Color(0.7f, 0.18f, 0.18f));
 
-            // 4. Prepare Parametric Road Profiles per Biome
-            RoadProfile profileForest = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Forest", ChunkBiomeType.Forest, 12f, 2.5f, roadMat, forestMat, false);
-            RoadProfile profileDesert = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Desert", ChunkBiomeType.Desert, 14f, 3.5f, roadMat, desertMat, false);
-            RoadProfile profileCity = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_RuinedCity", ChunkBiomeType.RuinedCity, 14f, 2.0f, roadMat, cityMat, false);
-            RoadProfile profileWasteland = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Wasteland", ChunkBiomeType.Wasteland, 10f, 4.0f, roadMat, wastelandMat, false);
+            // 4. Prepare Parametric Road Profiles per Biome (with curbs, sidewalks, and metal guardrails)
+            RoadProfile profileForest = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Forest", ChunkBiomeType.Forest, 11f, 0.30f, 0.18f, 2.2f, roadMat, curbMat, sidewalkMat, guardrailMat, true);
 
-            // 5. Generate Chunk Prefabs for each distinct Road Type
-            Chunk forestStraight = CreateChunkGameObject("Chunk_Forest_Straight", ChunkBiomeType.Forest, ChunkRoadType.Straight, layerForest, profileForest, blockadeMat, 10);
-            SaveChunkAsPrefab(forestStraight, chunkFolderPath);
-
-            Chunk forestCurveRight = CreateChunkGameObject("Chunk_Forest_CurveRight", ChunkBiomeType.Forest, ChunkRoadType.CurvedRight, layerForest, profileForest, blockadeMat, 10);
-            SaveChunkAsPrefab(forestCurveRight, chunkFolderPath);
-
-            Chunk forestCurveLeft = CreateChunkGameObject("Chunk_Forest_CurveLeft", ChunkBiomeType.Forest, ChunkRoadType.CurvedLeft, layerForest, profileForest, blockadeMat, 10);
-            SaveChunkAsPrefab(forestCurveLeft, chunkFolderPath);
-
-            Chunk forestHazard = CreateChunkGameObject("Chunk_Forest_Hazard", ChunkBiomeType.Forest, ChunkRoadType.HazardZone, layerForest, profileForest, blockadeMat, 10);
-            SaveChunkAsPrefab(forestHazard, chunkFolderPath);
+            // 5. Generate / Update Single Base Chunk Prefab (Chunk_Forest_Curve)
+            Chunk forestCurve = CreateChunkGameObject("Chunk_Forest_Curve", ChunkBiomeType.Forest, ChunkRoadType.CurvedRight, layerForest, profileForest, blockadeMat, 10);
+            SaveChunkAsPrefab(forestCurve, chunkFolderPath);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[ChunkPrefabGenerator] Successfully created 4 categorized chunk prefabs with distinct road types!");
+            Debug.Log("[ChunkPrefabGenerator] Successfully updated single base chunk prefab: Chunk_Forest_Curve!");
         }
 
         private static void EnsureFolder(string path)
@@ -183,7 +183,7 @@ namespace EndlessSurvival.World.Editor
             return mat;
         }
 
-        private static RoadProfile GetOrCreateRoadProfile(string folderPath, string profileName, ChunkBiomeType biome, float roadW, float shoulderW, Material roadMat, Material shoulderMat, bool guardrails)
+        private static RoadProfile GetOrCreateRoadProfile(string folderPath, string profileName, ChunkBiomeType biome, float roadW, float curbW, float curbH, float shoulderW, Material roadMat, Material curbMat, Material shoulderMat, Material guardrailMat, bool guardrails)
         {
             string path = $"{folderPath}/{profileName}.asset";
             RoadProfile profile = AssetDatabase.LoadAssetAtPath<RoadProfile>(path);
@@ -192,9 +192,13 @@ namespace EndlessSurvival.World.Editor
                 profile = ScriptableObject.CreateInstance<RoadProfile>();
                 profile.targetBiome = biome;
                 profile.roadWidth = roadW;
+                profile.curbWidth = curbW;
+                profile.curbHeight = curbH;
                 profile.shoulderWidth = shoulderW;
                 profile.roadMaterial = roadMat;
+                profile.curbMaterial = curbMat;
                 profile.shoulderMaterial = shoulderMat;
+                profile.guardrailMaterial = guardrailMat;
                 profile.hasGuardrails = guardrails;
                 AssetDatabase.CreateAsset(profile, path);
             }
@@ -202,13 +206,48 @@ namespace EndlessSurvival.World.Editor
             {
                 profile.targetBiome = biome;
                 profile.roadWidth = roadW;
+                profile.curbWidth = curbW;
+                profile.curbHeight = curbH;
                 profile.shoulderWidth = shoulderW;
                 profile.roadMaterial = roadMat;
+                profile.curbMaterial = curbMat;
                 profile.shoulderMaterial = shoulderMat;
+                profile.guardrailMaterial = guardrailMat;
                 profile.hasGuardrails = guardrails;
                 EditorUtility.SetDirty(profile);
             }
             return profile;
+        }
+
+        private static Material GetOrCreateURPMaterialWithTexture(string folderPath, string matName, Texture2D tex, Color color)
+        {
+            string matPath = $"{folderPath}/{matName}.mat";
+            Material mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            Shader urpShader = Shader.Find("Universal Render Pipeline/Lit");
+            if (urpShader == null)
+            {
+                Material sampleURP = AssetDatabase.LoadAssetAtPath<Material>("Assets/Pack_Adventure/Materials/Ground.mat");
+                if (sampleURP != null) urpShader = sampleURP.shader;
+            }
+            if (urpShader == null) urpShader = Shader.Find("Standard");
+
+            if (mat == null)
+            {
+                mat = new Material(urpShader);
+                AssetDatabase.CreateAsset(mat, matPath);
+            }
+
+            mat.shader = urpShader;
+            mat.color = color;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+            if (tex != null)
+            {
+                if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", tex);
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
+                mat.mainTexture = tex;
+            }
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         private static Material GetOrCreateURPMaterial(string folderPath, string matName, Color color)
@@ -256,7 +295,23 @@ namespace EndlessSurvival.World.Editor
             TerrainData td = new TerrainData();
             td.heightmapResolution = 129;
             td.baseMapResolution = 256;
-            td.size = new Vector3(500f, 60f, 500f);
+            td.size = new Vector3(500f, 100f, 500f);
+
+            // Baseline ground level at Y = 20m (0.20 normalized of 100m total height capacity)
+            // Y in [0..20m]: negative relief (beaches, coastlines, water level at Y=0)
+            // Y = 20m: road & plateau baseline
+            // Y in [20..100m]: positive relief (hills, mountains)
+            int hRes = td.heightmapResolution;
+            float[,] heights = new float[hRes, hRes];
+            float normalizedBase = 20f / td.size.y;
+            for (int y = 0; y < hRes; y++)
+            {
+                for (int x = 0; x < hRes; x++)
+                {
+                    heights[y, x] = normalizedBase;
+                }
+            }
+            td.SetHeights(0, 0, heights);
 
             td.terrainLayers = new TerrainLayer[] { terrainLayer };
 
@@ -299,20 +354,22 @@ namespace EndlessSurvival.World.Editor
             chunk.chunkLength = 500f;
             chunk.biomeType = biome;
             chunk.roadType = roadType;
+            chunk.crossSectionType = roadProfile != null ? roadProfile.defaultCrossSection : RoadCrossSectionPreset.FullHighway;
             chunk.spawnWeight = weight;
+            chunk.baseElevation = 20f;
 
             // 500x500 Unity Terrain
             CreateChunkTerrain(name, chunkGo.transform, terrainLayer);
 
-            // Sockets
+            // Sockets (at Y = 20m)
             GameObject entry = new GameObject("EntrySocket");
             entry.transform.SetParent(chunkGo.transform);
-            entry.transform.localPosition = Vector3.zero;
+            entry.transform.localPosition = new Vector3(0f, 20f, 0f);
             chunk.entrySocket = entry.transform;
 
             GameObject exit = new GameObject("ExitSocket");
             exit.transform.SetParent(chunkGo.transform);
-            exit.transform.localPosition = new Vector3(0f, 0f, 500f);
+            exit.transform.localPosition = new Vector3(0f, 20f, 500f);
             chunk.exitSocket = exit.transform;
 
             // Procedural Dynamic Spline Road
@@ -321,6 +378,7 @@ namespace EndlessSurvival.World.Editor
 
             RoadSpline spline = roadGo.AddComponent<RoadSpline>();
             spline.resolution = 100;
+            spline.baseElevation = 20f;
             if (roadType == ChunkRoadType.CurvedRight)
             {
                 spline.SetSCurvePreset(45f);
@@ -359,18 +417,18 @@ namespace EndlessSurvival.World.Editor
             roadGo.GetComponent<MeshFilter>().sharedMesh = savedMeshAsset;
             roadGo.GetComponent<MeshCollider>().sharedMesh = savedMeshAsset;
 
-            // Boundary Walls
-            CreateBoundary(chunkGo.transform, "LeftBoundary", new Vector3(-250f, 10f, 250f), new Vector3(2f, 20f, 500f));
-            CreateBoundary(chunkGo.transform, "RightBoundary", new Vector3(250f, 10f, 250f), new Vector3(2f, 20f, 500f));
+            // Boundary Walls (elevated around Y = 20m ground)
+            CreateBoundary(chunkGo.transform, "LeftBoundary", new Vector3(-250f, 30f, 250f), new Vector3(2f, 40f, 500f));
+            CreateBoundary(chunkGo.transform, "RightBoundary", new Vector3(250f, 30f, 250f), new Vector3(2f, 40f, 500f));
 
-            // Spawn Next Trigger (Z = 380m)
+            // Spawn Next Trigger (Z = 380m, Y = 25m)
             GameObject triggerNextGo = new GameObject("Trigger_SpawnNext");
             triggerNextGo.transform.SetParent(chunkGo.transform);
-            triggerNextGo.transform.localPosition = new Vector3(0f, 5f, 380f);
+            triggerNextGo.transform.localPosition = new Vector3(0f, 25f, 380f);
 
             BoxCollider triggerNextCol = triggerNextGo.AddComponent<BoxCollider>();
             triggerNextCol.isTrigger = true;
-            triggerNextCol.size = new Vector3(140f, 15f, 15f);
+            triggerNextCol.size = new Vector3(140f, 20f, 15f);
 
             ChunkTrigger triggerNext = triggerNextGo.AddComponent<ChunkTrigger>();
             triggerNext.triggerType = ChunkTrigger.TriggerType.SpawnNextChunk;
@@ -380,7 +438,7 @@ namespace EndlessSurvival.World.Editor
             // Seal Passage Trigger (Z = 40m)
             GameObject triggerSealGo = new GameObject("Trigger_SealPassage");
             triggerSealGo.transform.SetParent(chunkGo.transform);
-            triggerSealGo.transform.localPosition = new Vector3(0f, 5f, 40f);
+            triggerSealGo.transform.localPosition = new Vector3(0f, 25f, 40f);
 
             BoxCollider triggerSealCol = triggerSealGo.AddComponent<BoxCollider>();
             triggerSealCol.isTrigger = true;
@@ -394,7 +452,7 @@ namespace EndlessSurvival.World.Editor
             GameObject blockadeGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
             blockadeGo.name = "BackBlockade_Wall";
             blockadeGo.transform.SetParent(chunkGo.transform);
-            blockadeGo.transform.localPosition = new Vector3(0f, 5f, 2f);
+            blockadeGo.transform.localPosition = new Vector3(0f, 25f, 2f);
             blockadeGo.transform.localScale = new Vector3(40f, 10f, 2f);
 
             var blockadeRenderer = blockadeGo.GetComponent<Renderer>();
