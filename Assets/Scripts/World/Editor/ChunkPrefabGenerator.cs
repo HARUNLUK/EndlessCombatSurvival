@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -54,15 +55,21 @@ namespace EndlessSurvival.World.Editor
             TerrainLayer layerCity = GetOrCreateTerrainLayer(tlFolderPath, "Layer_RuinedCity", texCity);
             TerrainLayer layerWasteland = GetOrCreateTerrainLayer(tlFolderPath, "Layer_Wasteland", texWasteland);
 
-            // 3. Prepare road, curb, sidewalk, guardrail, and blockade materials with textures
-            Texture2D texAsphalt = RoadGenerator.GetOrCreateAsphaltTexture();
-            Texture2D texCurb = RoadGenerator.GetOrCreateCurbTexture();
-            Texture2D texSidewalk = RoadGenerator.GetOrCreateSidewalkTexture();
-            Texture2D texGuardrail = RoadGenerator.GetOrCreateGuardrailTexture();
+            // 3. Prepare road, curb, sidewalk, guardrail, and blockade materials with persistent disk textures
+            Texture2D texAsphalt = SaveTextureAsPNG(texFolderPath, "Tex_Road_Asphalt", RoadGenerator.GetOrCreateAsphaltTexture());
+            Texture2D texCurb = SaveTextureAsPNG(texFolderPath, "Tex_Road_Curb", RoadGenerator.GetOrCreateCurbTexture());
+            Texture2D texSidewalk = SaveTextureAsPNG(texFolderPath, "Tex_Road_Sidewalk", RoadGenerator.GetOrCreateSidewalkTexture());
+            Texture2D texGuardrail = SaveTextureAsPNG(texFolderPath, "Tex_Road_Guardrail", RoadGenerator.GetOrCreateGuardrailTexture());
 
             Material roadMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Road_Dark", texAsphalt, Color.white);
+            if (roadMat.HasProperty("_Smoothness")) roadMat.SetFloat("_Smoothness", 0.10f); // Low smoothness to eliminate blinding white specular glare on slopes
+
             Material curbMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Road_Curb", texCurb, Color.white);
+            if (curbMat.HasProperty("_Smoothness")) curbMat.SetFloat("_Smoothness", 0.20f);
+
             Material sidewalkMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Road_Sidewalk", texSidewalk, Color.white);
+            if (sidewalkMat.HasProperty("_Smoothness")) sidewalkMat.SetFloat("_Smoothness", 0.20f);
+
             Material guardrailMat = GetOrCreateURPMaterialWithTexture(matFolderPath, "Mat_Guardrail_Metal", texGuardrail, Color.white);
             if (guardrailMat.HasProperty("_Metallic")) guardrailMat.SetFloat("_Metallic", 0.85f);
             if (guardrailMat.HasProperty("_Smoothness")) guardrailMat.SetFloat("_Smoothness", 0.55f);
@@ -75,15 +82,38 @@ namespace EndlessSurvival.World.Editor
 
             // 4. Prepare Parametric Road Profiles per Biome (with curbs, sidewalks, and metal guardrails)
             RoadProfile profileForest = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Forest", ChunkBiomeType.Forest, 11f, 0.30f, 0.18f, 2.2f, roadMat, curbMat, sidewalkMat, guardrailMat, true);
+            RoadProfile profileDesert = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Desert", ChunkBiomeType.Desert, 12f, 0.30f, 0.18f, 3.0f, roadMat, curbMat, sidewalkMat, guardrailMat, true);
+            RoadProfile profileCity = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_RuinedCity", ChunkBiomeType.RuinedCity, 12f, 0.35f, 0.20f, 2.5f, roadMat, curbMat, sidewalkMat, guardrailMat, true);
+            RoadProfile profileWasteland = GetOrCreateRoadProfile(profileFolderPath, "RoadProfile_Wasteland", ChunkBiomeType.Wasteland, 10f, 0.25f, 0.15f, 3.0f, roadMat, curbMat, sidewalkMat, guardrailMat, true);
+
+            List<RoadProfile> allProfiles = new List<RoadProfile> { profileForest, profileDesert, profileCity, profileWasteland };
 
             // 5. Generate / Update Single Base Chunk Prefab (Chunk_Forest_Curve)
-            Chunk forestCurve = CreateChunkGameObject("Chunk_Forest_Curve", ChunkBiomeType.Forest, ChunkRoadType.CurvedRight, layerForest, profileForest, blockadeMat, 10);
+            Chunk forestCurve = CreateChunkGameObject("Chunk_Forest_Curve", ChunkBiomeType.Forest, ChunkRoadType.CurvedRight, layerForest, profileForest, blockadeMat, 10, allProfiles);
             SaveChunkAsPrefab(forestCurve, chunkFolderPath);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[ChunkPrefabGenerator] Successfully updated single base chunk prefab: Chunk_Forest_Curve!");
+            Debug.Log("[ChunkPrefabGenerator] Successfully updated single base chunk prefab with persistent textures: Chunk_Forest_Curve!");
+        }
+
+        private static Texture2D SaveTextureAsPNG(string folder, string name, Texture2D sourceTex)
+        {
+            string path = $"{folder}/{name}.png";
+            byte[] bytes = sourceTex.EncodeToPNG();
+            File.WriteAllBytes(path, bytes);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.wrapMode = TextureWrapMode.Repeat;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
         private static void EnsureFolder(string path)
@@ -347,7 +377,7 @@ namespace EndlessSurvival.World.Editor
             return terrainGo;
         }
 
-        private static Chunk CreateChunkGameObject(string name, ChunkBiomeType biome, ChunkRoadType roadType, TerrainLayer terrainLayer, RoadProfile roadProfile, Material blockadeMat, int weight)
+        private static Chunk CreateChunkGameObject(string name, ChunkBiomeType biome, ChunkRoadType roadType, TerrainLayer terrainLayer, RoadProfile roadProfile, Material blockadeMat, int weight, List<RoadProfile> allProfiles = null)
         {
             GameObject chunkGo = new GameObject(name);
             Chunk chunk = chunkGo.AddComponent<Chunk>();
@@ -399,6 +429,10 @@ namespace EndlessSurvival.World.Editor
             RoadGenerator roadGen = roadGo.AddComponent<RoadGenerator>();
             roadGen.spline = spline;
             roadGen.activeProfile = roadProfile;
+            if (allProfiles != null && allProfiles.Count > 0)
+            {
+                roadGen.biomeProfiles = new List<RoadProfile>(allProfiles);
+            }
             roadGen.roadElevation = 0.45f;
             roadGen.roadThickness = 0.80f;
             roadGen.syncExitSocket = true;

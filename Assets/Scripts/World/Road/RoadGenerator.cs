@@ -454,9 +454,15 @@ namespace EndlessSurvival.World.Road
             _meshCollider.sharedMesh = mesh;
 
             // Apply 3 distinct materials: Road (Asphalt), Curb (Bordür), Sidewalk (Kaldırım)
-            Material rMat = activeProfile != null && activeProfile.roadMaterial != null ? activeProfile.roadMaterial : CreateDefaultURPMaterial("Mat_Road_Dark", Color.white);
-            Material cMat = activeProfile != null && activeProfile.curbMaterial != null ? activeProfile.curbMaterial : CreateDefaultURPMaterial("Mat_Road_Curb", Color.white);
-            Material sMat = activeProfile != null && activeProfile.shoulderMaterial != null ? activeProfile.shoulderMaterial : CreateDefaultURPMaterial("Mat_Road_Sidewalk", Color.white);
+            Material rMat = activeProfile != null && activeProfile.roadMaterial != null 
+                ? activeProfile.roadMaterial 
+                : CreateDefaultURPMaterial("Mat_Road_Dark", new Color(0.18f, 0.18f, 0.19f, 1f), 0.10f);
+            Material cMat = activeProfile != null && activeProfile.curbMaterial != null 
+                ? activeProfile.curbMaterial 
+                : CreateDefaultURPMaterial("Mat_Road_Curb", new Color(0.68f, 0.67f, 0.65f, 1f), 0.20f);
+            Material sMat = activeProfile != null && activeProfile.shoulderMaterial != null 
+                ? activeProfile.shoulderMaterial 
+                : CreateDefaultURPMaterial("Mat_Road_Sidewalk", new Color(0.55f, 0.54f, 0.52f, 1f), 0.20f);
 
             EnsureMaterialTexture(rMat, GetOrCreateAsphaltTexture());
             EnsureMaterialTexture(cMat, GetOrCreateCurbTexture());
@@ -482,8 +488,18 @@ namespace EndlessSurvival.World.Road
         {
             if (_cachedAsphaltTex != null) return _cachedAsphaltTex;
 
+#if UNITY_EDITOR
+            Texture2D diskTex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Prefabs/Chunks/Textures/Tex_Road_Asphalt.png");
+            if (diskTex != null)
+            {
+                _cachedAsphaltTex = diskTex;
+                return _cachedAsphaltTex;
+            }
+#endif
+
             int size = 512;
             _cachedAsphaltTex = new Texture2D(size, size, TextureFormat.RGBA32, true);
+            _cachedAsphaltTex.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Color[] pixels = new Color[size * size];
 
             Color asphaltColor = new Color(0.17f, 0.175f, 0.18f);
@@ -535,9 +551,19 @@ namespace EndlessSurvival.World.Road
         {
             if (_cachedCurbTex != null) return _cachedCurbTex;
 
+#if UNITY_EDITOR
+            Texture2D diskTex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Prefabs/Chunks/Textures/Tex_Road_Curb.png");
+            if (diskTex != null)
+            {
+                _cachedCurbTex = diskTex;
+                return _cachedCurbTex;
+            }
+#endif
+
             int width = 128;
             int height = 256;
             _cachedCurbTex = new Texture2D(width, height, TextureFormat.RGBA32, true);
+            _cachedCurbTex.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Color[] pixels = new Color[width * height];
 
             Color curbColor = new Color(0.68f, 0.67f, 0.65f);
@@ -582,8 +608,18 @@ namespace EndlessSurvival.World.Road
         {
             if (_cachedSidewalkTex != null) return _cachedSidewalkTex;
 
+#if UNITY_EDITOR
+            Texture2D diskTex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Prefabs/Chunks/Textures/Tex_Road_Sidewalk.png");
+            if (diskTex != null)
+            {
+                _cachedSidewalkTex = diskTex;
+                return _cachedSidewalkTex;
+            }
+#endif
+
             int size = 256;
             _cachedSidewalkTex = new Texture2D(size, size, TextureFormat.RGBA32, true);
+            _cachedSidewalkTex.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Color[] pixels = new Color[size * size];
 
             Color baseTileColor = new Color(0.55f, 0.54f, 0.52f);
@@ -627,15 +663,21 @@ namespace EndlessSurvival.World.Road
         private static void EnsureMaterialTexture(Material mat, Texture2D tex)
         {
             if (mat == null || tex == null) return;
+            if (mat.HasProperty("_BaseMap") && mat.GetTexture("_BaseMap") == null)
+            {
+                mat.SetTexture("_BaseMap", tex);
+            }
+            if (mat.HasProperty("_MainTex") && mat.GetTexture("_MainTex") == null)
+            {
+                mat.SetTexture("_MainTex", tex);
+            }
             if (mat.mainTexture == null)
             {
-                if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", tex);
-                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
                 mat.mainTexture = tex;
             }
         }
 
-        private static Material CreateDefaultURPMaterial(string name, Color color)
+        private static Material CreateDefaultURPMaterial(string name, Color color, float smoothness = 0.10f)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
@@ -643,6 +685,7 @@ namespace EndlessSurvival.World.Road
             mat.name = name;
             mat.color = color;
             if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", smoothness);
             return mat;
         }
 
@@ -961,8 +1004,18 @@ namespace EndlessSurvival.World.Road
         {
             if (_cachedGuardrailTex != null) return _cachedGuardrailTex;
 
+#if UNITY_EDITOR
+            Texture2D diskTex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Prefabs/Chunks/Textures/Tex_Road_Guardrail.png");
+            if (diskTex != null)
+            {
+                _cachedGuardrailTex = diskTex;
+                return _cachedGuardrailTex;
+            }
+#endif
+
             int size = 256;
             _cachedGuardrailTex = new Texture2D(size, size, TextureFormat.RGBA32, true);
+            _cachedGuardrailTex.hideFlags = HideFlags.DontUnloadUnusedAsset;
             Color[] pixels = new Color[size * size];
 
             Color steelColor = new Color(0.82f, 0.83f, 0.85f);

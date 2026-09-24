@@ -140,7 +140,8 @@ namespace EndlessCombat.Combat
         {
             if (holsterSocket != null) return;
 
-            Transform[] children = GetComponentsInChildren<Transform>(true);
+            // 1. Search existing pre-defined socket in character hierarchy
+            Transform[] children = transform.root.GetComponentsInChildren<Transform>(true);
             for (int i = 0; i < children.Length; i++)
             {
                 if (children[i].name.Equals("HolsterSocket", System.StringComparison.OrdinalIgnoreCase))
@@ -148,6 +149,31 @@ namespace EndlessCombat.Combat
                     holsterSocket = children[i];
                     return;
                 }
+            }
+
+            // 2. Search on Chest/Spine bone
+            Transform spine = null;
+            if (animator != null)
+            {
+                spine = animator.GetBoneTransform(HumanBodyBones.Chest);
+                if (spine == null) spine = animator.GetBoneTransform(HumanBodyBones.Spine);
+            }
+
+            if (spine != null)
+            {
+                Transform existing = spine.Find("HolsterSocket");
+                if (existing != null)
+                {
+                    holsterSocket = existing;
+                    return;
+                }
+
+                // 3. Fallback: Create on chest so holstering always works even if socket wasn't placed in editor yet
+                GameObject socketObj = new GameObject("HolsterSocket");
+                socketObj.transform.SetParent(spine, false);
+                socketObj.transform.localPosition = new Vector3(0.18f, 0.02f, -0.15f);
+                socketObj.transform.localRotation = Quaternion.Euler(25f, 155f, -35f);
+                holsterSocket = socketObj.transform;
             }
         }
 

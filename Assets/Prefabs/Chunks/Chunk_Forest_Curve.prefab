@@ -435,7 +435,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.Road.RoadGenerator
   spline: {fileID: 7235861993325476862}
   activeProfile: {fileID: 11400000, guid: bd29a20eb75883747be166ee2e8e18e0, type: 2}
-  biomeProfiles: []
+  biomeProfiles:
+  - {fileID: 11400000, guid: bd29a20eb75883747be166ee2e8e18e0, type: 2}
+  - {fileID: 11400000, guid: ec028945e6c994445a20d77da4eb9a33, type: 2}
+  - {fileID: 11400000, guid: e4ae4adcae00dfe45a414ee922d93a85, type: 2}
+  - {fileID: 11400000, guid: f99b345c475a40748b2fa183208afde5, type: 2}
   roadElevation: 0.45
   roadThickness: 0.8
   crossSectionPreset: 0
