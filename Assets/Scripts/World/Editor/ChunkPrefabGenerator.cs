@@ -359,7 +359,7 @@ namespace EndlessSurvival.World.Editor
             chunk.baseElevation = 20f;
 
             // 500x500 Unity Terrain
-            CreateChunkTerrain(name, chunkGo.transform, terrainLayer);
+            GameObject terrainGo = CreateChunkTerrain(name, chunkGo.transform, terrainLayer);
 
             // Sockets (at Y = 20m)
             GameObject entry = new GameObject("EntrySocket");
@@ -416,6 +416,13 @@ namespace EndlessSurvival.World.Editor
             Mesh savedMeshAsset = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
             roadGo.GetComponent<MeshFilter>().sharedMesh = savedMeshAsset;
             roadGo.GetComponent<MeshCollider>().sharedMesh = savedMeshAsset;
+
+            // Conform Terrain to the generated road bed
+            Terrain terrainComp = terrainGo != null ? terrainGo.GetComponent<Terrain>() : null;
+            if (terrainComp != null)
+            {
+                RoadTerrainAdapter.ConformTerrainToRoad(terrainComp, spline, roadGen, false);
+            }
 
             // Boundary Walls (elevated around Y = 20m ground)
             CreateBoundary(chunkGo.transform, "LeftBoundary", new Vector3(-250f, 30f, 250f), new Vector3(2f, 40f, 500f));

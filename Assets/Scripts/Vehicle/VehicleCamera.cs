@@ -73,7 +73,12 @@ namespace EndlessSurvival.Vehicle
             transform.position = Vector3.Lerp(transform.position, targetPosition, followSpeed * Time.deltaTime);
 
             Vector3 lookTarget = target.position + Vector3.up * lookAtHeightOffset;
-            transform.LookAt(lookTarget);
+            Vector3 lookDir = lookTarget - transform.position;
+            if (lookDir != Vector3.zero)
+            {
+                Quaternion desiredRot = Quaternion.LookRotation(lookDir, Vector3.up);
+                transform.rotation = Quaternion.Slerp(transform.rotation, desiredRot, rotationSpeed * Time.deltaTime);
+            }
         }
 
         private void HandleMouseInput()

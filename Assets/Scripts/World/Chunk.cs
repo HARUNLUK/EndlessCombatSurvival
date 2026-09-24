@@ -22,6 +22,70 @@ namespace EndlessSurvival.World
         HazardZone
     }
 
+    public enum RoadElevationType
+    {
+        Flat,
+        HillCrest,
+        ValleyDip,
+        RollingHills,
+        MountainPass,
+        ElevatedChicane
+    }
+
+    /// <summary>
+    /// Configuration for procedural elevation, slopes, and height limits on chunks.
+    /// </summary>
+    [System.Serializable]
+    public class ChunkElevationConfig
+    {
+        [Header("Probability & Frequency (İhtimal & Sıklık)")]
+        [Tooltip("Probability of this chunk spawning with vertical slope/elevation (0 = always flat, 1 = always elevated/dipped)")]
+        [Range(0f, 1f)]
+        public float elevationChance = 0.75f;
+
+        [Header("Elevation Amplitude Limits (Maksimum ve Minimum Eğimler)")]
+        [Tooltip("Maximum height a hill or mountain crest can reach in meters")]
+        [Range(5f, 30f)]
+        public float maxHillHeight = 16f;
+
+        [Tooltip("Minimum height for a generated hill crest in meters")]
+        [Range(4f, 14f)]
+        public float minHillHeight = 8f;
+
+        [Tooltip("Maximum depth a valley or pit can dip down into the ground in meters (baseline is 20m, sea level is 0m)")]
+        [Range(5f, 18f)]
+        public float maxDipDepth = 15f;
+
+        [Tooltip("Minimum depth for a generated valley dip in meters")]
+        [Range(4f, 12f)]
+        public float minDipDepth = 7f;
+
+        [Header("Type Distribution Weights (Eğim Tipleri Dağılım Ağırlıkları)")]
+        [Tooltip("Relative weight for Hill Crest (Tümsek / Tepe)")]
+        [Range(0, 100)]
+        public int hillWeight = 25;
+
+        [Tooltip("Relative weight for Valley Dip (Vadi / Çukur İnişi)")]
+        [Range(0, 100)]
+        public int valleyWeight = 25;
+
+        [Tooltip("Relative weight for Rolling Hills (Dalgalı Tepeler)")]
+        [Range(0, 100)]
+        public int rollingHillsWeight = 20;
+
+        [Tooltip("Relative weight for Mountain Pass (Dağ Geçidi Zirve Virajı)")]
+        [Range(0, 100)]
+        public int mountainPassWeight = 20;
+
+        [Tooltip("Relative weight for Elevated Chicane (Tepeli Şikan)")]
+        [Range(0, 100)]
+        public int elevatedChicaneWeight = 15;
+
+        [Tooltip("Relative weight for Flat Road (Düz Yol)")]
+        [Range(0, 100)]
+        public int flatWeight = 15;
+    }
+
     /// <summary>
     /// Represents an individual 500x500 pre-authored parcel/chunk in the infinite road world.
     /// Classified by biome, road topology, and spawn weight parameters.
@@ -45,6 +109,20 @@ namespace EndlessSurvival.World
         [Tooltip("Difficulty tier of this chunk (for enemy/loot scaling in later phases)")]
         [Range(1, 5)]
         public int difficultyTier = 1;
+
+        [Header("Elevation & Slope Settings (Eğim Ayarları)")]
+        [Tooltip("Whether this chunk overrides the global elevation parameters set on ChunkManager")]
+        public bool overrideElevationSettings = false;
+
+        [Tooltip("Chunk-specific elevation distribution and amplitude limits")]
+        public ChunkElevationConfig elevationConfig = new ChunkElevationConfig();
+
+        [Header("Runtime Elevation State (Aktif Eğim Durumu)")]
+        [Tooltip("Active elevation type applied to this spawned chunk")]
+        public RoadElevationType currentElevationType = RoadElevationType.Flat;
+
+        [Tooltip("Generated hill height or dip depth for this chunk in meters")]
+        public float currentElevationParam = 0f;
 
         [Header("Dimensions & Sockets")]
         [Tooltip("Length of the chunk along the forward Z axis (standard 500 units)")]

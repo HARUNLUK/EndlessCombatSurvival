@@ -6,12 +6,16 @@ using UnityEngine.InputSystem;
 namespace EndlessSurvival.Vehicle
 {
     /// <summary>
-    /// Controls the rotation of VehicleCameraTarget using mouse input so Cinemachine
-    /// can orbit smoothly around the vehicle, just like the TPS player camera.
-    /// Includes optional auto-recentering behind the vehicle.
+    /// Controls VehicleCameraTarget orientation with smooth rotational chase lag,
+    /// speed-sensitive dynamics, and mouse orbit with smooth auto-recentering.
     /// </summary>
     public class VehicleCameraOrbit : MonoBehaviour
     {
+        [Header("Follow Dynamics (Yumuşak Takip)")]
+        [Tooltip("Smooth follow lag speed when the vehicle turns (lower = more cinematic lag, higher = tighter follow)")]
+        [Range(1f, 15f)]
+        public float followRotationSpeed = 4.5f;
+
         [Header("Sensitivity Settings")]
         [Tooltip("Horizontal mouse look sensitivity")]
         public float sensitivityX = 1.8f;
@@ -20,6 +24,9 @@ namespace EndlessSurvival.Vehicle
         public float sensitivityY = 1.4f;
 
         [Header("Pitch Clamping")]
+        [Tooltip("Default pitch angle behind vehicle")]
+        public float defaultPitch = 10f;
+
         [Tooltip("Minimum downward pitch angle")]
         public float minPitch = -15f;
 
@@ -31,18 +38,20 @@ namespace EndlessSurvival.Vehicle
         public bool autoRecenter = true;
 
         [Tooltip("Time in seconds without mouse input before auto recentering begins")]
-        public float recenterDelay = 1.8f;
+        public float recenterDelay = 1.5f;
 
-        [Tooltip("Speed of recentering")]
-        public float recenterSpeed = 3.5f;
+        [Tooltip("Speed of recentering pitch to default")]
+        public float recenterSpeed = 3.0f;
 
         [Header("References")]
         [Tooltip("Parent vehicle controller (found automatically if left empty)")]
         public VehicleController parentVehicle;
 
-        private float _yawOffset = 0f;
+        private float _currentWorldYaw = 0f;
+        private float _mouseYawOffset = 0f;
         private float _pitch = 10f;
         private float _lastInputTime = 0f;
+        private bool _hasInitialized = false;
 
         private void Awake()
         {
@@ -52,19 +61,42 @@ namespace EndlessSurvival.Vehicle
             }
         }
 
+        private void Start()
+        {
+            InitializeYaw();
+        }
+
         private void OnEnable()
         {
-            _yawOffset = 0f;
-            _pitch = 10f;
-            _lastInputTime = Time.time;
+            InitializeYaw();
+        }
+
+        private void InitializeYaw()
+        {
+            if (parentVehicle != null)
+            {
+                _currentWorldYaw = parentVehicle.transform.eulerAngles.y;
+            }
+            else
+            {
+                _currentWorldYaw = transform.eulerAngles.y;
+            }
+            _mouseYawOffset = 0f;
+            _pitch = defaultPitch;
+            _lastInputTime = -100f; // Force immediate follow until user touches mouse
+            _hasInitialized = true;
         }
 
         private void LateUpdate()
         {
-            // Only orbit when vehicle is actively driven
-            if (parentVehicle != null && !parentVehicle.isDriven)
+            if (parentVehicle == null || !parentVehicle.isDriven)
             {
                 return;
+            }
+
+            if (!_hasInitialized)
+            {
+                InitializeYaw();
             }
 
             HandleMouseInput();
@@ -91,20 +123,30 @@ namespace EndlessSurvival.Vehicle
 
             if (Mathf.Abs(mouseDeltaX) > 0.01f || Mathf.Abs(mouseDeltaY) > 0.01f)
             {
-                _yawOffset += mouseDeltaX;
+                _mouseYawOffset += mouseDeltaX;
                 _pitch = Mathf.Clamp(_pitch - mouseDeltaY, minPitch, maxPitch);
                 _lastInputTime = Time.time;
             }
             else if (autoRecenter && (Time.time - _lastInputTime > recenterDelay))
             {
-                // Smoothly recenter yaw behind the vehicle
-                _yawOffset = Mathf.Lerp(_yawOffset, 0f, Time.deltaTime * recenterSpeed);
+                // Smoothly decay mouse offset back to zero so camera returns to vehicle forward axis
+                _mouseYawOffset = Mathf.Lerp(_mouseYawOffset, 0f, Time.deltaTime * recenterSpeed);
+                _pitch = Mathf.Lerp(_pitch, defaultPitch, Time.deltaTime * recenterSpeed);
             }
         }
 
         private void ApplyRotation()
         {
-            transform.localRotation = Quaternion.Euler(_pitch, _yawOffset, 0f);
+            float vehicleWorldYaw = parentVehicle.transform.eulerAngles.y;
+
+            // Target world yaw combines vehicle forward heading with user's mouse look offset
+            float targetWorldYaw = vehicleWorldYaw + _mouseYawOffset;
+
+            // Smoothly interpolate current world yaw towards target world yaw for silky-smooth turning follow
+            _currentWorldYaw = Mathf.LerpAngle(_currentWorldYaw, targetWorldYaw, Time.deltaTime * followRotationSpeed);
+
+            // Apply world rotation to target
+            transform.rotation = Quaternion.Euler(_pitch, _currentWorldYaw, 0f);
         }
     }
 }

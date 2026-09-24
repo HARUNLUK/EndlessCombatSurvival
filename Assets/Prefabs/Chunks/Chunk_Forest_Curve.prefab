@@ -608,6 +608,21 @@ MonoBehaviour:
   crossSectionType: 1
   spawnWeight: 10
   difficultyTier: 1
+  overrideElevationSettings: 1
+  elevationConfig:
+    elevationChance: 0.2
+    maxHillHeight: 12.6
+    minHillHeight: 4.69
+    maxDipDepth: 12.08
+    minDipDepth: 6.04
+    hillWeight: 8
+    valleyWeight: 8
+    rollingHillsWeight: 4
+    mountainPassWeight: 5
+    elevatedChicaneWeight: 8
+    flatWeight: 9
+  currentElevationType: 0
+  currentElevationParam: 0
   chunkLength: 500
   baseElevation: 20
   entrySocket: {fileID: 6887151771872429049}

@@ -179,6 +179,14 @@ namespace EndlessSurvival.World.Road
             GenerateGuardrails();
         }
 
+        public float GetTotalHalfWidth()
+        {
+            float roadW = activeProfile != null ? activeProfile.roadWidth : 11f;
+            float curbW = hasCurbs && activeProfile != null ? activeProfile.curbWidth : 0f;
+            float sideW = hasSidewalks && activeProfile != null ? activeProfile.shoulderWidth : 0f;
+            return (roadW * 0.5f) + curbW + sideW;
+        }
+
         [ContextMenu("Build Road Mesh")]
         public Mesh BuildRoadMesh()
         {

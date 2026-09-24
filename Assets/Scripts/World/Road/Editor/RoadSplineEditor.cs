@@ -43,7 +43,7 @@ namespace EndlessSurvival.World.Road.Editor
             if (GUILayout.Button("Elevation Hill"))
             {
                 Undo.RecordObject(_spline, "Set Hill Preset");
-                _spline.SetElevationHillPreset(12f);
+                _spline.SetElevationHillPreset(14f);
                 _generator.BuildRoadMesh();
             }
 
@@ -55,11 +55,39 @@ namespace EndlessSurvival.World.Road.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Valley Dip"))
+            {
+                Undo.RecordObject(_spline, "Set Valley Dip Preset");
+                _spline.SetDipValleyPreset(8f);
+                _generator.BuildRoadMesh();
+            }
+
+            if (GUILayout.Button("Rolling Hills"))
+            {
+                Undo.RecordObject(_spline, "Set Rolling Hills Preset");
+                _spline.SetRollingHillsPreset(12f, 6f);
+                _generator.BuildRoadMesh();
+            }
+
+            if (GUILayout.Button("Mountain Pass"))
+            {
+                Undo.RecordObject(_spline, "Set Mountain Pass Preset");
+                _spline.SetMountainPassPreset(45f, 16f);
+                _generator.BuildRoadMesh();
+            }
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.Space(8);
             GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
-            if (GUILayout.Button("Rebuild Road Mesh Now", GUILayout.Height(32)))
+            if (GUILayout.Button("Rebuild Road & Terrain Now", GUILayout.Height(32)))
             {
                 _generator.BuildRoadMesh();
+                Terrain t = _generator.GetComponentInParent<Chunk>()?.GetComponentInChildren<Terrain>();
+                if (t != null)
+                {
+                    RoadTerrainAdapter.ConformTerrainToRoad(t, _spline, _generator, false);
+                }
             }
             GUI.backgroundColor = Color.white;
         }

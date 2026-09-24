@@ -46,10 +46,30 @@ namespace EndlessSurvival.Vehicle
 
         [Header("Stability & Physics")]
         [Tooltip("Center of mass offset (kept low to prevent rollover)")]
-        public Vector3 centerOfMassOffset = new Vector3(0f, -0.4f, 0f);
+        public Vector3 centerOfMassOffset = new Vector3(0f, -0.25f, 0.15f);
 
         [Tooltip("Anti-roll stabilizer bar force")]
         public float antiRollForce = 5000f;
+
+        [Header("Tire Grip & Traction (Yol Tutuşu & Kayma Önleme)")]
+        [Tooltip("Forward tire traction stiffness (longitudinal grip)")]
+        [Range(1.0f, 5.0f)]
+        public float forwardGrip = 2.8f;
+
+        [Tooltip("Sideways tire traction stiffness (lateral grip / anti-drift)")]
+        [Range(1.0f, 5.0f)]
+        public float sidewaysGrip = 3.4f;
+
+        [Tooltip("Active lateral traction assist to eliminate ice-like sliding")]
+        [Range(0f, 1f)]
+        public float tractionAssist = 0.70f;
+
+        [Header("Weight Feeling & Aerodynamics (Ağırlık Hissi)")]
+        [Tooltip("Aerodynamic downforce multiplier to keep the vehicle planted at speed")]
+        public float downforce = 140f;
+
+        [Tooltip("Passive engine braking torque applied when releasing gas (Nm)")]
+        public float coastBrakeTorque = 150f;
 
         [Header("Status & GDD Stats")]
         [Tooltip("Whether the vehicle is currently driven by the player")]
@@ -87,6 +107,32 @@ namespace EndlessSurvival.Vehicle
             _rb.centerOfMass = centerOfMassOffset;
             _rb.interpolation = RigidbodyInterpolation.Interpolate;
             _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+            ConfigureWheelFriction(frontLeftCollider);
+            ConfigureWheelFriction(frontRightCollider);
+            ConfigureWheelFriction(rearLeftCollider);
+            ConfigureWheelFriction(rearRightCollider);
+        }
+
+        public void ConfigureWheelFriction(WheelCollider wc)
+        {
+            if (wc == null) return;
+
+            WheelFrictionCurve f = wc.forwardFriction;
+            f.extremumSlip = 0.35f;
+            f.extremumValue = 1.25f;
+            f.asymptoteSlip = 0.80f;
+            f.asymptoteValue = 1.0f;
+            f.stiffness = forwardGrip;
+            wc.forwardFriction = f;
+
+            WheelFrictionCurve s = wc.sidewaysFriction;
+            s.extremumSlip = 0.25f;
+            s.extremumValue = 1.35f;
+            s.asymptoteSlip = 0.65f;
+            s.asymptoteValue = 1.15f;
+            s.stiffness = sidewaysGrip;
+            wc.sidewaysFriction = s;
         }
 
         private void Update()
@@ -111,6 +157,8 @@ namespace EndlessSurvival.Vehicle
             ApplyMotor();
             ApplySteering();
             ApplyAntiRollBars();
+            ApplyDownforce();
+            ApplyTractionControl();
         }
 
         private void HandleInput()
@@ -149,7 +197,21 @@ namespace EndlessSurvival.Vehicle
         {
             float effectiveVerticalInput = (currentFuel > 0f) ? _verticalInput : 0f;
             float torque = effectiveVerticalInput * motorForce;
-            float currentBrakeTorque = _isBraking ? brakeForce : 0f;
+
+            float currentBrakeTorque;
+            if (_isBraking)
+            {
+                currentBrakeTorque = brakeForce;
+            }
+            else if (Mathf.Abs(effectiveVerticalInput) < 0.05f)
+            {
+                // Engine compression resistance when releasing throttle (gives vehicle weighty momentum)
+                currentBrakeTorque = coastBrakeTorque;
+            }
+            else
+            {
+                currentBrakeTorque = 0f;
+            }
 
             if (driveType == DriveType.FrontWheelDrive || driveType == DriveType.AllWheelDrive)
             {
@@ -186,11 +248,38 @@ namespace EndlessSurvival.Vehicle
 
         private void ApplySteering()
         {
-            float targetAngle = _horizontalInput * maxSteerAngle;
+            // Speed-sensitive steering: scales down maximum steer angle at higher speeds to prevent high-speed spinouts
+            float speedFactor = Mathf.Clamp01(CurrentSpeedKmh / 90f);
+            float currentMaxSteer = Mathf.Lerp(maxSteerAngle, maxSteerAngle * 0.40f, speedFactor);
+
+            float targetAngle = _horizontalInput * currentMaxSteer;
             _currentSteerAngle = Mathf.Lerp(_currentSteerAngle, targetAngle, Time.fixedDeltaTime * steerSmoothSpeed);
 
             if (frontLeftCollider != null) frontLeftCollider.steerAngle = _currentSteerAngle;
             if (frontRightCollider != null) frontRightCollider.steerAngle = _currentSteerAngle;
+        }
+
+        private void ApplyDownforce()
+        {
+            if (_rb == null) return;
+            // Aerodynamic downforce pushes tires into road proportionally to velocity
+            float speed = _rb.linearVelocity.magnitude;
+            _rb.AddForce(-transform.up * (speed * downforce), ForceMode.Force);
+        }
+
+        private void ApplyTractionControl()
+        {
+            if (_rb == null || _isBraking) return; // Allow handbrake drift when Space is pressed
+
+            // Extract lateral (sideways) sliding velocity component
+            Vector3 lateralVelocity = transform.right * Vector3.Dot(_rb.linearVelocity, transform.right);
+
+            if (tractionAssist > 0f && lateralVelocity.sqrMagnitude > 0.02f)
+            {
+                // Counteract unwanted sliding on asphalt to deliver solid, heavy tire grip
+                Vector3 counterForce = -lateralVelocity * (tractionAssist * _rb.mass * 8.0f);
+                _rb.AddForce(counterForce, ForceMode.Force);
+            }
         }
 
         private void UpdateWheelVisuals()

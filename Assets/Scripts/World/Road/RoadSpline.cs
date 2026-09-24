@@ -63,16 +63,78 @@ namespace EndlessSurvival.World.Road
         }
 
         [ContextMenu("Curve Preset: Elevation Hill (Tümsek / Eğim)")]
-        public void SetElevationHillPreset() => SetElevationHillPreset(12f);
+        public void SetElevationHillPreset() => SetElevationHillPreset(14f);
 
-        public void SetElevationHillPreset(float hillHeight = 12f)
+        public void SetElevationHillPreset(float hillHeight = 14f)
+        {
+            waypoints = new List<Vector3>
+            {
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 50f),
+                new Vector3(0f, baseElevation + hillHeight * 0.40f, 130f),
+                new Vector3(0f, baseElevation + hillHeight * 0.85f, 190f),
+                new Vector3(0f, baseElevation + hillHeight, 250f),
+                new Vector3(0f, baseElevation + hillHeight * 0.85f, 310f),
+                new Vector3(0f, baseElevation + hillHeight * 0.40f, 370f),
+                new Vector3(0f, baseElevation, 450f),
+                new Vector3(0f, baseElevation, 500f)
+            };
+        }
+
+        [ContextMenu("Curve Preset: Valley Dip (Vadi İnişi)")]
+        public void SetDipValleyPreset() => SetDipValleyPreset(14f);
+
+        public void SetDipValleyPreset(float dipDepth = 14f)
+        {
+            waypoints = new List<Vector3>
+            {
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 50f),
+                new Vector3(0f, baseElevation - dipDepth * 0.40f, 130f),
+                new Vector3(0f, baseElevation - dipDepth * 0.85f, 190f),
+                new Vector3(0f, baseElevation - dipDepth, 250f),
+                new Vector3(0f, baseElevation - dipDepth * 0.85f, 310f),
+                new Vector3(0f, baseElevation - dipDepth * 0.40f, 370f),
+                new Vector3(0f, baseElevation, 450f),
+                new Vector3(0f, baseElevation, 500f)
+            };
+        }
+
+        [ContextMenu("Curve Preset: Rolling Hills (Dalgalı Tepeler)")]
+        public void SetRollingHillsPreset() => SetRollingHillsPreset(14f, 10f);
+
+        public void SetRollingHillsPreset(float hillHeight = 14f, float dipDepth = 10f)
+        {
+            waypoints = new List<Vector3>
+            {
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 50f),
+                new Vector3(0f, baseElevation + hillHeight * 0.60f, 110f),
+                new Vector3(0f, baseElevation + hillHeight, 160f),
+                new Vector3(0f, baseElevation + hillHeight * 0.50f, 210f),
+                new Vector3(0f, baseElevation, 250f),
+                new Vector3(0f, baseElevation - dipDepth * 0.50f, 300f),
+                new Vector3(0f, baseElevation - dipDepth, 350f),
+                new Vector3(0f, baseElevation - dipDepth * 0.60f, 400f),
+                new Vector3(0f, baseElevation, 450f),
+                new Vector3(0f, baseElevation, 500f)
+            };
+        }
+
+        [ContextMenu("Curve Preset: Mountain Pass (Dağ Geçidi Viraj & Zirve)")]
+        public void SetMountainPassPreset() => SetMountainPassPreset(45f, 16f);
+
+        public void SetMountainPassPreset(float lateralShift = 45f, float hillHeight = 16f)
         {
             waypoints = new List<Vector3>
             {
                 new Vector3(0f, baseElevation, 0f),
                 new Vector3(0f, baseElevation, 60f),
-                new Vector3(0f, baseElevation + hillHeight, 180f),
-                new Vector3(0f, baseElevation + hillHeight, 320f),
+                new Vector3(lateralShift * 0.7f, baseElevation + hillHeight * 0.5f, 130f),
+                new Vector3(lateralShift, baseElevation + hillHeight, 200f),
+                new Vector3(0f, baseElevation + hillHeight * 0.85f, 250f),
+                new Vector3(-lateralShift, baseElevation + hillHeight * 0.6f, 320f),
+                new Vector3(-lateralShift * 0.5f, baseElevation + hillHeight * 0.25f, 390f),
                 new Vector3(0f, baseElevation, 440f),
                 new Vector3(0f, baseElevation, 500f)
             };
@@ -97,25 +159,104 @@ namespace EndlessSurvival.World.Road
             };
         }
 
+        [ContextMenu("Curve Preset: Elevated Chicane (Tepeli Şikan)")]
+        public void SetElevatedChicanePreset() => SetElevatedChicanePreset(35f, 10f);
+
+        public void SetElevatedChicanePreset(float shift = 35f, float hillHeight = 10f)
+        {
+            waypoints = new List<Vector3>
+            {
+                new Vector3(0f, baseElevation, 0f),
+                new Vector3(0f, baseElevation, 60f),
+                new Vector3(shift, baseElevation + hillHeight * 0.5f, 150f),
+                new Vector3(0f, baseElevation + hillHeight, 200f),
+                new Vector3(-shift, baseElevation + hillHeight * 0.75f, 260f),
+                new Vector3(0f, baseElevation + hillHeight * 0.35f, 320f),
+                new Vector3(shift * 0.6f, baseElevation, 380f),
+                new Vector3(0f, baseElevation, 440f),
+                new Vector3(0f, baseElevation, 500f)
+            };
+        }
+
         public Vector3 GetPoint(float t)
         {
-            if (waypoints == null || waypoints.Count < 2)
+            if (waypoints == null || waypoints.Count == 0)
                 return Vector3.zero;
+            if (waypoints.Count == 1)
+                return waypoints[0];
 
             t = Mathf.Clamp01(t);
-            if (t <= 0.0001f) return waypoints[0];
-            if (t >= 0.9999f) return waypoints[waypoints.Count - 1];
+            float minZ = waypoints[0].z;
+            float maxZ = waypoints[waypoints.Count - 1].z;
+            float targetZ = Mathf.Lerp(minZ, maxZ, t);
+            return GetPointAtZ(targetZ);
+        }
 
-            int numSections = waypoints.Count - 1;
-            int currPt = Mathf.Min(Mathf.FloorToInt(t * numSections), numSections - 1);
-            float u = (t * numSections) - currPt;
+        public Vector3 GetPointAtZ(float targetZ)
+        {
+            if (waypoints == null || waypoints.Count == 0)
+                return Vector3.zero;
+            if (waypoints.Count == 1)
+                return waypoints[0];
+
+            float minZ = waypoints[0].z;
+            float maxZ = waypoints[waypoints.Count - 1].z;
+            if (maxZ <= minZ) return waypoints[0];
+
+            targetZ = Mathf.Clamp(targetZ, minZ, maxZ);
+
+            if (targetZ <= minZ + 0.0001f) return waypoints[0];
+            if (targetZ >= maxZ - 0.0001f) return waypoints[waypoints.Count - 1];
+
+            // Find segment [currPt, currPt + 1] containing targetZ
+            int currPt = 0;
+            for (int i = 0; i < waypoints.Count - 1; i++)
+            {
+                if (targetZ <= waypoints[i + 1].z)
+                {
+                    currPt = i;
+                    break;
+                }
+            }
 
             Vector3 p0 = currPt > 0 ? waypoints[currPt - 1] : waypoints[currPt] + (waypoints[currPt] - waypoints[currPt + 1]);
             Vector3 p1 = waypoints[currPt];
             Vector3 p2 = waypoints[currPt + 1];
             Vector3 p3 = (currPt + 2 < waypoints.Count) ? waypoints[currPt + 2] : waypoints[currPt + 1] + (waypoints[currPt + 1] - waypoints[currPt]);
 
-            return CatmullRom(p0, p1, p2, p3, u);
+            // Binary search u in [0, 1] such that CatmullRom1D(p0.z, p1.z, p2.z, p3.z, u) == targetZ
+            float low = 0f;
+            float high = 1f;
+            float mid = 0.5f;
+
+            for (int iter = 0; iter < 12; iter++)
+            {
+                mid = (low + high) * 0.5f;
+                float zMid = CatmullRom1D(p0.z, p1.z, p2.z, p3.z, mid);
+                if (zMid < targetZ)
+                {
+                    low = mid;
+                }
+                else
+                {
+                    high = mid;
+                }
+            }
+
+            return CatmullRom(p0, p1, p2, p3, mid);
+        }
+
+        private static float CatmullRom1D(float p0, float p1, float p2, float p3, float t)
+        {
+            float t2 = t * t;
+            float t3 = t2 * t;
+
+            return 0.5f * (
+                (2.0f * p1) +
+                (-p0 + p2) * t +
+                (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * t2 +
+                (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3
+            );
         }
 
         public Vector3 GetTangent(float t)
