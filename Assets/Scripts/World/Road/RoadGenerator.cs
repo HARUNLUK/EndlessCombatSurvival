@@ -52,25 +52,20 @@ namespace EndlessSurvival.World.Road
         private void OnEnable()
         {
             EnsureComponents();
-            if (!Application.isPlaying)
+            if (_meshFilter != null && _meshFilter.sharedMesh == null)
             {
-                if (_meshFilter != null && _meshFilter.sharedMesh == null)
-                {
-                    ApplyBiomeProfile();
-                    BuildRoadMesh();
-                }
+                ApplyBiomeProfile();
+                BuildRoadMesh();
             }
         }
 
         private void Start()
         {
-            if (Application.isPlaying && generateOnStart)
+            EnsureComponents();
+            if (generateOnStart || (_meshFilter != null && _meshFilter.sharedMesh == null))
             {
-                if (_meshFilter.sharedMesh == null)
-                {
-                    ApplyBiomeProfile();
-                    BuildRoadMesh();
-                }
+                ApplyBiomeProfile();
+                BuildRoadMesh();
             }
         }
 

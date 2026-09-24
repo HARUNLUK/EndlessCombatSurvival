@@ -51,11 +51,7 @@ MonoBehaviour:
   waypoints:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 60}
-  - {x: 31.5, y: 0, z: 130}
-  - {x: 45, y: 0, z: 200}
   - {x: 0, y: 0, z: 250}
-  - {x: -45, y: 0, z: 300}
-  - {x: -31.5, y: 0, z: 370}
   - {x: 0, y: 0, z: 440}
   - {x: 0, y: 0, z: 500}
   resolution: 100
@@ -134,7 +130,7 @@ MonoBehaviour:
   biomeProfiles: []
   roadElevation: 0.45
   roadThickness: 0.8
-  generateOnStart: 0
+  generateOnStart: 1
   syncExitSocket: 1
 --- !u!64 &8712723442576950080
 MeshCollider:

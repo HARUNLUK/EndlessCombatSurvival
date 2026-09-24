@@ -8,20 +8,6 @@ namespace EndlessSurvival.World.Editor
 {
     public static class SetupSceneChunkManager
     {
-        [InitializeOnLoadMethod]
-        private static void AutoUpdateChunkManager()
-        {
-            EditorApplication.delayCall += () =>
-            {
-                if (Application.isPlaying) return;
-                var mgr = Object.FindAnyObjectByType<ChunkManager>();
-                if (mgr != null && (mgr.maxActiveChunks > 3 || mgr.maxChunksBehind != 1))
-                {
-                    SetupInActiveScene();
-                }
-            };
-        }
-
         [MenuItem("Endless Survival/Setup ChunkManager in Scene")]
         public static void SetupInActiveScene()
         {
@@ -35,23 +21,25 @@ namespace EndlessSurvival.World.Editor
                 Undo.RegisterCreatedObjectUndo(go, "Create ChunkManager");
             }
 
-            // Load the single master chunk prototype: Chunk_Forest_Curve
-            string chunkPath = "Assets/Prefabs/Chunks/Chunk_Forest_Curve.prefab";
-            GameObject pgo = AssetDatabase.LoadAssetAtPath<GameObject>(chunkPath);
+            // Load all chunk prefabs found in Assets/Prefabs/Chunks
+            string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs/Chunks" });
             List<Chunk> prefabs = new List<Chunk>();
 
-            if (pgo != null)
+            foreach (string guid in guids)
             {
-                Chunk c = pgo.GetComponent<Chunk>();
-                if (c != null)
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                GameObject pgo = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (pgo != null)
                 {
-                    prefabs.Add(c);
+                    Chunk c = pgo.GetComponent<Chunk>();
+                    if (c != null && !prefabs.Contains(c))
+                    {
+                        prefabs.Add(c);
+                    }
                 }
             }
 
             mgr.chunkPrefabs = prefabs;
-            mgr.targetBiome = ChunkBiomeType.Forest;
-            mgr.selectionMode = ChunkSelectionMode.SingleBiome;
             mgr.initialChunkCount = 2;
             mgr.maxChunksBehind = 1;
             mgr.maxActiveChunks = 3;

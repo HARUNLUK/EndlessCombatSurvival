@@ -225,41 +225,6 @@ namespace EndlessSurvival.Vehicle
             OnDriveStateChanged?.Invoke(false);
         }
 
-        private void OnGUI()
-        {
-            if (_isPlayerNear && !IsPlayerInside)
-            {
-                GUIStyle style = new GUIStyle(GUI.skin.box);
-                style.fontSize = 18;
-                style.fontStyle = FontStyle.Bold;
-                style.normal.textColor = Color.white;
-                style.alignment = TextAnchor.MiddleCenter;
-
-                float width = 280f;
-                float height = 45f;
-                float x = (Screen.width - width) / 2f;
-                float y = Screen.height - 130f;
-
-                GUI.Box(new Rect(x, y, width, height), "Press [F] to Drive Jeep", style);
-            }
-            else if (IsPlayerInside)
-            {
-                GUIStyle style = new GUIStyle(GUI.skin.box);
-                style.fontSize = 14;
-                style.fontStyle = FontStyle.Bold;
-                style.normal.textColor = Color.white;
-                style.alignment = TextAnchor.MiddleCenter;
-
-                float width = 360f;
-                float height = 55f;
-                float x = (Screen.width - width) / 2f;
-                float y = Screen.height - 100f;
-
-                int speed = Mathf.RoundToInt(vehicleController != null ? vehicleController.CurrentSpeedKmh : 0f);
-                string text = $"WASD: Drive | Space: Brake | [F]: Exit\nSpeed: {speed} km/h";
-                GUI.Box(new Rect(x, y, width, height), text, style);
-            }
-        }
 
         private void OnDrawGizmosSelected()
         {
