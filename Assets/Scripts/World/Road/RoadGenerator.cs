@@ -727,18 +727,23 @@ namespace EndlessSurvival.World.Road
 
         public void GenerateGuardrails(bool enabled, float computedOffset)
         {
+            // Destroy all existing guardrails to prevent duplicates in the same frame
             Transform existingHolder = transform.Find("Guardrails");
-            if (existingHolder != null)
+            while (existingHolder != null)
             {
+                existingHolder.name = "Guardrails_Destroying";
                 if (Application.isPlaying) Destroy(existingHolder.gameObject);
                 else DestroyImmediate(existingHolder.gameObject);
+                existingHolder = transform.Find("Guardrails");
             }
 
             Transform oldHolder = transform.Find("Guardrails_Holder");
-            if (oldHolder != null)
+            while (oldHolder != null)
             {
+                oldHolder.name = "Guardrails_Destroying";
                 if (Application.isPlaying) Destroy(oldHolder.gameObject);
                 else DestroyImmediate(oldHolder.gameObject);
+                oldHolder = transform.Find("Guardrails_Holder");
             }
 
             if (!enabled) return;
