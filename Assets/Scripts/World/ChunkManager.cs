@@ -129,6 +129,9 @@ namespace EndlessSurvival.World
         [Tooltip("Global elevation and slope distribution settings (used if chunk doesn't override)")]
         public ChunkElevationConfig globalElevationConfig = new ChunkElevationConfig();
 
+        [Tooltip("Random curve generation (bend count, positions, lengths, offsets)")]
+        public RoadCurveSettings curveSettings = new RoadCurveSettings();
+
         public enum ElevationSelectionMode
         {
             DynamicWeightedRandom, // Procedurally rolls based on probability, weights, and min/max limits
@@ -219,7 +222,7 @@ namespace EndlessSurvival.World
 
             if (config == null) config = new ChunkElevationConfig();
 
-            // First N chunks are kept completely flat as runway
+            // First N chunks are kept completely flat and straight as runway
             bool forceFlat = _totalSpawnedCount < initialFlatChunks || !enableElevationVariation;
             bool rollSuccess = !forceFlat && (Random.value <= config.elevationChance);
 
@@ -227,125 +230,71 @@ namespace EndlessSurvival.World
 
             if (rollSuccess)
             {
-                int totalWeight = Mathf.Max(1, config.hillWeight + config.valleyWeight + config.rollingHillsWeight + config.mountainPassWeight + config.elevatedChicaneWeight + config.flatWeight);
+                int w0 = config.hillWeight;
+                int w1 = w0 + config.valleyWeight;
+                int w2 = w1 + config.rollingHillsWeight;
+                int w3 = w2 + config.mountainPassWeight;
+                int w4 = w3 + config.elevatedChicaneWeight;
+                int totalWeight = Mathf.Max(1, w4 + config.flatWeight);
                 int roll = Random.Range(0, totalWeight);
 
-                if (roll < config.hillWeight)
-                {
-                    elevationType = RoadElevationType.HillCrest;
-                }
-                else if (roll < config.hillWeight + config.valleyWeight)
-                {
-                    elevationType = RoadElevationType.ValleyDip;
-                }
-                else if (roll < config.hillWeight + config.valleyWeight + config.rollingHillsWeight)
-                {
-                    elevationType = RoadElevationType.RollingHills;
-                }
-                else if (roll < config.hillWeight + config.valleyWeight + config.rollingHillsWeight + config.mountainPassWeight)
-                {
-                    elevationType = RoadElevationType.MountainPass;
-                }
-                else if (roll < config.hillWeight + config.valleyWeight + config.rollingHillsWeight + config.mountainPassWeight + config.elevatedChicaneWeight)
-                {
-                    elevationType = RoadElevationType.ElevatedChicane;
-                }
-                else
-                {
-                    elevationType = RoadElevationType.Flat;
-                }
+                if (roll < w0) elevationType = RoadElevationType.HillCrest;
+                else if (roll < w1) elevationType = RoadElevationType.ValleyDip;
+                else if (roll < w2) elevationType = RoadElevationType.RollingHills;
+                else if (roll < w3) elevationType = RoadElevationType.MountainPass;
+                else if (roll < w4) elevationType = RoadElevationType.ElevatedChicane;
             }
+
+            float hill = 0f, dip = 0f;
+            bool forceCurve = false, sharp = false;
+            RoadCrossSectionPreset cross = RoadCrossSectionPreset.SidewalkOnly;
 
             switch (elevationType)
             {
                 case RoadElevationType.HillCrest:
-                    float hillHeight = Random.Range(config.minHillHeight, config.maxHillHeight);
-                    spline.SetElevationHillPreset(hillHeight);
-                    chunk.roadType = ChunkRoadType.Straight;
-                    chunk.crossSectionType = RoadCrossSectionPreset.GuardrailOnly;
-                    chunk.currentElevationType = RoadElevationType.HillCrest;
-                    chunk.currentElevationParam = hillHeight;
-                    roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.GuardrailOnly);
+                    hill = Random.Range(config.minHillHeight, config.maxHillHeight);
+                    cross = RoadCrossSectionPreset.GuardrailOnly;
                     break;
-
                 case RoadElevationType.ValleyDip:
-                    float dipDepth = Random.Range(config.minDipDepth, config.maxDipDepth);
-                    spline.SetDipValleyPreset(dipDepth);
-                    chunk.roadType = ChunkRoadType.Straight;
-                    chunk.crossSectionType = RoadCrossSectionPreset.OpenRoad;
-                    chunk.currentElevationType = RoadElevationType.ValleyDip;
-                    chunk.currentElevationParam = dipDepth;
-                    roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.OpenRoad);
+                    dip = Random.Range(config.minDipDepth, config.maxDipDepth);
+                    cross = RoadCrossSectionPreset.OpenRoad;
                     break;
-
                 case RoadElevationType.RollingHills:
-                    float rHill = Random.Range(config.minHillHeight, config.maxHillHeight);
-                    float rDip = Random.Range(config.minDipDepth, config.maxDipDepth);
-                    spline.SetRollingHillsPreset(rHill, rDip);
-                    chunk.roadType = ChunkRoadType.CurvedRight;
-                    chunk.crossSectionType = RoadCrossSectionPreset.GuardrailOnly;
-                    chunk.currentElevationType = RoadElevationType.RollingHills;
-                    chunk.currentElevationParam = rHill;
-                    roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.GuardrailOnly);
+                    hill = Random.Range(config.minHillHeight, config.maxHillHeight);
+                    dip = Random.Range(config.minDipDepth, config.maxDipDepth);
+                    cross = RoadCrossSectionPreset.GuardrailOnly;
                     break;
-
                 case RoadElevationType.MountainPass:
-                    float mHill = Random.Range(config.minHillHeight, config.maxHillHeight);
-                    float shift = (Random.value > 0.5f ? 1f : -1f) * Random.Range(35f, 45f);
-                    spline.SetMountainPassPreset(shift, mHill);
-                    chunk.roadType = shift > 0f ? ChunkRoadType.CurvedRight : ChunkRoadType.CurvedLeft;
-                    chunk.crossSectionType = RoadCrossSectionPreset.FullHighway;
-                    chunk.currentElevationType = RoadElevationType.MountainPass;
-                    chunk.currentElevationParam = mHill;
-                    roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.FullHighway);
+                    hill = Random.Range(config.minHillHeight, config.maxHillHeight);
+                    forceCurve = true;
+                    cross = RoadCrossSectionPreset.FullHighway;
                     break;
-
                 case RoadElevationType.ElevatedChicane:
-                    float cHill = Random.Range(config.minHillHeight * 0.7f, config.maxHillHeight * 0.7f);
-                    float cShift = (Random.value > 0.5f ? 1f : -1f) * 35f;
-                    spline.SetElevatedChicanePreset(cShift, cHill);
-                    chunk.roadType = ChunkRoadType.HazardZone;
-                    chunk.crossSectionType = RoadCrossSectionPreset.HazardFortified;
-                    chunk.currentElevationType = RoadElevationType.ElevatedChicane;
-                    chunk.currentElevationParam = cHill;
-                    roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.HazardFortified);
-                    break;
-
-                case RoadElevationType.Flat:
-                default:
-                    float curveRoll = Random.value;
-                    if (curveRoll < 0.45f)
-                    {
-                        spline.SetStraightPreset();
-                        chunk.roadType = ChunkRoadType.Straight;
-                        chunk.crossSectionType = RoadCrossSectionPreset.SidewalkOnly;
-                        roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.SidewalkOnly);
-                    }
-                    else if (curveRoll < 0.70f)
-                    {
-                        spline.SetSCurvePreset(45f);
-                        chunk.roadType = ChunkRoadType.CurvedRight;
-                        chunk.crossSectionType = RoadCrossSectionPreset.FullHighway;
-                        roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.FullHighway);
-                    }
-                    else if (curveRoll < 0.90f)
-                    {
-                        spline.SetSCurvePreset(-45f);
-                        chunk.roadType = ChunkRoadType.CurvedLeft;
-                        chunk.crossSectionType = RoadCrossSectionPreset.FullHighway;
-                        roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.FullHighway);
-                    }
-                    else
-                    {
-                        spline.SetChicanePreset(35f);
-                        chunk.roadType = ChunkRoadType.HazardZone;
-                        chunk.crossSectionType = RoadCrossSectionPreset.HazardFortified;
-                        roadGen.ApplyCrossSectionPreset(RoadCrossSectionPreset.HazardFortified);
-                    }
-                    chunk.currentElevationType = RoadElevationType.Flat;
-                    chunk.currentElevationParam = 0f;
+                    hill = Random.Range(config.minHillHeight * 0.7f, config.maxHillHeight * 0.7f);
+                    forceCurve = sharp = true;
+                    cross = RoadCrossSectionPreset.HazardFortified;
                     break;
             }
+
+            // Curve layout (bend count, positions, lengths, offsets) is fully random
+            bool curvy = !forceFlat && (forceCurve || Random.value < curveSettings.curveChance);
+            if (curvy && !forceCurve)
+            {
+                sharp = Random.value < 0.15f;
+                if (elevationType == RoadElevationType.Flat)
+                    cross = sharp ? RoadCrossSectionPreset.HazardFortified : RoadCrossSectionPreset.FullHighway;
+            }
+
+            float peak = spline.SetProceduralPreset(curveSettings, curvy, sharp, elevationType, hill, dip);
+
+            chunk.roadType = !curvy ? ChunkRoadType.Straight
+                : sharp ? ChunkRoadType.HazardZone
+                : peak > 0f ? ChunkRoadType.CurvedRight : ChunkRoadType.CurvedLeft;
+            chunk.crossSectionType = cross;
+            chunk.currentElevationType = elevationType;
+            chunk.currentElevationParam = hill > 0f ? hill : dip;
+
+            roadGen.ApplyCrossSectionPreset(cross);
         }
 
         private void ApplySequentialElevationPreset(Chunk chunk, RoadGenerator roadGen, RoadSpline spline)

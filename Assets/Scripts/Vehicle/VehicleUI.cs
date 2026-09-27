@@ -26,6 +26,13 @@ namespace EndlessSurvival.Vehicle
         [Tooltip("Dashboard panel containing speed, fuel, and controls information")]
         public GameObject dashboardPanel;
 
+        [Header("Condition UI Elements")]
+        [Tooltip("Text component displaying hull condition percentage")]
+        public Text healthText;
+
+        [Tooltip("Text component displaying warnings (out of fuel, engine broken)")]
+        public Text warningText;
+
         [Header("Dashboard UI Elements")]
         [Tooltip("Text component displaying current speed")]
         public Text speedText;
@@ -111,6 +118,22 @@ namespace EndlessSurvival.Vehicle
             if (fuelSlider != null)
             {
                 fuelSlider.value = fuelRatio;
+            }
+
+            if (healthText != null)
+            {
+                float healthRatio = vehicleController.maxHealth > 0 ? (vehicleController.currentHealth / vehicleController.maxHealth) : 0f;
+                healthText.text = $"HULL: {Mathf.RoundToInt(healthRatio * 100f)}%";
+            }
+
+            if (warningText != null)
+            {
+                if (vehicleController.IsBroken)
+                    warningText.text = "ENGINE BROKEN - exit and repair it (needs materials)";
+                else if (vehicleController.currentFuel <= 0f)
+                    warningText.text = "OUT OF FUEL - exit and refuel it (needs fuel cans)";
+                else
+                    warningText.text = string.Empty;
             }
 
             if (fuelText != null)

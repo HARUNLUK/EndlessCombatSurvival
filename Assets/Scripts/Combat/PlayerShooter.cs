@@ -246,7 +246,7 @@ namespace EndlessCombat.Combat
             if (animator == null) return;
 
             // When holstered, layer weight blends to 0, returning character to unarmed locomotion and idle
-            float targetLayerWeight = isHolstered ? 0f : 1f;
+            float targetLayerWeight = (isHolstered || currentWeapon == null) ? 0f : 1f;
             currentUpperBodyLayerWeight = Mathf.MoveTowards(currentUpperBodyLayerWeight, targetLayerWeight, Time.deltaTime * 6f);
             animator.SetLayerWeight(1, currentUpperBodyLayerWeight);
         }
@@ -502,6 +502,8 @@ namespace EndlessCombat.Combat
             aimPressed = Input.GetMouseButton(1);
 #endif
 
+            if (EndlessSurvival.Inventory.InventoryUI.IsOpen || currentWeapon == null) aimPressed = false;
+
             if (aimPressed != isAiming)
             {
                 isAiming = aimPressed;
@@ -619,6 +621,47 @@ namespace EndlessCombat.Combat
         public void SetWeapon(WeaponController newWeapon)
         {
             currentWeapon = newWeapon;
+        }
+
+        /// <summary>
+        /// Destroys the held weapon and, if a prefab is given, spawns it in the hand socket
+        /// (or holster socket while holstered). Returns the new weapon instance, or null.
+        /// </summary>
+        public WeaponController ReplaceWeapon(WeaponController weaponPrefab)
+        {
+            if (currentWeapon != null)
+            {
+                currentWeapon.CancelReload();
+                Destroy(currentWeapon.gameObject);
+                currentWeapon = null;
+            }
+
+            isShooting = false;
+            if (weaponPrefab == null) return null;
+
+            if (handSocket == null) handSocket = FindHandSocket();
+            if (handSocket == null)
+            {
+                Debug.LogWarning("[PlayerShooter] WeaponSocket not found; cannot equip weapon.", this);
+                return null;
+            }
+
+            WeaponController instance = Instantiate(weaponPrefab, handSocket);
+            handLocalPos = instance.transform.localPosition;
+            handLocalRot = instance.transform.localRotation;
+            currentWeapon = instance;
+
+            SetHolstered(isHolstered);
+            return instance;
+        }
+
+        private Transform FindHandSocket()
+        {
+            foreach (Transform child in transform.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name.Equals("WeaponSocket", System.StringComparison.OrdinalIgnoreCase)) return child;
+            }
+            return animator != null ? animator.GetBoneTransform(HumanBodyBones.RightHand) : null;
         }
     }
 }

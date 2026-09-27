@@ -3,6 +3,28 @@ using UnityEngine;
 
 namespace EndlessSurvival.World.Road
 {
+    /// <summary>Tuning for randomly generated road curves.</summary>
+    [System.Serializable]
+    public class RoadCurveSettings
+    {
+        [Tooltip("Chance a (non-runway) chunk has curves at all")]
+        [Range(0f, 1f)] public float curveChance = 0.7f;
+        [Tooltip("Min/max number of bends in a curvy chunk")]
+        [Range(1, 8)] public int minBends = 2;
+        [Range(1, 8)] public int maxBends = 5;
+        [Tooltip("Lateral offset range of each bend apex in meters")]
+        public float minShift = 15f;
+        public float maxShift = 50f;
+        [Tooltip("Absolute lateral limit from chunk center")]
+        public float maxLateral = 70f;
+        [Tooltip("Max sideways meters per forward meter (lower = gentler curves)")]
+        [Range(0.2f, 1.2f)] public float maxSlope = 0.55f;
+        [Tooltip("Tightest allowed turn radius in meters. Keeps road edges and guardrails from folding on the inside of bends")]
+        [Range(15f, 120f)] public float minTurnRadius = 35f;
+        [Tooltip("Bend length randomness: gaps vary between 1x and this multiple")]
+        [Range(1f, 4f)] public float lengthVariance = 2.5f;
+    }
+
     /// <summary>
     /// Self-contained Catmull-Rom spline representation for dynamic road pathing.
     /// Provides smooth interpolation, tangents, and presets within a 500m chunk.
@@ -38,6 +60,125 @@ namespace EndlessSurvival.World.Road
                 new Vector3(0f, baseElevation, 440f),
                 new Vector3(0f, baseElevation, 500f)
             };
+        }
+
+        /// <summary>
+        /// Builds a fully random road: bend count, bend positions along Z, bend lengths and lateral
+        /// offsets are all rolled per call. Entry/exit stay at X=0 and baseElevation so chunks still join.
+        /// Returns the signed lateral offset of the largest bend (0 when straight).
+        /// </summary>
+        public float SetProceduralPreset(RoadCurveSettings s, bool curvy, bool sharp,
+            RoadElevationType elevation, float hillHeight, float dipDepth)
+        {
+            const float edge = 60f;
+            const float length = 500f;
+            float span = length - 2f * edge;
+
+            int bends = curvy ? Random.Range(s.minBends, s.maxBends + 1) + (sharp ? 2 : 0) : 0;
+            int interior = Mathf.Max(bends, elevation == RoadElevationType.Flat ? 1 : 5);
+
+            // Random gap lengths between control points -> random bend lengths
+            float[] gaps = new float[interior + 1];
+            float total = 0f;
+            for (int i = 0; i < gaps.Length; i++)
+            {
+                gaps[i] = Random.Range(1f, Mathf.Max(1.01f, s.lengthVariance));
+                total += gaps[i];
+            }
+
+            var pts = new List<Vector3> { new Vector3(0f, baseElevation, 0f) };
+            float prevZ = edge, prevX = 0f, cum = 0f;
+            float sign = Random.value > 0.5f ? 1f : -1f;
+            float peak = 0f;
+            float minAmp = sharp ? Mathf.Lerp(s.minShift, s.maxShift, 0.5f) : s.minShift;
+
+            for (int i = 0; i < interior; i++)
+            {
+                cum += gaps[i];
+                float z = edge + span * (cum / total);
+                float x = 0f;
+
+                if (curvy && i < bends)
+                {
+                    if (i > 0 && Random.value < 0.75f) sign = -sign;
+                    x = sign * Random.Range(minAmp, s.maxShift);
+                    x = Mathf.Clamp(x, prevX - s.maxSlope * (z - prevZ), prevX + s.maxSlope * (z - prevZ));
+                    float toExit = s.maxSlope * (length - edge - z);
+                    x = Mathf.Clamp(x, -Mathf.Min(s.maxLateral, toExit), Mathf.Min(s.maxLateral, toExit));
+                    if (Mathf.Abs(x) > Mathf.Abs(peak)) peak = x;
+                }
+
+                pts.Add(new Vector3(x, baseElevation + ElevationOffset(z / length, elevation, hillHeight, dipDepth), z));
+                prevZ = z;
+                prevX = x;
+            }
+
+            pts.Insert(1, new Vector3(0f, baseElevation + ElevationOffset(edge / length, elevation, hillHeight, dipDepth), edge));
+            pts.Add(new Vector3(0f, baseElevation + ElevationOffset((length - edge) / length, elevation, hillHeight, dipDepth), length - edge));
+            pts.Add(new Vector3(0f, baseElevation, length));
+            waypoints = pts;
+
+            // Soften bends until no turn is tighter than minTurnRadius
+            if (curvy)
+            {
+                for (int attempt = 0; attempt < 10 && MinTurnRadius() < s.minTurnRadius; attempt++)
+                {
+                    for (int i = 0; i < waypoints.Count; i++)
+                    {
+                        Vector3 wp = waypoints[i];
+                        wp.x *= 0.85f;
+                        waypoints[i] = wp;
+                    }
+                }
+                peak = 0f;
+                foreach (var wp in waypoints)
+                    if (Mathf.Abs(wp.x) > Mathf.Abs(peak)) peak = wp.x;
+            }
+            return peak;
+        }
+
+        /// <summary>Smallest horizontal turn radius along the current spline (Menger curvature, 5m samples).</summary>
+        public float MinTurnRadius()
+        {
+            const float h = 5f;
+            float minRadius = float.MaxValue;
+            for (float z = h; z <= 500f - h; z += h)
+            {
+                Vector3 a = GetPointAtZ(z - h), b = GetPointAtZ(z), c = GetPointAtZ(z + h);
+                float cross = Mathf.Abs((b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x));
+                if (cross < 1e-4f) continue;
+                float ab = new Vector2(b.x - a.x, b.z - a.z).magnitude;
+                float bc = new Vector2(c.x - b.x, c.z - b.z).magnitude;
+                float ca = new Vector2(a.x - c.x, a.z - c.z).magnitude;
+                float radius = (ab * bc * ca) / (2f * cross);
+                if (radius < minRadius) minRadius = radius;
+            }
+            return minRadius;
+        }
+
+        private static float ElevationOffset(float u, RoadElevationType type, float hill, float dip)
+        {
+            float f;
+            switch (type)
+            {
+                case RoadElevationType.HillCrest:
+                case RoadElevationType.MountainPass:
+                case RoadElevationType.ElevatedChicane:
+                    f = hill * Mathf.Sin(Mathf.PI * u);
+                    break;
+                case RoadElevationType.ValleyDip:
+                    f = -dip * Mathf.Sin(Mathf.PI * u);
+                    break;
+                case RoadElevationType.RollingHills:
+                    float w = Mathf.Sin(2f * Mathf.PI * u);
+                    f = w * (w > 0f ? hill : dip);
+                    break;
+                default:
+                    return 0f;
+            }
+            // Flatten the ends so slope is zero at chunk borders
+            float window = Mathf.SmoothStep(0f, 1f, u / 0.18f) * Mathf.SmoothStep(0f, 1f, (1f - u) / 0.18f);
+            return f * window;
         }
 
         [ContextMenu("Curve Preset: S-Curve Right (Sağ Viraj)")]

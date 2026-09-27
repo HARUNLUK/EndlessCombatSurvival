@@ -259,7 +259,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4416926081852918481, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_Name
-      value: Enemy  Variant
+      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 4416926081852918481, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: m_TagString
@@ -1155,6 +1155,8 @@ MonoBehaviour:
   attackRange: 15
   attackCooldown: 1.5
   damage: 10
+  dropTable: {fileID: 11400000, guid: c695a741898ba9b4b91cb9fd935f1536, type: 2}
+  heldWeaponItem: {fileID: 11400000, guid: fc03a84f96abd5840990848f0f1e6a5c, type: 2}
   target: {fileID: 0}
 --- !u!1 &6668634541437508130 stripped
 GameObject:

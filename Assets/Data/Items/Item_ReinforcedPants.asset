@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_ReinforcedPants
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: Reinforced Pants
+  category: 7
+  description: Pants with hard knee and shin plates.
+  weight: 2
+  value: 70
+  useAmount: 1
+  equipSlot: 3
+  armor: 6
+  weaponPrefab: {fileID: 0}
+  worldColor: {r: 0.25, g: 0.25, b: 0.3, a: 1}
+  worldScale: {x: 0.35, y: 0.15, z: 0.3}

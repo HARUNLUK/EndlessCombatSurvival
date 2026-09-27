@@ -57,6 +57,17 @@ namespace EndlessSurvival.World.Road
         private MeshCollider _meshCollider;
         private Chunk _parentChunk;
 
+        // Meshes created at runtime by this component; freed on rebuild/destroy to avoid leaking per chunk
+        private Mesh _ownedRoadMesh;
+        private Mesh _ownedGuardMesh;
+
+        private void OnDestroy()
+        {
+            if (!Application.isPlaying) return;
+            if (_ownedRoadMesh != null) Destroy(_ownedRoadMesh);
+            if (_ownedGuardMesh != null) Destroy(_ownedGuardMesh);
+        }
+
         private void Awake()
         {
             EnsureComponents();
@@ -179,12 +190,68 @@ namespace EndlessSurvival.World.Road
             GenerateGuardrails();
         }
 
+        /// <summary>Cross-section dimensions shared by the road mesh, guardrails and terrain adapter.</summary>
+        private struct CrossSectionDims
+        {
+            public float roadWidth, curbWidth, curbHeight, sidewalkWidth;
+            public bool guardrails;
+            public float HalfWidth => roadWidth * 0.5f + curbWidth + sidewalkWidth;
+        }
+
+        private CrossSectionDims ComputeCrossSection()
+        {
+            var p = activeProfile;
+            var d = new CrossSectionDims { roadWidth = p != null ? p.roadWidth : 11.0f, guardrails = hasGuardrails };
+
+            switch (crossSectionPreset)
+            {
+                case RoadCrossSectionPreset.FullHighway:
+                    d.curbWidth = p != null ? p.curbWidth : 0.30f;
+                    d.curbHeight = p != null ? p.curbHeight : 0.18f;
+                    d.sidewalkWidth = p != null ? p.shoulderWidth : 2.2f;
+                    d.guardrails = true;
+                    break;
+                case RoadCrossSectionPreset.SidewalkOnly:
+                    d.curbWidth = p != null ? p.curbWidth : 0.30f;
+                    d.curbHeight = p != null ? p.curbHeight : 0.18f;
+                    d.sidewalkWidth = p != null ? p.shoulderWidth : 2.4f;
+                    d.guardrails = false;
+                    break;
+                case RoadCrossSectionPreset.GuardrailOnly:
+                    d.curbWidth = 0.15f;
+                    d.curbHeight = 0.05f;
+                    d.sidewalkWidth = 0.85f;
+                    d.guardrails = true;
+                    break;
+                case RoadCrossSectionPreset.OpenRoad:
+                    d.curbWidth = 0.05f;
+                    d.curbHeight = 0.0f;
+                    d.sidewalkWidth = 1.0f;
+                    d.guardrails = false;
+                    break;
+                case RoadCrossSectionPreset.HazardFortified:
+                    d.roadWidth = Mathf.Min(d.roadWidth, 9.5f);
+                    d.curbWidth = 0.35f;
+                    d.curbHeight = 0.22f;
+                    d.sidewalkWidth = 1.2f;
+                    d.guardrails = true;
+                    break;
+                case RoadCrossSectionPreset.ProfileDefault:
+                default:
+                    d.curbWidth = hasCurbs ? (p != null ? p.curbWidth : 0.30f) : 0.05f;
+                    d.curbHeight = hasCurbs ? (p != null ? p.curbHeight : 0.18f) : 0.0f;
+                    d.sidewalkWidth = hasSidewalks ? (p != null ? p.shoulderWidth : 2.2f) : 0.85f;
+                    break;
+            }
+            return d;
+        }
+
+        /// <summary>Number of cross-section rings; dense enough (~2.5m) that tight bends stay smooth.</summary>
+        private int SampleSteps => Mathf.Max(200, spline != null ? spline.resolution : 0);
+
         public float GetTotalHalfWidth()
         {
-            float roadW = activeProfile != null ? activeProfile.roadWidth : 11f;
-            float curbW = hasCurbs && activeProfile != null ? activeProfile.curbWidth : 0f;
-            float sideW = hasSidewalks && activeProfile != null ? activeProfile.shoulderWidth : 0f;
-            return (roadW * 0.5f) + curbW + sideW;
+            return ComputeCrossSection().HalfWidth;
         }
 
         [ContextMenu("Build Road Mesh")]
@@ -197,59 +264,17 @@ namespace EndlessSurvival.World.Road
                 ApplyBiomeProfile();
             }
 
-            float baseRoadWidth = activeProfile != null ? activeProfile.roadWidth : 11.0f;
-            float roadWidth = baseRoadWidth;
-            float curbWidth = 0.30f;
-            float curbHeight = 0.18f;
-            float sidewalkWidth = 2.2f;
-            bool enableGuardrails = hasGuardrails;
-
-            switch (crossSectionPreset)
-            {
-                case RoadCrossSectionPreset.FullHighway:
-                    curbWidth = activeProfile != null ? activeProfile.curbWidth : 0.30f;
-                    curbHeight = activeProfile != null ? activeProfile.curbHeight : 0.18f;
-                    sidewalkWidth = activeProfile != null ? activeProfile.shoulderWidth : 2.2f;
-                    enableGuardrails = true;
-                    break;
-                case RoadCrossSectionPreset.SidewalkOnly:
-                    curbWidth = activeProfile != null ? activeProfile.curbWidth : 0.30f;
-                    curbHeight = activeProfile != null ? activeProfile.curbHeight : 0.18f;
-                    sidewalkWidth = activeProfile != null ? activeProfile.shoulderWidth : 2.4f;
-                    enableGuardrails = false;
-                    break;
-                case RoadCrossSectionPreset.GuardrailOnly:
-                    curbWidth = 0.15f;
-                    curbHeight = 0.05f;
-                    sidewalkWidth = 0.85f;
-                    enableGuardrails = true;
-                    break;
-                case RoadCrossSectionPreset.OpenRoad:
-                    curbWidth = 0.05f;
-                    curbHeight = 0.0f;
-                    sidewalkWidth = 1.0f;
-                    enableGuardrails = false;
-                    break;
-                case RoadCrossSectionPreset.HazardFortified:
-                    roadWidth = Mathf.Min(baseRoadWidth, 9.5f);
-                    curbWidth = 0.35f;
-                    curbHeight = 0.22f;
-                    sidewalkWidth = 1.2f;
-                    enableGuardrails = true;
-                    break;
-                case RoadCrossSectionPreset.ProfileDefault:
-                default:
-                    curbWidth = hasCurbs ? (activeProfile != null ? activeProfile.curbWidth : 0.30f) : 0.05f;
-                    curbHeight = hasCurbs ? (activeProfile != null ? activeProfile.curbHeight : 0.18f) : 0.0f;
-                    sidewalkWidth = hasSidewalks ? (activeProfile != null ? activeProfile.shoulderWidth : 2.2f) : 0.85f;
-                    enableGuardrails = hasGuardrails;
-                    break;
-            }
+            CrossSectionDims dims = ComputeCrossSection();
+            float roadWidth = dims.roadWidth;
+            float curbWidth = dims.curbWidth;
+            float curbHeight = dims.curbHeight;
+            float sidewalkWidth = dims.sidewalkWidth;
+            bool enableGuardrails = dims.guardrails;
 
             float skirtDepth = 0.80f;
             float tileRate = activeProfile != null ? activeProfile.textureTileRate : 0.15f;
 
-            int steps = Mathf.Max(10, spline.resolution);
+            int steps = SampleSteps;
             // 15 vertices per ring:
             // 0..4: Road surface (Left edge, Left lane, Center, Right lane, Right edge)
             // 5..7: Left Curb (Bottom at road level, Top inner, Top outer)
@@ -450,6 +475,11 @@ namespace EndlessSurvival.World.Road
             mesh.RecalculateBounds();
             mesh.RecalculateTangents();
 
+            if (Application.isPlaying)
+            {
+                if (_ownedRoadMesh != null) Destroy(_ownedRoadMesh);
+                _ownedRoadMesh = mesh;
+            }
             _meshFilter.sharedMesh = mesh;
             _meshCollider.sharedMesh = mesh;
 
@@ -475,7 +505,7 @@ namespace EndlessSurvival.World.Road
                 SyncSocketToEnd();
             }
 
-            GenerateGuardrails(enableGuardrails, halfRoad + curbWidth + sidewalkWidth);
+            GenerateGuardrails(enableGuardrails, halfRoad + curbWidth + sidewalkWidth, curbHeight);
 
             return mesh;
         }
@@ -717,15 +747,11 @@ namespace EndlessSurvival.World.Road
 
         public void GenerateGuardrails()
         {
-            float baseRoadWidth = activeProfile != null ? activeProfile.roadWidth : 11.0f;
-            float roadWidth = (crossSectionPreset == RoadCrossSectionPreset.HazardFortified) ? Mathf.Min(baseRoadWidth, 9.5f) : baseRoadWidth;
-            float curbW = hasCurbs ? (activeProfile != null ? activeProfile.curbWidth : 0.30f) : 0.05f;
-            float sidewalkW = hasSidewalks ? (activeProfile != null ? activeProfile.shoulderWidth : 2.2f) : 0.85f;
-            float computedOffset = (roadWidth * 0.5f) + curbW + sidewalkW;
-            GenerateGuardrails(hasGuardrails, computedOffset);
+            CrossSectionDims dims = ComputeCrossSection();
+            GenerateGuardrails(dims.guardrails, dims.HalfWidth, dims.curbHeight);
         }
 
-        public void GenerateGuardrails(bool enabled, float computedOffset)
+        private void GenerateGuardrails(bool enabled, float computedOffset, float curbHeight)
         {
             // Destroy all existing guardrails to prevent duplicates in the same frame
             Transform existingHolder = transform.Find("Guardrails");
@@ -755,7 +781,12 @@ namespace EndlessSurvival.World.Road
             MeshRenderer renderer = guardrailsGo.AddComponent<MeshRenderer>();
             MeshCollider collider = guardrailsGo.AddComponent<MeshCollider>();
 
-            Mesh mesh = BuildGuardrailMesh(computedOffset);
+            Mesh mesh = BuildGuardrailMesh(computedOffset, curbHeight);
+            if (Application.isPlaying)
+            {
+                if (_ownedGuardMesh != null) Destroy(_ownedGuardMesh);
+                _ownedGuardMesh = mesh;
+            }
             filter.sharedMesh = mesh;
             collider.sharedMesh = mesh;
 
@@ -766,12 +797,11 @@ namespace EndlessSurvival.World.Road
             renderer.sharedMaterial = gMat;
         }
 
-        private Mesh BuildGuardrailMesh(float offset)
+        private Mesh BuildGuardrailMesh(float offset, float curbH)
         {
-            float curbH = hasCurbs ? (activeProfile != null ? activeProfile.curbHeight : 0.18f) : 0.0f;
             float sidewalkY = roadElevation + curbH;
 
-            int steps = Mathf.Max(20, spline.resolution);
+            int steps = SampleSteps;
             float postSpacing = activeProfile != null ? Mathf.Max(2f, activeProfile.guardrailSpacing) : 3.5f;
 
             List<Vector3> verts = new List<Vector3>();

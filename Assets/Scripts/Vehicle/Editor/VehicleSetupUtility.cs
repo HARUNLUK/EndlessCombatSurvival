@@ -3,14 +3,139 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 using UnityEngine;
 using EndlessSurvival.Vehicle;
+using EndlessSurvival.Inventory;
 using Unity.Cinemachine;
 
 namespace EndlessSurvival.Vehicle.Editor
 {
     public static class VehicleSetupUtility
     {
+        private const string PackAdventurePickupPath = "Assets/Pack_Adventure/Prefabs/pickup.prefab";
+
+        /// <summary>
+        /// Removes whatever custom vehicle model is currently in the scene and rebuilds the drivable
+        /// vehicle from the real Pack_Adventure pickup art asset. Any extra gameplay component found on
+        /// the old vehicle (VehicleUI, VehicleStorage, VehicleMaintenance, ...) is copied over as-is, and
+        /// the InventoryUI's direct references to the old vehicle's storage/maintenance/interaction are
+        /// repointed to the new one, so the inventory/maintenance systems keep working unmodified.
+        /// </summary>
+        [MenuItem("Endless Survival/Restore Pack Adventure Pickup")]
+        public static void RestorePackAdventurePickup()
+        {
+            GameObject pickupPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PackAdventurePickupPath);
+            if (pickupPrefab == null)
+            {
+                Debug.LogError("[VehicleSetupUtility] Pack_Adventure pickup prefab not found at " + PackAdventurePickupPath);
+                return;
+            }
+
+            VehicleInteraction oldInteraction = UnityEngine.Object.FindFirstObjectByType<VehicleInteraction>(FindObjectsInactive.Include);
+            Vector3 position = new Vector3(0f, 1f, 0f);
+            Quaternion rotation = Quaternion.identity;
+            GameObject oldRoot = null;
+            List<Component> extraComponents = new List<Component>();
+
+            if (oldInteraction != null)
+            {
+                oldRoot = oldInteraction.gameObject;
+                position = oldRoot.transform.position;
+                rotation = oldRoot.transform.rotation;
+
+                // Anything beyond the base drive/interaction set is a gameplay hookup (inventory, storage,
+                // maintenance, ...) that SetupPickupInActiveScene below does not know how to build itself.
+                foreach (Component c in oldRoot.GetComponents<Component>())
+                {
+                    if (c is Transform || c is Rigidbody || c is Collider
+                        || c is VehicleController || c is VehicleInteraction)
+                        continue;
+                    extraComponents.Add(c);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[VehicleSetupUtility] No existing vehicle found in the scene; the pickup will be placed at the origin.");
+            }
+
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(pickupPrefab);
+            Undo.RegisterCreatedObjectUndo(instance, "Restore Pack Adventure pickup");
+            instance.name = "pickup";
+            instance.transform.SetPositionAndRotation(position, rotation);
+
+            SetupPickupInActiveScene();
+
+            GameObject configured = GameObject.Find("pickup");
+            if (configured == null)
+            {
+                Debug.LogError("[VehicleSetupUtility] Setup did not produce a 'pickup' object; aborting before touching the old vehicle.");
+                return;
+            }
+
+            Dictionary<Type, Component> newExtras = new Dictionary<Type, Component>();
+            foreach (Component c in extraComponents)
+            {
+                if (c == null) continue; // already destroyed / missing script
+
+                ComponentUtility.CopyComponent(c);
+                if (ComponentUtility.PasteComponentAsNew(configured))
+                {
+                    Component pasted = configured.GetComponent(c.GetType());
+                    newExtras[c.GetType()] = pasted;
+                }
+                else
+                {
+                    Debug.LogWarning("[VehicleSetupUtility] Could not copy component " + c.GetType().Name + " onto the pickup.");
+                }
+            }
+
+            RepointInventoryReferences(configured, newExtras);
+
+            if (oldRoot != null)
+                Undo.DestroyObjectImmediate(oldRoot);
+
+            EditorUtility.SetDirty(configured);
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            EditorSceneManager.SaveOpenScenes();
+            Selection.activeGameObject = configured;
+            Debug.Log("[VehicleSetupUtility] Restored the Pack_Adventure pickup as the drivable vehicle (" + newExtras.Count + " gameplay component(s) carried over).");
+        }
+
+        private static void RepointInventoryReferences(GameObject configured, Dictionary<Type, Component> newExtras)
+        {
+            InventoryUI inventoryUi = UnityEngine.Object.FindFirstObjectByType<InventoryUI>(FindObjectsInactive.Include);
+            if (inventoryUi == null) return;
+
+            bool changed = false;
+            Undo.RecordObject(inventoryUi, "Repoint vehicle references");
+
+            if (newExtras.TryGetValue(typeof(VehicleStorage), out Component storage))
+            {
+                inventoryUi.vehicleStorage = (VehicleStorage)storage;
+                changed = true;
+            }
+
+            if (newExtras.TryGetValue(typeof(VehicleMaintenance), out Component maintenance))
+            {
+                inventoryUi.vehicleMaintenance = (VehicleMaintenance)maintenance;
+                changed = true;
+            }
+
+            VehicleInteraction newInteraction = configured.GetComponent<VehicleInteraction>();
+            if (newInteraction != null)
+            {
+                inventoryUi.vehicleInteraction = newInteraction;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                EditorUtility.SetDirty(inventoryUi);
+                Debug.Log("[VehicleSetupUtility] Repointed InventoryUI's vehicle references to the new pickup.");
+            }
+        }
+
         [InitializeOnLoadMethod]
         private static void AutoSetupIfMissing()
         {
@@ -268,7 +393,7 @@ namespace EndlessSurvival.Vehicle.Editor
                 pickupGo.transform.position = pos;
             }
 
-            string prefabPath = "Assets/Prefabs/Vehicle_Jeep.prefab";
+            string prefabPath = "Assets/Prefabs/Vehicle_Pickup.prefab";
             if (!AssetDatabase.IsValidFolder("Assets/Prefabs"))
             {
                 AssetDatabase.CreateFolder("Assets", "Prefabs");

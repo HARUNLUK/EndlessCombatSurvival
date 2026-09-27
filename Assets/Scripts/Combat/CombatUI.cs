@@ -55,9 +55,14 @@ namespace EndlessCombat.Combat
         {
             if (playerShooter == null) return;
 
+            if (playerShooter.CurrentWeapon != weaponController)
+            {
+                RebindWeapon(playerShooter.CurrentWeapon);
+            }
+
             if (crosshairRoot != null)
             {
-                if (playerShooter.IsHolstered)
+                if (playerShooter.IsHolstered || playerShooter.CurrentWeapon == null)
                 {
                     crosshairRoot.SetActive(false);
                 }
@@ -87,6 +92,31 @@ namespace EndlessCombat.Combat
             }
 
             wasHolstered = playerShooter.IsHolstered;
+        }
+
+        private void RebindWeapon(WeaponController newWeapon)
+        {
+            if (weaponController != null)
+            {
+                weaponController.onAmmoChanged.RemoveListener(UpdateAmmoDisplay);
+                weaponController.onReloadStart.RemoveListener(ShowReloading);
+                weaponController.onReloadComplete.RemoveListener(HideReloading);
+            }
+
+            weaponController = newWeapon;
+            HideReloading();
+
+            if (weaponController != null)
+            {
+                weaponController.onAmmoChanged.AddListener(UpdateAmmoDisplay);
+                weaponController.onReloadStart.AddListener(ShowReloading);
+                weaponController.onReloadComplete.AddListener(HideReloading);
+                UpdateAmmoDisplay(weaponController.CurrentAmmo, weaponController.ReserveAmmo);
+            }
+            else if (ammoText != null)
+            {
+                ammoText.text = "NO WEAPON";
+            }
         }
 
         private void UpdateAmmoDisplay(int current, int reserve)

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_Smg
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: SMG
+  category: 6
+  description: Compact and fast, but weak per shot.
+  weight: 2.5
+  value: 110
+  useAmount: 1
+  equipSlot: 5
+  armor: 0
+  weaponPrefab: {fileID: 5682234443793956795, guid: 82ce8f0ff0dd04843be4aa8b05419a1d, type: 3}
+  worldColor: {r: 0.3, g: 0.3, b: 0.35, a: 1}
+  worldScale: {x: 0.5, y: 0.12, z: 0.15}
+  worldModel: {fileID: 1007872867208780327, guid: 2cc1f39ee68ba4d40a992919d421e81a, type: 3}
+  worldModelScale: 0.85

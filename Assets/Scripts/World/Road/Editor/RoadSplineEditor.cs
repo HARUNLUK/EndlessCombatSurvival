@@ -78,6 +78,12 @@ namespace EndlessSurvival.World.Road.Editor
             }
             EditorGUILayout.EndHorizontal();
 
+            Chunk parentChunk = _generator.GetComponentInParent<Chunk>();
+            if (parentChunk != null && GUILayout.Button("Random Curves (from Chunk Road Type)"))
+            {
+                EndlessSurvival.World.Editor.ChunkEditor.Regenerate(parentChunk);
+            }
+
             EditorGUILayout.Space(8);
             GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
             if (GUILayout.Button("Rebuild Road & Terrain Now", GUILayout.Height(32)))

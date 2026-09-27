@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using EndlessCombat.Combat;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -7,7 +8,7 @@ using UnityEngine.InputSystem;
 namespace EndlessSurvival.Vehicle
 {
     [RequireComponent(typeof(Rigidbody))]
-    public class VehicleController : MonoBehaviour
+    public class VehicleController : MonoBehaviour, IDamageable
     {
         public enum DriveType
         {
@@ -71,6 +72,10 @@ namespace EndlessSurvival.Vehicle
         [Tooltip("Passive engine braking torque applied when releasing gas (Nm)")]
         public float coastBrakeTorque = 150f;
 
+        [Header("Air Physics")]
+        [Tooltip("Gravity multiplier applied only while every wheel is off the ground. Large vehicles look floaty at normal gravity.")]
+        public float airGravityMultiplier = 2.5f;
+
         [Header("Status & GDD Stats")]
         [Tooltip("Whether the vehicle is currently driven by the player")]
         public bool isDriven = false;
@@ -85,6 +90,21 @@ namespace EndlessSurvival.Vehicle
         public float currentHealth = 100f;
         public float maxHealth = 100f;
 
+        [Header("Damage & Breakdown")]
+        [Tooltip("Impact speed (m/s) below which collisions do no damage")]
+        public float collisionDamageThreshold = 7f;
+
+        [Tooltip("Damage per m/s of impact speed above the threshold")]
+        public float collisionDamageScale = 3f;
+
+        [Tooltip("Multiplier applied to bullet damage received by the vehicle body")]
+        [Range(0f, 1f)]
+        public float bulletDamageMultiplier = 0.3f;
+
+        [Tooltip("Below this health ratio the engine loses power")]
+        [Range(0f, 1f)]
+        public float weakEngineHealthRatio = 0.3f;
+
         // Runtime state
         private Rigidbody _rb;
         private float _currentSteerAngle;
@@ -94,6 +114,53 @@ namespace EndlessSurvival.Vehicle
 
         public float CurrentSpeedKmh => _rb != null ? _rb.linearVelocity.magnitude * 3.6f : 0f;
         public Rigidbody Rigidbody => _rb;
+
+        public bool IsBroken => currentHealth <= 0f;
+        public bool IsDead => IsBroken;
+
+        public float HealthRatio => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
+
+        public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
+        {
+            ApplyDamage(damage * bulletDamageMultiplier);
+        }
+
+        public void ApplyDamage(float amount)
+        {
+            if (amount <= 0f || IsBroken) return;
+            currentHealth = Mathf.Max(0f, currentHealth - amount);
+        }
+
+        /// <summary>Adds fuel up to the tank capacity and returns the amount actually added.</summary>
+        public float Refuel(float amount)
+        {
+            float before = currentFuel;
+            currentFuel = Mathf.Min(maxFuel, currentFuel + Mathf.Max(0f, amount));
+            return currentFuel - before;
+        }
+
+        /// <summary>Restores health up to the maximum and returns the amount actually restored.</summary>
+        public float Repair(float amount)
+        {
+            float before = currentHealth;
+            currentHealth = Mathf.Min(maxHealth, currentHealth + Mathf.Max(0f, amount));
+            return currentHealth - before;
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            float impact = collision.relativeVelocity.magnitude;
+            if (impact <= collisionDamageThreshold) return;
+            ApplyDamage((impact - collisionDamageThreshold) * collisionDamageScale);
+        }
+
+        private float GetPowerFactor()
+        {
+            if (IsBroken) return 0f;
+            float ratio = HealthRatio;
+            if (weakEngineHealthRatio <= 0f || ratio >= weakEngineHealthRatio) return 1f;
+            return Mathf.Lerp(0.5f, 1f, ratio / weakEngineHealthRatio);
+        }
 
         private void Awake()
         {
@@ -159,6 +226,24 @@ namespace EndlessSurvival.Vehicle
             ApplyAntiRollBars();
             ApplyDownforce();
             ApplyTractionControl();
+            ApplyAirGravity();
+        }
+
+        private bool IsAirborne()
+        {
+            return !IsWheelGrounded(frontLeftCollider) && !IsWheelGrounded(frontRightCollider)
+                && !IsWheelGrounded(rearLeftCollider) && !IsWheelGrounded(rearRightCollider);
+        }
+
+        private static bool IsWheelGrounded(WheelCollider wc)
+        {
+            return wc != null && wc.isGrounded;
+        }
+
+        private void ApplyAirGravity()
+        {
+            if (_rb == null || airGravityMultiplier <= 1f || !IsAirborne()) return;
+            _rb.AddForce(Physics.gravity * (airGravityMultiplier - 1f), ForceMode.Acceleration);
         }
 
         private void HandleInput()
@@ -186,7 +271,7 @@ namespace EndlessSurvival.Vehicle
 
         private void ConsumeFuel()
         {
-            if (currentFuel > 0f && Mathf.Abs(_verticalInput) > 0.05f)
+            if (currentFuel > 0f && !IsBroken && Mathf.Abs(_verticalInput) > 0.05f)
             {
                 currentFuel -= fuelConsumptionRate * Time.deltaTime;
                 if (currentFuel < 0f) currentFuel = 0f;
@@ -195,8 +280,8 @@ namespace EndlessSurvival.Vehicle
 
         private void ApplyMotor()
         {
-            float effectiveVerticalInput = (currentFuel > 0f) ? _verticalInput : 0f;
-            float torque = effectiveVerticalInput * motorForce;
+            float effectiveVerticalInput = (currentFuel > 0f && !IsBroken) ? _verticalInput : 0f;
+            float torque = effectiveVerticalInput * motorForce * GetPowerFactor();
 
             float currentBrakeTorque;
             if (_isBraking)

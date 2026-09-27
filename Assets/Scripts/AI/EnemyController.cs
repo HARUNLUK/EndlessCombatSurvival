@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using EndlessCombat.Combat;
 using System.Collections.Generic;
+using EndlessSurvival.Inventory;
 
 namespace EndlessCombat.AI
 {
@@ -20,6 +21,13 @@ namespace EndlessCombat.AI
         public float attackCooldown = 1.5f;
         public float damage = 10f;
         private float lastAttackTime;
+
+        [Header("Loot")]
+        [Tooltip("Loot rolled and dropped as pickups when this enemy dies")]
+        public LootTable dropTable;
+
+        [Tooltip("Item version of the weapon this enemy carries; dropped as a pickup on death (needs Drop Table for the pickup prefab)")]
+        public ItemDefinition heldWeaponItem;
 
         [Header("References")]
         public Transform target;
@@ -191,8 +199,21 @@ namespace EndlessCombat.AI
             if (agent != null) agent.enabled = false;
             
             EnableRagdoll();
-            
+
+            LootSpawner.DropLoot(dropTable, transform.position);
+            DropHeldWeapon();
+
             Destroy(gameObject, 15f); // 15 saniye sonra cesedi sil
+        }
+
+        private void DropHeldWeapon()
+        {
+            if (heldWeaponItem == null || dropTable == null || dropTable.pickupPrefab == null) return;
+
+            Vector3 position = weapon != null ? weapon.transform.position : transform.position + Vector3.up;
+            WorldPickup.Spawn(dropTable.pickupPrefab, heldWeaponItem, 1, position, null);
+
+            if (weapon != null) weapon.gameObject.SetActive(false);
         }
 
         private void SetupRagdoll()

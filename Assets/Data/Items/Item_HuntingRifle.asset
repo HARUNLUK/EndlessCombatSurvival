@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_HuntingRifle
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: Hunting Rifle
+  category: 6
+  description: Slow, accurate and hits hard.
+  weight: 4
+  value: 130
+  useAmount: 1
+  equipSlot: 5
+  armor: 0
+  weaponPrefab: {fileID: 8646480309787850917, guid: f00b4870005afdd4cbdb9212885e2625, type: 3}
+  worldColor: {r: 0.45, g: 0.3, b: 0.15, a: 1}
+  worldScale: {x: 0.8, y: 0.1, z: 0.15}
+  worldModel: {fileID: 1007872867208780327, guid: 2cc1f39ee68ba4d40a992919d421e81a, type: 3}
+  worldModelScale: 1.05

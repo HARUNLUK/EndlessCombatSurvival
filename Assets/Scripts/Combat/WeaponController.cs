@@ -184,6 +184,23 @@ namespace EndlessCombat.Combat
             return true;
         }
 
+        /// <summary>Removes all magazine and reserve rounds and returns the total.</summary>
+        public int TakeAllAmmo()
+        {
+            int total = currentAmmo + reserveAmmo;
+            currentAmmo = 0;
+            reserveAmmo = 0;
+            NotifyAmmoChanged();
+            return total;
+        }
+
+        public void AddReserveAmmo(int amount)
+        {
+            if (amount <= 0) return;
+            reserveAmmo += amount;
+            NotifyAmmoChanged();
+        }
+
         public bool TryReload()
         {
             if (isReloading) return false;
