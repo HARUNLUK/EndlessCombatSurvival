@@ -1959,11 +1959,11 @@ MonoBehaviour:
   isDriven: 0
   currentFuel: 100
   maxFuel: 100
-  fuelConsumptionRate: 0.5
+  fuelConsumptionRate: 0.1
   currentHealth: 100
   maxHealth: 100
-  collisionDamageThreshold: 7
-  collisionDamageScale: 3
+  collisionDamageThreshold: 14
+  collisionDamageScale: 0.5
   bulletDamageMultiplier: 0.3
   weakEngineHealthRatio: 0.3
 --- !u!114 &7195314199008806507

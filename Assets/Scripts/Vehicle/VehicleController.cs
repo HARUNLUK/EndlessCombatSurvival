@@ -84,7 +84,7 @@ namespace EndlessSurvival.Vehicle
         public float currentFuel = 100f;
         public float maxFuel = 100f;
         [Tooltip("Fuel consumed per second during driving")]
-        public float fuelConsumptionRate = 0.5f;
+        public float fuelConsumptionRate = 0.1f;
 
         [Tooltip("Vehicle body health")]
         public float currentHealth = 100f;
@@ -92,10 +92,10 @@ namespace EndlessSurvival.Vehicle
 
         [Header("Damage & Breakdown")]
         [Tooltip("Impact speed (m/s) below which collisions do no damage")]
-        public float collisionDamageThreshold = 7f;
+        public float collisionDamageThreshold = 14f;
 
         [Tooltip("Damage per m/s of impact speed above the threshold")]
-        public float collisionDamageScale = 3f;
+        public float collisionDamageScale = 0.5f;
 
         [Tooltip("Multiplier applied to bullet damage received by the vehicle body")]
         [Range(0f, 1f)]

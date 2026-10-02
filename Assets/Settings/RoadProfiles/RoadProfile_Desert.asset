@@ -22,7 +22,7 @@ MonoBehaviour:
   shoulderWidth: 3
   roadMaterial: {fileID: 2100000, guid: 6e0c90106271f2a4bb445e6be927e928, type: 2}
   curbMaterial: {fileID: 2100000, guid: bde5d65fe4ffdff4f9a990b387e132ec, type: 2}
-  shoulderMaterial: {fileID: 2100000, guid: 24f55b77f670e384d90b9b32a82a8e3f, type: 2}
+  shoulderMaterial: {fileID: 2100000, guid: 80d217481349c2a41be6d78dd0900d67, type: 2}
   textureTileRate: 0.2
   hasGuardrails: 1
   guardrailMaterial: {fileID: 2100000, guid: 370934bc4e131d44da70eb3051ed25c5, type: 2}

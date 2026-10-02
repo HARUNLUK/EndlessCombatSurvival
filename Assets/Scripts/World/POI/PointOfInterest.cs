@@ -1,24 +1,37 @@
 using UnityEngine;
+using EndlessSurvival.World;
 
 namespace EndlessSurvival.World.POI
 {
     public abstract class PointOfInterest : MonoBehaviour
     {
-        [Tooltip("Sıfır ile bir arasında bu POI'nin var olma ihtimali (1 = kesin çıkar).")]
+        [Tooltip("Sifir ile bir arasinda bu POI'nin var olma ihtimali (1 = kesin cikar).")]
         [Range(0f, 1f)]
         public float spawnChance = 1f;
 
-        protected virtual void Start()
+        /// <summary>
+        /// Called by the parent Chunk after initialization to give the POI its
+        /// deterministic random. This replaces the old Start()-based spawn roll
+        /// so the result is independent of Unity's non-deterministic Start order.
+        /// </summary>
+        public void InitializeFromChunk(SeededRandom poiRng, Transform container = null)
         {
-            if (Random.value > spawnChance)
+            if (!poiRng.Chance(spawnChance))
             {
                 gameObject.SetActive(false);
                 return;
             }
 
-            OnSpawn();
+            OnSpawn(poiRng, container ?? transform);
         }
 
-        protected abstract void OnSpawn();
+        protected virtual void Start()
+        {
+            // If the POI was not initialized from the chunk (e.g. placed manually in editor),
+            // fall back to the old non-deterministic path.
+            // Normally, chunks call InitializeFromChunk() before Start() runs.
+        }
+
+        protected abstract void OnSpawn(SeededRandom rng, Transform container);
     }
 }

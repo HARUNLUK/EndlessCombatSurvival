@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e38efcef2ee49564f85d9c803c01e0e3, type: 3}
+  m_Name: DefaultLootTable
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.LootTable
+  pickupPrefab: {fileID: 4753128589801956333, guid: ece485f30819638429c3d2d56ad9fb75, type: 3}
+  minRolls: 1
+  maxRolls: 3
+  entries:
+  - item: {fileID: 11400000, guid: 08f60d85d368f7941a04d0ea0281ca8c, type: 2}
+    weight: 1
+    minAmount: 1
+    maxAmount: 3

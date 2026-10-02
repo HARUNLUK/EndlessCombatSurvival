@@ -25,10 +25,18 @@ namespace EndlessSurvival.World.Road
             {
                 if (!terrain.gameObject.name.Contains("(RuntimeClone)"))
                 {
+                    TerrainLayer[] oldLayers = terrain.terrainData.terrainLayers;
+                    Material oldMat = terrain.materialTemplate;
+                    
                     terrain.terrainData = Object.Instantiate(terrain.terrainData);
+                    terrain.terrainData.terrainLayers = oldLayers;
+                    terrain.materialTemplate = oldMat;
+                    
                     terrain.gameObject.name += " (RuntimeClone)";
                     var tCol = terrain.GetComponent<TerrainCollider>();
                     if (tCol != null) tCol.terrainData = terrain.terrainData;
+                    
+                    terrain.allowAutoConnect = false;
                 }
             }
 

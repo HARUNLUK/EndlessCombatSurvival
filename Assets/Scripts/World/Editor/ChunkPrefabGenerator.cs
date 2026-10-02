@@ -101,8 +101,28 @@ namespace EndlessSurvival.World.Editor
         private static Texture2D SaveTextureAsPNG(string folder, string name, Texture2D sourceTex)
         {
             string path = $"{folder}/{name}.png";
-            byte[] bytes = sourceTex.EncodeToPNG();
+
+            // If the texture is not readable, create a readable copy via RenderTexture
+            Texture2D readable = sourceTex;
+            if (!sourceTex.isReadable)
+            {
+                RenderTexture rt = RenderTexture.GetTemporary(sourceTex.width, sourceTex.height, 0, RenderTextureFormat.ARGB32);
+                Graphics.Blit(sourceTex, rt);
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                readable = new Texture2D(sourceTex.width, sourceTex.height, TextureFormat.RGBA32, false);
+                readable.ReadPixels(new Rect(0, 0, sourceTex.width, sourceTex.height), 0, 0);
+                readable.Apply();
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+            }
+
+            byte[] bytes = readable.EncodeToPNG();
             File.WriteAllBytes(path, bytes);
+
+            if (readable != sourceTex)
+                Object.DestroyImmediate(readable);
+
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using EndlessSurvival.World.Road;
+using EndlessSurvival.World.POI;
 
 namespace EndlessSurvival.World
 {
@@ -141,6 +142,10 @@ namespace EndlessSurvival.World
         [Tooltip("Trigger near the chunk end that requests spawning the next chunk ahead")]
         public ChunkTrigger spawnNextTrigger;
 
+        [Header("Editor Preview")]
+        [Tooltip("Type a seed here to preview deterministic generation in the editor. Leave empty for random.")]
+        public string editorPreviewSeed = "";
+
         [Tooltip("Trigger or barrier that blocks backward passage after moving forward")]
         public GameObject backBlockade;
 
@@ -151,14 +156,70 @@ namespace EndlessSurvival.World
         // Runtime state
         private ChunkManager _manager;
         private int _chunkIndex;
+        private int _seed;
+
+        // Sub-stream random generators for each system.
+        // Adding a new sub-stream never alters the output of existing ones.
+        private SeededRandom _roadRandom;
+        private SeededRandom _lootRandom;
+        private SeededRandom _poiRandom;
+        private SeededRandom _campRandom;
+        private SeededRandom _eventsRandom;
+        private SeededRandom _notesRandom;
 
         public int ChunkIndex => _chunkIndex;
         public ChunkManager Manager => _manager;
+        public int ChunkSeed => _seed;
+        
+        public Terrain ChunkTerrain => GetComponentInChildren<Terrain>();
 
-        public void Initialize(ChunkManager manager, int index)
+        /// <summary>Per-chunk deterministic random for road generation.</summary>
+        public SeededRandom RoadRandom => _roadRandom;
+        /// <summary>Per-chunk deterministic random for loot placement and rolls.</summary>
+        public SeededRandom LootRandom => _lootRandom;
+        /// <summary>Per-chunk deterministic random for POI spawn chance.</summary>
+        public SeededRandom PoiRandom => _poiRandom;
+        /// <summary>Per-chunk deterministic random for enemy camp details.</summary>
+        public SeededRandom CampRandom => _campRandom;
+        /// <summary>Per-chunk deterministic random for story events (future).</summary>
+        public SeededRandom EventsRandom => _eventsRandom;
+        /// <summary>Per-chunk deterministic random for readable notes (future).</summary>
+        public SeededRandom NotesRandom => _notesRandom;
+
+        private void Awake()
+        {
+            Transform preview = transform.Find("EditorPreview");
+            if (preview != null) Destroy(preview.gameObject);
+        }
+
+        public void Initialize(ChunkManager manager, int index, int seed)
         {
             _manager = manager;
             _chunkIndex = index;
+            _seed = seed;
+
+            // Derive independent sub-stream seeds
+            var chunkRng = new SeededRandom(seed);
+            _roadRandom = chunkRng.SubStream("road");
+            _lootRandom = chunkRng.SubStream("loot");
+            _poiRandom = chunkRng.SubStream("poi");
+            _campRandom = chunkRng.SubStream("camp");
+            _eventsRandom = chunkRng.SubStream("events");
+            _notesRandom = chunkRng.SubStream("notes");
+
+            // Initialize all POIs deterministically instead of relying on Unity's Start() order
+            var pois = GetComponentsInChildren<PointOfInterest>(true);
+            for (int i = 0; i < pois.Length; i++)
+            {
+                // Each POI gets its own sub-stream so POI order doesn't matter
+                SeededRandom poiSubRng;
+                if (pois[i] is EnemyCampPOI)
+                    poiSubRng = new SeededRandom(SeededRandom.Combine(_campRandom.Seed, i));
+                else
+                    poiSubRng = new SeededRandom(SeededRandom.Combine(_poiRandom.Seed, i));
+
+                pois[i].InitializeFromChunk(poiSubRng);
+            }
 
             if (backBlockade != null)
             {
@@ -196,6 +257,41 @@ namespace EndlessSurvival.World
         {
             Destroy(gameObject);
         }
+
+#if UNITY_EDITOR
+        public void GenerateEditorPreview(int seed)
+        {
+            Transform oldPreview = transform.Find("EditorPreview");
+            if (oldPreview != null) DestroyImmediate(oldPreview.gameObject);
+
+            GameObject previewContainer = new GameObject("EditorPreview");
+            previewContainer.transform.SetParent(transform, false);
+
+            var chunkRng = new SeededRandom(seed);
+            var lootRng = chunkRng.SubStream("loot");
+            var poiRng = chunkRng.SubStream("poi");
+            var campRng = chunkRng.SubStream("camp");
+            var notesRng = chunkRng.SubStream("notes");
+
+            var lootSpawner = GetComponentInChildren<RoadsideLootSpawner>();
+            if (lootSpawner != null) lootSpawner.GenerateLoot(lootRng, previewContainer.transform);
+
+            var noteSpawner = GetComponentInChildren<EndlessSurvival.World.POI.NoteSpawner>();
+            if (noteSpawner != null) noteSpawner.GenerateNote(notesRng, previewContainer.transform);
+
+            var pois = GetComponentsInChildren<EndlessSurvival.World.POI.PointOfInterest>(true);
+            for (int i = 0; i < pois.Length; i++)
+            {
+                SeededRandom poiSubRng;
+                if (pois[i] is EndlessSurvival.World.POI.EnemyCampPOI)
+                    poiSubRng = new SeededRandom(SeededRandom.Combine(campRng.Seed, i));
+                else
+                    poiSubRng = new SeededRandom(SeededRandom.Combine(poiRng.Seed, i));
+
+                pois[i].InitializeFromChunk(poiSubRng, previewContainer.transform);
+            }
+        }
+#endif
 
         private void OnDrawGizmos()
         {

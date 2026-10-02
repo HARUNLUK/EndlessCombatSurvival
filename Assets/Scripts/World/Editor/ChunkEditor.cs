@@ -19,11 +19,13 @@ namespace EndlessSurvival.World.Editor
             var oldCross = chunk.crossSectionType;
             var oldElevation = chunk.currentElevationType;
             float oldParam = chunk.currentElevationParam;
+            string oldSeed = chunk.editorPreviewSeed;
 
             DrawDefaultInspector();
 
             bool roadChanged = chunk.roadType != oldRoad
                 || chunk.currentElevationType != oldElevation
+                || chunk.editorPreviewSeed != oldSeed
                 || !Mathf.Approximately(chunk.currentElevationParam, oldParam);
             bool crossChanged = chunk.crossSectionType != oldCross;
 
@@ -65,8 +67,14 @@ namespace EndlessSurvival.World.Editor
             if (chunk.currentElevationType != RoadElevationType.Flat && param <= 0f) param = 12f;
 
             Undo.RecordObject(spline, "Randomize Road");
+            
+            int seed = string.IsNullOrEmpty(chunk.editorPreviewSeed) 
+                ? new System.Random().Next() 
+                : SeededRandom.HashString(chunk.editorPreviewSeed);
+            var editorRng = new SeededRandom(seed);
+            
             float peak = spline.SetProceduralPreset(settings, curvy, sharp, chunk.currentElevationType,
-                param, chunk.currentElevationType == RoadElevationType.RollingHills ? param * 0.7f : param);
+                param, chunk.currentElevationType == RoadElevationType.RollingHills ? param * 0.7f : param, editorRng);
 
             // Honor requested side: CurvedRight = biggest bend to +X, CurvedLeft = -X
             bool wantRight = chunk.roadType == ChunkRoadType.CurvedRight;
@@ -89,6 +97,8 @@ namespace EndlessSurvival.World.Editor
             {
                 RoadTerrainAdapter.ConformTerrainToRoad(terrain, spline, gen, true);
             }
+
+            chunk.GenerateEditorPreview(seed);
         }
     }
 }

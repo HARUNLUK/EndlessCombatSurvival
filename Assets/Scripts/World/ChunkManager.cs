@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using EndlessSurvival.World.Road;
 
@@ -11,6 +12,16 @@ namespace EndlessSurvival.World
     public class ChunkManager : MonoBehaviour
     {
         public static ChunkManager Instance { get; private set; }
+
+        [Header("Seed")]
+        [Tooltip("Master seed text. Leave empty for a random seed each run. Same seed always produces the same world.")]
+        public string masterSeed = "";
+
+        /// <summary>Resolved integer seed used for all generation this session.</summary>
+        public int ResolvedSeed { get; private set; }
+
+        /// <summary>Ordered list of chunk seeds generated so far (index = chunk index).</summary>
+        private readonly List<int> _chunkSeeds = new List<int>();
 
         [Header("Chunk Prefab")]
         [Tooltip("The single base 500x500 chunk prefab used for endless generation")]
@@ -51,6 +62,15 @@ namespace EndlessSurvival.World
             }
             Instance = this;
 
+            // Resolve the master seed
+            if (string.IsNullOrEmpty(masterSeed))
+            {
+                masterSeed = GenerateRandomSeedText(12);
+                Debug.Log($"[ChunkManager] No seed provided. Generated random seed: {masterSeed}");
+            }
+            ResolvedSeed = SeededRandom.HashString(masterSeed);
+            Debug.Log($"[ChunkManager] Master seed: \"{masterSeed}\" -> hash: {ResolvedSeed}");
+
             ClearChildObjects();
         }
 
@@ -87,7 +107,13 @@ namespace EndlessSurvival.World
         /// </summary>
         public Chunk SpawnNextChunk()
         {
-            Chunk prefab = SelectNextPrefab();
+            // Derive a deterministic seed for this chunk index
+            int chunkSeed = SeededRandom.Combine(ResolvedSeed, _totalSpawnedCount);
+            _chunkSeeds.Add(chunkSeed);
+
+            // Use a prefab-selection random derived from this chunk's seed
+            var prefabRng = new SeededRandom(SeededRandom.Combine(chunkSeed, "prefab"));
+            Chunk prefab = SelectNextPrefab(prefabRng);
             if (prefab == null)
             {
                 Debug.LogError("[ChunkManager] Cannot spawn: No valid chunk prefab found.");
@@ -104,10 +130,10 @@ namespace EndlessSurvival.World
             }
 
             Chunk newChunk = Instantiate(prefab, spawnPos, spawnRot, transform);
+            newChunk.Initialize(this, _totalSpawnedCount, chunkSeed);
             ApplyDynamicRoadVariation(newChunk);
 
             newChunk.name = $"Chunk_{_totalSpawnedCount}_{newChunk.biomeType}_{newChunk.roadType}_{newChunk.crossSectionType}";
-            newChunk.Initialize(this, _totalSpawnedCount);
 
             _activeChunks.Add(newChunk);
             _totalSpawnedCount++;
@@ -216,6 +242,8 @@ namespace EndlessSurvival.World
 
         private void ApplyProceduralElevation(Chunk chunk, RoadGenerator roadGen, RoadSpline spline)
         {
+            SeededRandom rng = chunk.RoadRandom;
+
             ChunkElevationConfig config = (chunk != null && chunk.overrideElevationSettings)
                 ? chunk.elevationConfig
                 : globalElevationConfig;
@@ -223,8 +251,8 @@ namespace EndlessSurvival.World
             if (config == null) config = new ChunkElevationConfig();
 
             // First N chunks are kept completely flat and straight as runway
-            bool forceFlat = _totalSpawnedCount < initialFlatChunks || !enableElevationVariation;
-            bool rollSuccess = !forceFlat && (Random.value <= config.elevationChance);
+            bool forceFlat = chunk.ChunkIndex < initialFlatChunks || !enableElevationVariation;
+            bool rollSuccess = !forceFlat && (rng.Value <= config.elevationChance);
 
             RoadElevationType elevationType = RoadElevationType.Flat;
 
@@ -236,7 +264,7 @@ namespace EndlessSurvival.World
                 int w3 = w2 + config.mountainPassWeight;
                 int w4 = w3 + config.elevatedChicaneWeight;
                 int totalWeight = Mathf.Max(1, w4 + config.flatWeight);
-                int roll = Random.Range(0, totalWeight);
+                int roll = rng.Range(0, totalWeight);
 
                 if (roll < w0) elevationType = RoadElevationType.HillCrest;
                 else if (roll < w1) elevationType = RoadElevationType.ValleyDip;
@@ -252,40 +280,40 @@ namespace EndlessSurvival.World
             switch (elevationType)
             {
                 case RoadElevationType.HillCrest:
-                    hill = Random.Range(config.minHillHeight, config.maxHillHeight);
+                    hill = rng.Range(config.minHillHeight, config.maxHillHeight);
                     cross = RoadCrossSectionPreset.GuardrailOnly;
                     break;
                 case RoadElevationType.ValleyDip:
-                    dip = Random.Range(config.minDipDepth, config.maxDipDepth);
+                    dip = rng.Range(config.minDipDepth, config.maxDipDepth);
                     cross = RoadCrossSectionPreset.OpenRoad;
                     break;
                 case RoadElevationType.RollingHills:
-                    hill = Random.Range(config.minHillHeight, config.maxHillHeight);
-                    dip = Random.Range(config.minDipDepth, config.maxDipDepth);
+                    hill = rng.Range(config.minHillHeight, config.maxHillHeight);
+                    dip = rng.Range(config.minDipDepth, config.maxDipDepth);
                     cross = RoadCrossSectionPreset.GuardrailOnly;
                     break;
                 case RoadElevationType.MountainPass:
-                    hill = Random.Range(config.minHillHeight, config.maxHillHeight);
+                    hill = rng.Range(config.minHillHeight, config.maxHillHeight);
                     forceCurve = true;
                     cross = RoadCrossSectionPreset.FullHighway;
                     break;
                 case RoadElevationType.ElevatedChicane:
-                    hill = Random.Range(config.minHillHeight * 0.7f, config.maxHillHeight * 0.7f);
+                    hill = rng.Range(config.minHillHeight * 0.7f, config.maxHillHeight * 0.7f);
                     forceCurve = sharp = true;
                     cross = RoadCrossSectionPreset.HazardFortified;
                     break;
             }
 
             // Curve layout (bend count, positions, lengths, offsets) is fully random
-            bool curvy = !forceFlat && (forceCurve || Random.value < curveSettings.curveChance);
+            bool curvy = !forceFlat && (forceCurve || rng.Chance(curveSettings.curveChance));
             if (curvy && !forceCurve)
             {
-                sharp = Random.value < 0.15f;
+                sharp = rng.Chance(0.15f);
                 if (elevationType == RoadElevationType.Flat)
                     cross = sharp ? RoadCrossSectionPreset.HazardFortified : RoadCrossSectionPreset.FullHighway;
             }
 
-            float peak = spline.SetProceduralPreset(curveSettings, curvy, sharp, elevationType, hill, dip);
+            float peak = spline.SetProceduralPreset(curveSettings, curvy, sharp, elevationType, hill, dip, rng);
 
             chunk.roadType = !curvy ? ChunkRoadType.Straight
                 : sharp ? ChunkRoadType.HazardZone
@@ -378,7 +406,7 @@ namespace EndlessSurvival.World
         /// <summary>
         /// Selects the next chunk prefab from the pool, ensuring consecutive chunks have different road types.
         /// </summary>
-        private Chunk SelectNextPrefab()
+        private Chunk SelectNextPrefab(SeededRandom rng)
         {
             if (chunkPrefab != null) return chunkPrefab;
             if (chunkPrefabs == null || chunkPrefabs.Count == 0) return null;
@@ -421,7 +449,7 @@ namespace EndlessSurvival.World
                 totalWeight += Mathf.Max(1, candidates[i].spawnWeight);
             }
 
-            int roll = Random.Range(0, totalWeight);
+            int roll = rng.Range(0, totalWeight);
             int cumulative = 0;
             for (int i = 0; i < candidates.Count; i++)
             {
@@ -550,5 +578,29 @@ namespace EndlessSurvival.World
         {
             ClearChildObjects();
         }
+
+        /// <summary>
+        /// Generates a random alphanumeric seed text using System.Random (non-deterministic, for first-run only).
+        /// </summary>
+        private static string GenerateRandomSeedText(int length)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            var sysRng = new System.Random();
+            var sb = new StringBuilder(length);
+            for (int i = 0; i < length; i++)
+                sb.Append(chars[sysRng.Next(chars.Length)]);
+            return sb.ToString();
+        }
+
+        /// <summary>Returns the seed used for a given chunk index, or 0 if not yet generated.</summary>
+        public int GetChunkSeed(int chunkIndex)
+        {
+            if (chunkIndex >= 0 && chunkIndex < _chunkSeeds.Count)
+                return _chunkSeeds[chunkIndex];
+            return 0;
+        }
+
+        /// <summary>Total number of chunks spawned so far.</summary>
+        public int TotalSpawnedCount => _totalSpawnedCount;
     }
 }

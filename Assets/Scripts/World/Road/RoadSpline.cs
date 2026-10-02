@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using EndlessSurvival.World;
 
 namespace EndlessSurvival.World.Road
 {
@@ -68,13 +69,13 @@ namespace EndlessSurvival.World.Road
         /// Returns the signed lateral offset of the largest bend (0 when straight).
         /// </summary>
         public float SetProceduralPreset(RoadCurveSettings s, bool curvy, bool sharp,
-            RoadElevationType elevation, float hillHeight, float dipDepth)
+            RoadElevationType elevation, float hillHeight, float dipDepth, SeededRandom rng)
         {
             const float edge = 60f;
             const float length = 500f;
             float span = length - 2f * edge;
 
-            int bends = curvy ? Random.Range(s.minBends, s.maxBends + 1) + (sharp ? 2 : 0) : 0;
+            int bends = curvy ? rng.Range(s.minBends, s.maxBends + 1) + (sharp ? 2 : 0) : 0;
             int interior = Mathf.Max(bends, elevation == RoadElevationType.Flat ? 1 : 5);
 
             // Random gap lengths between control points -> random bend lengths
@@ -82,13 +83,13 @@ namespace EndlessSurvival.World.Road
             float total = 0f;
             for (int i = 0; i < gaps.Length; i++)
             {
-                gaps[i] = Random.Range(1f, Mathf.Max(1.01f, s.lengthVariance));
+                gaps[i] = rng.Range(1f, Mathf.Max(1.01f, s.lengthVariance));
                 total += gaps[i];
             }
 
             var pts = new List<Vector3> { new Vector3(0f, baseElevation, 0f) };
             float prevZ = edge, prevX = 0f, cum = 0f;
-            float sign = Random.value > 0.5f ? 1f : -1f;
+            float sign = rng.Value > 0.5f ? 1f : -1f;
             float peak = 0f;
             float minAmp = sharp ? Mathf.Lerp(s.minShift, s.maxShift, 0.5f) : s.minShift;
 
@@ -100,8 +101,8 @@ namespace EndlessSurvival.World.Road
 
                 if (curvy && i < bends)
                 {
-                    if (i > 0 && Random.value < 0.75f) sign = -sign;
-                    x = sign * Random.Range(minAmp, s.maxShift);
+                    if (i > 0 && rng.Value < 0.75f) sign = -sign;
+                    x = sign * rng.Range(minAmp, s.maxShift);
                     x = Mathf.Clamp(x, prevX - s.maxSlope * (z - prevZ), prevX + s.maxSlope * (z - prevZ));
                     float toExit = s.maxSlope * (length - edge - z);
                     x = Mathf.Clamp(x, -Mathf.Min(s.maxLateral, toExit), Mathf.Min(s.maxLateral, toExit));
