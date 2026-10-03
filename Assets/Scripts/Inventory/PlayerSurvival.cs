@@ -32,6 +32,12 @@ namespace EndlessSurvival.Inventory
         [Range(0f, 1f)]
         public float lowThreshold = 0.2f;
 
+        [Header("Bladder / Restroom Need")]
+        public float maxBladder = 100f;
+        [Tooltip("Bladder fill rate per second")]
+        public float bladderFillPerSecond = 0.05f;
+        private float _bladder = 0f;
+
         [Header("References")]
         public PlayerHealth health;
         public StarterAssetsInputs inputs;
@@ -63,12 +69,24 @@ namespace EndlessSurvival.Inventory
             }
         }
 
+        public float Bladder
+        {
+            get
+            {
+                EnsureInitialized();
+                return _bladder;
+            }
+        }
+
+        public bool IsBladderFull => _bladder >= maxBladder * 0.85f;
+
         private void EnsureInitialized()
         {
             if (_initialized) return;
             _initialized = true;
             _hunger = maxHunger;
             _thirst = maxThirst;
+            _bladder = 0f;
         }
 
         private void Awake()
@@ -98,11 +116,16 @@ namespace EndlessSurvival.Inventory
             float multiplier = (dt < 1f && inputs != null && inputs.sprint) ? sprintMultiplier : 1f;
             _hunger = Mathf.Max(0f, _hunger - hungerDrainPerSecond * multiplier * dt);
             _thirst = Mathf.Max(0f, _thirst - thirstDrainPerSecond * multiplier * dt);
+            _bladder = Mathf.Min(maxBladder, _bladder + bladderFillPerSecond * dt);
 
             if (health != null)
             {
                 int empty = (_hunger <= 0f ? 1 : 0) + (_thirst <= 0f ? 1 : 0);
-                if (empty > 0) health.DamageIgnoringArmor(starvationDamagePerSecond * empty * dt);
+                if (empty > 0)
+                {
+                    string cause = (_hunger <= 0f && _thirst <= 0f) ? "Açlık ve Susuzluk" : (_hunger <= 0f ? "Açlıktan Tükenme" : "Susuzluk (Dehidrasyon)");
+                    health.DamageIgnoringArmor(starvationDamagePerSecond * empty * dt, cause);
+                }
             }
 
             if (Time.unscaledTime >= _nextRefresh)
@@ -128,8 +151,18 @@ namespace EndlessSurvival.Inventory
             EnsureInitialized();
             float before = _thirst;
             _thirst = Mathf.Min(maxThirst, _thirst + Mathf.Max(0f, amount));
+            // Drinking fills bladder faster
+            _bladder = Mathf.Min(maxBladder, _bladder + amount * 0.35f);
             RefreshUI();
             return _thirst - before;
+        }
+
+        /// <summary>Relieves personal need. No animations/visuals, resets bladder.</summary>
+        public void RelieveNeed()
+        {
+            EnsureInitialized();
+            _bladder = 0f;
+            RefreshUI();
         }
 
         public void RefreshUI()
@@ -140,7 +173,8 @@ namespace EndlessSurvival.Inventory
             float hungerRatio = maxHunger > 0f ? _hunger / maxHunger : 0f;
             float thirstRatio = maxThirst > 0f ? _thirst / maxThirst : 0f;
 
-            statusText.text = $"HUNGER: {Mathf.CeilToInt(_hunger)}    THIRST: {Mathf.CeilToInt(_thirst)}";
+            string needTag = IsBladderFull ? "  <color=yellow>[İHTİYAÇ: Rahatla (P)]</color>" : "";
+            statusText.text = $"HUNGER: {Mathf.CeilToInt(_hunger)}    THIRST: {Mathf.CeilToInt(_thirst)}{needTag}";
 
             float lowest = Mathf.Min(hungerRatio, thirstRatio);
             if (lowest <= 0f) statusText.color = new Color(1f, 0.2f, 0.2f);

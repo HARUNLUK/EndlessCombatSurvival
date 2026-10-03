@@ -1,0 +1,567 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.5/staging' branch; Version is '6000.5.10f1 (3bd4f66ad299) revision 3921142'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) Professional' Language: 'tr' Physical Memory: 15584 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-HARUNLUK" at "2026-10-03T03:43:11.5571259Z"
+System  architecture: x64
+Process architecture: x64
+Date: 2026-10-03T03:43:11Z
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 21772, path: "C:/Program Files/Unity Hub/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              7a09ad320dec4bb78d0625ab6bf8ee74
+  Correlation Id:          51eb4c0b3ffcc9852359cdb2fef61ffa
+  External correlation Id: 6713527801008883740
+  Machine Id:              x7eUqeowrmKk8fqfCJZuDQtBvE0=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-HARUNLUK" (connect: 0.00s, validation: 0.00s, handshake: 0.03s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-HARUNLUK-notifications" at "2026-10-03T03:43:11.5890185Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 18966793819655-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.04s
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.5.10f1\Editor\Unity.exe
+-quit
+-batchmode
+-projectPath
+d:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival
+-executeMethod
+EndlessSurvival.World.Editor.CampSetupUtility.RunSetupBatch
+-logFile
+batch_log.txt
+Successfully changed project path to: d:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival
+D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-remapper-allocator-initial-capacity=32768"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-main-allocator-mimalloc-enabled=0"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+Logging is directed to a specific file, skipping project log.Player connection [23208]  Target information:
+
+Player connection [23208]  * "[IP] 192.168.0.104 [Port] 55505 [Flags] 2 [Guid] 3157336010 [EditorId] 3157336010 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-BH9VBBM) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [23208] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [23208] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-32960" after 0.3 seconds.
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Initialize engine version: 6000.5.10f1 (3bd4f66ad299)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+d3d12: failed to query info queue interface (0x80004002).
+Direct3D:
+    Version:         Direct3D 12 [level 12.2]
+    Renderer:        NVIDIA GeForce RTX 4070 Laptop GPU (ID=0x2860)
+    Vendor:          NVIDIA
+    VRAM:            7948 MB
+    App VRAM Budget: 7180 MB
+    Driver:          32.0.16.1714
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/BCLExtensions/runtime/netstandard2.1'
+Mono path[2] = 'C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56960
+CodeReloadManager initialized
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/PlaybackEngines/WebGLSupport/UnityEditor.WebGL.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.5.10f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.002885 seconds.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+Package Manager log level set to [2]
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.650 seconds
+Domain Reload Profiling: 1192ms
+	BeginReloadAssembly (132ms)
+		CreateAndSetChildDomain (15ms)
+	RebuildCommonClasses (6ms)
+	RebuildNativeTypeToScriptingClass (14ms)
+	initialDomainReloadingComplete (75ms)
+	LoadAllAssembliesAndSetupDomain (314ms)
+		LoadAssemblies (116ms)
+		AnalyzeDomain (225ms)
+			TypeCache.Refresh (223ms)
+				TypeCache.ScanAssembly (204ms)
+	FinalizeReload (650ms)
+		SetupLoadedEditorAssemblies (0ms)
+			InitializePlatformSupportModulesInManaged (3ms)
+			BeforeProcessingInitializeOnLoad (91ms)
+			ProcessInitializeOnLoadAttributes (93ms)
+			ProcessInitializeOnLoadMethodAttributes (393ms)
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 66 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.ai.assistant@2.19.0-pre.2 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ai.assistant@8d1e3e89e3a7)
+    com.unity.ai.inference@2.6.1 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ai.inference@9a123aee5df7)
+    com.unity.ai.navigation@2.0.14 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ai.navigation@134dd6a3b97b)
+    com.unity.cinemachine@3.1.7 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.cinemachine@f3f96bcb59af)
+    com.unity.collab-proxy@2.13.6 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.collab-proxy@4628d2ba6ea4)
+    com.unity.ide.rider@3.0.38 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ide.rider@1f60b3138684)
+    com.unity.ide.visualstudio@2.0.26 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ide.visualstudio@a99d56dec63f)
+    com.unity.inputsystem@1.20.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.inputsystem@7a4e1a2a8194)
+    com.unity.pipeline@0.7.0-exp.1 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.pipeline@ab05e9cd7f74)
+    com.unity.timeline@1.8.13 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.timeline@3a22918286f5)
+    com.unity.visualscripting@1.9.12 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.visualscripting@4edfcc09512f)
+    com.unity.nuget.mono-cecil@1.11.6 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff)
+    com.unity.nuget.newtonsoft-json@3.2.2 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64)
+    com.unity.splines@2.9.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.splines@e6e1d5900acc)
+    com.unity.burst@1.8.30 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.burst@2f3d916873ea)
+    com.unity.dt.app-ui@2.1.7 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.dt.app-ui@b097002a00c2)
+    com.unity.searcher@4.9.5 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.searcher@a463122f2c00)
+    com.unity.settings-manager@2.1.1 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.settings-manager@0b8638c5ce86)
+    com.unity.test-framework.performance@3.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.test-framework.performance@8b56083ec0f0)
+  Built-in packages:
+    com.unity.multiplayer.center@1.0.1 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.multiplayer.center@b860850997d0)
+    com.unity.render-pipelines.universal@17.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.render-pipelines.universal@d7774c218bdf)
+    com.unity.test-framework@1.7.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.test-framework@1405238725ab)
+    com.unity.ugui@2.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ugui@1c4864518158)
+    com.unity.modules.accessibility@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.adaptiveperformance)
+    com.unity.modules.ai@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.physicscore2d@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.physicscore2d)
+    com.unity.modules.screencapture@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.wind@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.modules.hierarchycore)
+    com.unity.ext.nunit@2.1.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.ext.nunit@44f7d31723bd)
+    com.unity.render-pipelines.core@17.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.render-pipelines.core@bbba1f0c681e)
+    com.unity.shadergraph@17.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.shadergraph@8d7376ec43ee)
+    com.unity.render-pipelines.universal-config@17.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.render-pipelines.universal-config@fdda01c80fe3)
+    com.unity.collections@6.5.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.collections@ec2c217e4cb2)
+    com.unity.2d.sprite@1.0.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.2d.sprite@053a968eab56)
+    com.unity.mathematics@1.4.0 (location: D:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival\Library\PackageCache\com.unity.mathematics@981956d94fb6)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.02 seconds
+Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
+Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
+[ScriptCompilation] Requested script compilation because: AssetDatabase observed changes in script compilation related files
+Refreshing native plugins compatible for Editor in 15.24 ms, found 5 plugins.
+Starting: C:\Program Files\Unity\Hub\Editor\6000.5.10f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival
+DisplayProgressbar: Compiling Scripts
+Starting: C:\Program Files\Unity\Hub\Editor\6000.5.10f1\Editor\Data\netcorerun\netcorerun.exe "C:\Program Files\Unity\Hub\Editor\6000.5.10f1\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
+WorkingDir: D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival
+ExitCode: 4 Duration: 2s807ms
+Rebuilding DAG because FileSignature timestamp changed: Library/Bee/1900b0aE-inputdata.json
+[1299/1707  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+[1300/1707  2s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll (+2 others)
+Assets\Scripts\Combat\CombatUI.cs(30,33): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+*** Tundra requires additional run (2.75 seconds), 2 items updated, 1298 evaluated
+ExitCode: 0 Duration: 2s61ms
+Starting: C:\Program Files\Unity\Hub\Editor\6000.5.10f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
+WorkingDir: D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival
+ExitCode: 0 Duration: 1s914ms
+Finished compiling graph: 1711 nodes, 37753 flattened edges (30615 ToBuild, 284 ToUse), maximum node priority 1917
+[ 876/1707  0s] WriteText Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.rsp
+[1300/1707  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+[1700/1707  0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll, with 144 defines and 383 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, Unity.Pipeline.CodeGen.CodeReloadInPlaceILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running Unity.Pipeline.CodeGen.CodeReloadInPlaceILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[1701/1707  0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[1702/1707  0s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
+Assets\Scripts\Inventory\Editor\InventoryUiAutoUpdate.cs(25,22): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\Scripts\Vehicle\Editor\VehicleSetupUtility.cs(35,49): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\Scripts\Vehicle\Editor\VehicleSetupUtility.cs(107,39): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(573,101): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'
+
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(573,28): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsInactive, FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'
+
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(667,29): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(936,17): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+[1703/1707  0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+[1704/1707  0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp-Editor.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll, with 142 defines and 407 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, Unity.Pipeline.CodeGen.CodeReloadInPlaceILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running Unity.Pipeline.CodeGen.CodeReloadInPlaceILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[1705/1707  0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
+[1706/1707  0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
+*** Tundra build success (1.86 seconds), 9 items updated, 1707 evaluated
+Assets\Scripts\Combat\CombatUI.cs(30,33): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\Scripts\Inventory\Editor\InventoryUiAutoUpdate.cs(25,22): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\Scripts\Vehicle\Editor\VehicleSetupUtility.cs(35,49): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\Scripts\Vehicle\Editor\VehicleSetupUtility.cs(107,39): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(573,101): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(573,28): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsInactive, FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(667,29): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Assets\Scripts\Inventory\Editor\InventorySetupTool.cs(936,17): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'
+Total cache size 268359832
+Total cache size after purge 268359832, took 00:00:00.1872342
+AssetDatabase: script compilation time: 7.617564s
+Begin MonoManager ReloadAssembly
+Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
+'Packages/com.unity.cinemachine/Editor/Editors/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+'Packages/com.unity.cinemachine/Editor/Obsolete/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+Refreshing native plugins compatible for Editor in 7.91 ms, found 5 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+Refreshing native plugins compatible for Editor in 2.39 ms, found 5 plugins.
+Refreshing native plugins compatible for Editor in 7.07 ms, found 5 plugins.
+Start HTTP server: port:7802
+[Licensing::Client] Error: Code 404 while processing request (status: Found 0 entitlement groups and 0 free entitlements matching requested entitlement ids)
+[Licensing::Client] Error: Code 404 while processing request (status: Found 0 entitlement groups and 0 free entitlements matching requested entitlement ids)
+[Licensing::Client] Error: Code 404 while processing request (status: Found 0 entitlement groups and 0 free entitlements matching requested entitlement ids)
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  7.386 seconds
+Domain Reload Profiling: 8945ms
+	BeginReloadAssembly (233ms)
+		DisableScriptedObjects (18ms)
+		CreateAndSetChildDomain (61ms)
+	RebuildCommonClasses (10ms)
+	RebuildNativeTypeToScriptingClass (17ms)
+	initialDomainReloadingComplete (92ms)
+	LoadAllAssembliesAndSetupDomain (1206ms)
+		LoadAssemblies (544ms)
+		AnalyzeDomain (589ms)
+			TypeCache.Refresh (456ms)
+				TypeCache.ScanAssembly (435ms)
+			BuildScriptInfoCaches (123ms)
+			ResolveRequiredComponents (8ms)
+	FinalizeReload (7387ms)
+		SetupLoadedEditorAssemblies (0ms)
+			BeforeProcessingInitializeOnLoad (125ms)
+			ProcessInitializeOnLoadAttributes (6365ms)
+			ProcessInitializeOnLoadMethodAttributes (360ms)
+			AfterProcessingInitializeOnLoad (7ms)
+		AwakeInstancesAfterBackupRestoration (25ms)
+Importing 'GUID: 84435d1a85743b442985fa085210c9e1 - Path: Assets/Prefabs/PointsOfInterests/EnemyCamp_Medium.prefab' with importer (PrefabImporter)
+Imported 'GUID: 84435d1a85743b442985fa085210c9e1' -> (Import Result ID: 'e7017683ef5a7cfdae7539bd225867a3') in 0.066 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=56e664b6c3e6d810e80ebfada6e78bb6 DependenciesID=d84499acb36f08f7d773117fe4dbffb4 StaticDependenciesID=2782e6cf71378c109f7688edca534f60 
+Importing 'GUID: 95431f2e00cb4d442842077688ec6969 - Path: Assets/Prefabs/Chunks/Chunk_Forest_Curve.prefab' with importer (PrefabImporter)
+Imported 'GUID: 95431f2e00cb4d442842077688ec6969' -> (Import Result ID: 'ac11e89f7d73323fd329c205cf42d8cd') in 0.032 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=380874576ac83eaed09b33c39746d311 DependenciesID=60b011d71d7175c4b8d989c80304dec0 StaticDependenciesID=4b69e99f67f21be7ee14f3426492e6b6 
+Importing 'GUID: 7e74ec794582fee429dfc861a0361ef7 - Path: Assets/Prefabs/Enemies/Enemy.prefab' with importer (PrefabImporter)
+Imported 'GUID: 7e74ec794582fee429dfc861a0361ef7' -> (Import Result ID: 'a62603ab68d4cffe3eb46fb1c69ad520') in 0.052 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=0f830b75a54bad8b79534f9c0202680e DependenciesID=6df5fd4242182c693b04c311eef1a935 StaticDependenciesID=0aef7033081ae9328249998c65829e18 
+Starting new worker id: 0 with log in D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival/Logs/AssetImportWorkerHW0.log
+Refreshing native plugins compatible for Editor in 8.33 ms, found 5 plugins.
+
+Asset Pipeline Refresh (id=9b8dc2017e06f5c4296340678ece7642): Total: 19.740 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=3 (actual=3, local cache=0, cache server=0)
+		Asset DB Process Time: managed=3 ms, native=9793 ms
+		Asset DB Callback time: managed=453 ms, native=36 ms
+		Scripting: domain reloads=1, domain reload time=1734 ms, compile time=7619 ms, other=99 ms
+		Project Asset Count: scripts=2389, non-scripts=5857
+		Asset File Changes: new=1, changed=3, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokePackagesCallback: 24.985ms
+	ApplyChangesToAssetFolders: 0.610ms
+	Scan: 265.393ms
+	Collect global state as custom dependencies: 18.942ms
+	OnSourceAssetsModified: 0.842ms
+	CategorizeScriptCompilationAssets: 277.855ms
+	ProcessAssetsWithTransientArtifactChanges: 127.569ms
+	CategorizeAssets: 903.861ms
+	CompileScripts: 7619.393ms
+	ImportOutOfDateAssets: 7738.231ms (7455.051ms without children)
+		ImportManagerImport: 192.787ms (33.216ms without children)
+			UpdateCategorizedAssets: 0.088ms
+		ReloadNativeAssets: 0.054ms
+		UnloadImportedAssets: 0.960ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 2.368ms
+		ImportSchedulerStart: 86.994ms
+	PostProcessAllAssets: 453.931ms
+		VCAutoAddAssetPostprocess 0.993ms
+		XRBuildSystem.XRAssetImported 0.469ms
+		MonoPostProcessAllAssets: 451.917ms
+			AssetPostprocessor.OnPostprocessAllAssets 177.055ms
+			AssetReferenceReimportMonitor.OnPostprocessAllAssets 25.379ms
+			StyleCatalogPostProcessor.OnPostprocessAllAssets 21.921ms
+			UniversalRenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 11.270ms
+			BuilderAssetPostprocessor.OnPostprocessAllAssets 6.170ms
+			SpriteSlicePostprocessor.OnPostprocessAllAssets 3.093ms
+			ShaderGraphAssetPostProcessor.OnPostprocessAllAssets 1.916ms
+			AssetChangedListener.OnPostprocessAllAssets 1.804ms
+			SpeedTree9Postprocessor.OnPostprocessAllAssets 1.690ms
+			GraphRefreshPostprocessor.OnPostprocessAllAssets 1.632ms
+			WindowAssetPostprocessingWatcher.OnPostprocessAllAssets 1.427ms
+			RetainedModeAssetPostprocessor.OnPostprocessAllAssets 1.259ms
+			EditModeScopePostprocessor.OnPostprocessAllAssets 0.835ms
+			AssetChangeDetector.OnPostprocessAllAssets 0.804ms
+			RenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 0.692ms
+			MaterialPostprocessor.OnPostprocessAllAssets 0.662ms
+			SpriteEditorTexturePostprocessor.OnPostprocessAllAssets 0.570ms
+			ArtifactBrowserPostProcessor.OnPostprocessAllAssets 0.521ms
+			ShaderReflectionAssetPostProcessor.OnPostprocessAllAssets 0.397ms
+			InputActionAssetPostprocessor.OnPostprocessAllAssets 0.390ms
+			TextAssetPostProcessor.OnPostprocessAllAssets 0.380ms
+			SkillsProjectAssetPostprocessor.OnPostprocessAllAssets 0.342ms
+			UVCSAssetPostprocessor.OnPostprocessAllAssets 0.313ms
+			SampleDependencyImporterPostProcessor.OnPostprocessAllAssets 0.296ms
+			ModelAssetProcessor.OnPostprocessAllAssets 0.295ms
+			PostProcessor.OnPostprocessAllAssets 0.290ms
+			InputActionJsonNameModifierAssetProcessor.OnPostprocessAllAssets 0.283ms
+			ReferencedClipsPostProcessor.OnPostprocessAllAssets 0.268ms
+			AudioMixerPostprocessor.OnPostprocessAllAssets 0.265ms
+			ProjectSettingsPostprocessor.OnPostprocessAllAssets 0.252ms
+			CinemachineSettings.OnPostprocessAllAssets 0.236ms
+			AssetEvents.OnPostprocessAllAssets 0.226ms
+			TMPro_TexturePostProcessor.OnPostprocessAllAssets 0.217ms
+			DomainReloadProcessor.OnPostprocessAllAssets 0.214ms
+			TerrainToolbarOverlayPostProcessor.OnPostprocessAllAssets 0.200ms
+			SpeedTreePostProcessor.OnPostprocessAllAssets 0.169ms
+			SyncVS.PostprocessSyncProject 0.168ms
+			AssetDatabaseCallbacks.OnPostprocessAllAssets 0.150ms
+			SamplePostprocessor.OnPostprocessAllAssets 0.126ms
+			ConfigAssetsTracker.OnPostprocessAllAssets 0.122ms
+			PipelineAssetProcessor.OnPostprocessAllAssets 0.119ms
+			AssetReloadNotifier.OnPostprocessAllAssets 0.101ms
+			ScenarioDriftAssetsTracker.OnPostprocessAllAssets 0.099ms
+			AudioContainerPostProcessor.OnPostprocessAllAssets 0.074ms
+			TrackSelectedAssetsProcessor.OnPostprocessAllAssets 0.053ms
+	PostAssetChangesProfiler: 13.784ms
+	UnloadStreamsBegin: 3.620ms
+	PersistCurrentRevisions: 0.382ms
+	GenerateScriptTypeHashes: 8.222ms
+	GenerateScriptTypeSerializationHashes: 13.123ms
+	Untracked: 2287.426ms
+
+Application.AssetDatabase Initial Refresh End
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.01 seconds
+Scanning for USB devices : 5.912ms
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-EndlessCombatSurvival
+Unloading 70 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 11118 unused Assets / (25.6 MB). Loaded Objects now: 12216.
+Memory consumption went from 0.68 GB to 0.66 GB.
+Total: 29.835300 ms (FindLiveObjects: 1.135800 ms CreateObjectMapping: 1.219800 ms MarkObjects: 17.527200 ms  DeleteObjects: 9.948500 ms)
+
+Starting RunSetupBatch...
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EndlessSurvival.World.Editor.CampSetupUtility:RunSetupBatch () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:40)
+
+(Filename: Assets/Scripts/World/Editor/CampSetupUtility.cs Line: 40)
+
+Importing 'GUID: 42224ee2eb06caa4caf46f321e1a029f - Path: Assets/Resources' with importer (DefaultImporter)
+Imported 'GUID: 42224ee2eb06caa4caf46f321e1a029f' -> (Import Result ID: 'e7dfbee8c2d664e6940607ed5d2dc57d') in 0.012 seconds [static dependencies only]. Details - ImportResultOutputID=b6feb7479de957ed0c79ff08f0994aef DependenciesID=287deed8794df40d9f6decf4e4754da9 StaticDependenciesID=ef54114dd3de51acc6a820c9895a6877 
+Asset Pipeline Refresh (id=e72062cef6458764db556e5f7a6555dd): Total: 0.222 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: d28bc18da4d63c74892539412d9bc262 - Path: Assets/Resources/Dialogues' with importer (DefaultImporter)
+Imported 'GUID: d28bc18da4d63c74892539412d9bc262' -> (Import Result ID: '476430d149d5d1cd45792138cef5d43c') in 0.010 seconds [static dependencies only]. Details - ImportResultOutputID=6e4716e02915e22a85d142b7d1a41acf DependenciesID=eb8b2718051eecc0f7fb13f653cf2609 StaticDependenciesID=7cb4b09f09788c81fa45bad5b48a3926 
+Asset Pipeline Refresh (id=59a0ce11ec93f0f489a905a1581236a0): Total: 0.140 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: dca10342148297c4c9033670fed955e4 - Path: Assets/Resources/Dialogues/Dialogue_Complaining.asset' with importer (NativeFormatImporter)
+Imported 'GUID: dca10342148297c4c9033670fed955e4' -> (Import Result ID: '181bb056397dd1322f648ee89ac0e92c') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=689c3ad83fa9b9e854fcfb5fce014726 DependenciesID=96484f3488117653ecd5cf6c83e54edc StaticDependenciesID=0c55f1e9b1ad89bbedae05655afd3f9e 
+Asset Pipeline Refresh (id=7605337c5fbbda1468cc1925251e328c): Total: 0.140 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: dfba8ddca9e4652458b0b679865e6540 - Path: Assets/Resources/Dialogues/Dialogue_Story.asset' with importer (NativeFormatImporter)
+Imported 'GUID: dfba8ddca9e4652458b0b679865e6540' -> (Import Result ID: 'bc6d7c8c4b634225d37e11facfe1b3da') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=ffeafad2ec8ad7af7a287e11f06dafd4 DependenciesID=6f7562043ee44a5a83e6c66b3b591a9b StaticDependenciesID=195c9ea8df2690d409de7ca90e6789a1 
+Refreshing native plugins compatible for Editor in 2.22 ms, found 5 plugins.
+Asset Pipeline Refresh (id=c82c37ca52844604fbdb980258704c8c): Total: 0.129 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: 0000000000000000b000000000000000 - Path: ProjectSettings/EditorBuildSettings.asset' with importer (LibraryAssetImporter)
+Imported 'GUID: 0000000000000000b000000000000000' -> (Import Result ID: 'ebd24802f63656ece539678bb8e64d47') in 0.002 seconds [static dependencies only]. Details - ImportResultOutputID=4647dd083cfc32cebcd7526e8846440c DependenciesID=7a829441299454d69bd20d107bf9922c StaticDependenciesID=d66a6bf6b87f856255ac31b8f2fcb817 
+Importing 'GUID: dca10342148297c4c9033670fed955e4 - Path: Assets/Resources/Dialogues/Dialogue_Complaining.asset' with importer (NativeFormatImporter)
+Imported 'GUID: dca10342148297c4c9033670fed955e4' -> (Import Result ID: 'f1734851ff2f3e67801e1c3d302707c2') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=689c3ad83fa9b9e854fcfb5fce014726 DependenciesID=56451aa7ff92889be29d1f0780f364ab StaticDependenciesID=c19375209ea59adff200ae7e6b62007d 
+Importing 'GUID: dfba8ddca9e4652458b0b679865e6540 - Path: Assets/Resources/Dialogues/Dialogue_Story.asset' with importer (NativeFormatImporter)
+Imported 'GUID: dfba8ddca9e4652458b0b679865e6540' -> (Import Result ID: '2411c8f4ebe5944a1a90975d5979f6ce') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=ffeafad2ec8ad7af7a287e11f06dafd4 DependenciesID=3234564f1cf0920a8c3c577af9946033 StaticDependenciesID=813d9aca1abdf10bc7fff844f3b2e2e2 
+Refreshing native plugins compatible for Editor in 2.23 ms, found 5 plugins.
+Asset Pipeline Refresh (id=6d1d6456a7d6e5e408ece6d14d4ac736): Total: 0.143 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Dialogue Sets created in Assets/Resources/Dialogues.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EndlessSurvival.World.Editor.CampSetupUtility:CreateDialogueSets () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:67)
+EndlessSurvival.World.Editor.CampSetupUtility:RunSetupBatch () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:41)
+
+(Filename: Assets/Scripts/World/Editor/CampSetupUtility.cs Line: 67)
+
+Importing 'GUID: 77030903247b59145b1955c8039f38dc - Path: Assets/Prefabs/UI' with importer (DefaultImporter)
+Imported 'GUID: 77030903247b59145b1955c8039f38dc' -> (Import Result ID: '33fcd10945d7efe6b0b6cb7797f81bea') in 0.010 seconds [static dependencies only]. Details - ImportResultOutputID=b747e002c37b367e5449daf1f48aa6da DependenciesID=eb14cdf755c752b21e10df4fa228da92 StaticDependenciesID=c197e564cc94c5f6b35f8f4198e8257c 
+Asset Pipeline Refresh (id=9696c0b0d1e8b5a459896f8078fb121c): Total: 0.125 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: ec3e7b90a6b91e044a4f6f9b6e95bcb5 - Path: Assets/Prefabs/UI/SpeechBubble.prefab' with importer (PrefabImporter)
+Imported 'GUID: ec3e7b90a6b91e044a4f6f9b6e95bcb5' -> (Import Result ID: 'd10a4d5fbaf4835c7ca733e23c511216') in 0.013 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=cd9ad40b811a4b45fe86a044c0ad26cc DependenciesID=a7406ee5c0fe124333b1a9552d560e08 StaticDependenciesID=c6a389c97f4f6c31f5b73849563c7f14 
+Refreshing native plugins compatible for Editor in 2.43 ms, found 5 plugins.
+Asset Pipeline Refresh (id=e53286c7497f1864ba27a546326cba67): Total: 0.154 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Created SpeechBubble prefab at Assets/Prefabs/UI/SpeechBubble.prefab
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EndlessSurvival.World.Editor.CampSetupUtility:CreateSpeechBubblePrefab () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:139)
+EndlessSurvival.World.Editor.CampSetupUtility:RunSetupBatch () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:42)
+
+(Filename: Assets/Scripts/World/Editor/CampSetupUtility.cs Line: 139)
+
+Loaded scene 'Library/Unused/3c8abdfd143848549b4b02ab76259ce9'
+	Deserialize:            11.845 ms
+	Integration:            0.312 ms
+	Integration of assets:  7.866 ms
+	Thread Wait Time:       7.998 ms
+	Total Operation Time:   28.021 ms
+Importing 'GUID: 84435d1a85743b442985fa085210c9e1 - Path: Assets/Prefabs/PointsOfInterests/EnemyCamp_Medium.prefab' with importer (PrefabImporter)
+Imported 'GUID: 84435d1a85743b442985fa085210c9e1' -> (Import Result ID: 'aeb020e4238a3f98f6242031969698e2') in 0.003 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=587f9cc62f5dac2262c9c2bee0c7c5cf DependenciesID=47a1bbc309f7b541b77160829d7cd95c StaticDependenciesID=7a6b607b5c8809ff310b1a41907e402a 
+Refreshing native plugins compatible for Editor in 2.24 ms, found 5 plugins.
+Asset Pipeline Refresh (id=1670d016ef9679b46b3346ed86db8b13): Total: 0.137 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Updated camp prefab at Assets/Prefabs/PointsOfInterests/EnemyCamp_Medium.prefab
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EndlessSurvival.World.Editor.CampSetupUtility:UpdateCampPrefabs () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:195)
+EndlessSurvival.World.Editor.CampSetupUtility:RunSetupBatch () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:43)
+
+(Filename: Assets/Scripts/World/Editor/CampSetupUtility.cs Line: 195)
+
+Worker ready: AssetImportWorkerHW0 0
+Loaded scene 'Library/Unused/4caf23102bd511640813f47db85e4e5e'
+	Deserialize:            0.624 ms
+	Integration:            45.310 ms
+	Integration of assets:  0.001 ms
+	Thread Wait Time:       0.008 ms
+	Total Operation Time:   45.943 ms
+Importing 'GUID: 7e74ec794582fee429dfc861a0361ef7 - Path: Assets/Prefabs/Enemies/Enemy.prefab' with importer (PrefabImporter)
+Imported 'GUID: 7e74ec794582fee429dfc861a0361ef7' -> (Import Result ID: '3e3a70e8ffdd70527da727c50c0d695c') in 0.005 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=179522e6850b95aba1d3269bbf41604a DependenciesID=da762ed86ef8eec1c1da67aa34f3720c StaticDependenciesID=c3e4bc752df694d1d1e53ae1fef4e141 
+Refreshing native plugins compatible for Editor in 2.43 ms, found 5 plugins.
+Asset Pipeline Refresh (id=4e14b08ddb22a2d43840263b37cb7318): Total: 0.142 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Updated Enemy prefab with SpeechBubble reference at Assets/Prefabs/Enemies/Enemy.prefab
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EndlessSurvival.World.Editor.CampSetupUtility:UpdateEnemyPrefabToLoadBubble () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:223)
+EndlessSurvival.World.Editor.CampSetupUtility:UpdateCampPrefabs () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:200)
+EndlessSurvival.World.Editor.CampSetupUtility:RunSetupBatch () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:43)
+
+(Filename: Assets/Scripts/World/Editor/CampSetupUtility.cs Line: 223)
+
+Finished RunSetupBatch.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+EndlessSurvival.World.Editor.CampSetupUtility:RunSetupBatch () (at Assets/Scripts/World/Editor/CampSetupUtility.cs:44)
+
+(Filename: Assets/Scripts/World/Editor/CampSetupUtility.cs Line: 44)
+
+Batchmode quit successfully invoked - shutting down!
+Pipeline Server stopped
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input Polling Thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-HARUNLUK-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-HARUNLUK channel disconnected successfully.
+Lingering sessions upon destruction of worker manager
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+CodeReloadManager destroyed
+Exiting batchmode successfully now!
+Exiting without the bug reporter. Application will terminate with return code 0

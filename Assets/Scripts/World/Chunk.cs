@@ -221,6 +221,14 @@ namespace EndlessSurvival.World
                 pois[i].InitializeFromChunk(poiSubRng);
             }
 
+            // Initialize or spawn roadside story events (Deniz Feneri vb.)
+            var eventSpawner = GetComponentInChildren<StoryEventSpawner>();
+            if (eventSpawner == null)
+            {
+                eventSpawner = gameObject.AddComponent<StoryEventSpawner>();
+            }
+            eventSpawner.SpawnEventIfEligible(this);
+
             if (backBlockade != null)
             {
                 backBlockade.SetActive(false);

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 492baecdd5060bf41b78cbed506d0a84, type: 3}
+  m_Name: Note_LighthouseKeeper
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Story.NoteDefinition
+  title: "Fener Bek\xE7isinin Son Seyir Defteri"
+  author: "Fener Bek\xE7isi Thomas"
+  bodyText: "14 Ekim - Sis G\xFCn\xFC 412\n\nDeniz \xE7ekileli aylar oldu. Art\u0131k
+    dalga sesleri yerine sadece asfalt\u0131n u\u011Fultusu ve r\xFCzgar\u0131n f\u0131s\u0131lt\u0131s\u0131
+    var. Kuzeye giden ara\xE7 konvoylar\u0131 da bitti. Kalan son askeri devriyeler
+    de kamplar\u0131na \xE7ekilip bir daha g\xF6r\xFCnmediler.\n\nHer gece bu feneri
+    yakmaya devam ediyorum. Belki karanl\u0131kta y\xF6n\xFCn\xFC kaybetmi\u015F
+    bir yolcu, benim gibi hayatta kalmaya \xE7al\u0131\u015Fan bir ruh g\xF6r\xFCr
+    de buraya s\u0131\u011F\u0131n\u0131r diye.\n\nE\u011Fer bu sat\u0131rlar\u0131
+    okuyorsan yabanc\u0131; kul\xFCbedeki yak\u0131t\u0131 ve suyu al. \u0130lerideki
+    da\u011F ge\xE7itleri d\xFC\u015Fman kamplar\u0131yla dolu. Ate\u015Fini yakmadan
+    ve araban\u0131 kontrol etmeden sak\u0131n yola \xE7\u0131kma. I\u015F\u0131k
+    yolunu ayd\u0131nlats\u0131n."
+  noteId: NOTE_LIGHTHOUSE_KEEPER

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_CookedMeat
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: "Pi\u015Fmi\u015F Et"
+  category: 9
+  description: "Ate\u015Fte taze pi\u015Firilmi\u015F, a\xE7l\u0131\u011F\u0131 h\u0131zla
+    gideren ve can yenileyen lezzetli et."
+  weight: 0.4
+  value: 1
+  useAmount: 45
+  equipSlot: 1
+  armor: 0
+  weaponPrefab: {fileID: 0}
+  worldColor: {r: 0.6, g: 0.25, b: 0.1, a: 1}
+  worldScale: {x: 0.35, y: 0.35, z: 0.35}
+  worldModel: {fileID: 0}
+  worldModelScale: 1

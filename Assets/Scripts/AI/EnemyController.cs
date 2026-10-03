@@ -9,6 +9,13 @@ namespace EndlessCombat.AI
     [RequireComponent(typeof(NavMeshAgent))]
     public class EnemyController : MonoBehaviour, IDamageable
     {
+        public enum EnemyState { Idle, Sitting, Patrolling, Combat }
+        
+        [Header("Behavior")]
+        public EnemyState initialState = EnemyState.Idle;
+        private EnemyState currentState;
+        public bool IsAlerted => currentState == EnemyState.Combat;
+
         [Header("Stats")]
         public float maxHealth = 100f;
         private float currentHealth;
@@ -46,6 +53,7 @@ namespace EndlessCombat.AI
 
         private void Start()
         {
+            currentState = initialState;
             currentHealth = maxHealth;
             agent = GetComponent<NavMeshAgent>();
             animator = GetComponentInChildren<Animator>();
@@ -108,6 +116,7 @@ namespace EndlessCombat.AI
 
             if (distanceToTarget <= attackRange)
             {
+                SetState(EnemyState.Combat);
                 animator.SetBool("IsAiming", true);
                 
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
@@ -125,6 +134,7 @@ namespace EndlessCombat.AI
             }
             else if (distanceToTarget <= detectionRange)
             {
+                SetState(EnemyState.Combat);
                 animator.SetBool("IsAiming", false);
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
                 
@@ -137,6 +147,23 @@ namespace EndlessCombat.AI
             else
             {
                 animator.SetBool("IsAiming", false);
+                if (currentState == EnemyState.Combat)
+                {
+                    SetState(initialState); // Return to initial state if lost target
+                }
+            }
+
+            if (currentState == EnemyState.Sitting)
+            {
+                transform.localScale = Vector3.one;
+                isMoving = false;
+                moveVelocity = Vector3.zero;
+                animator.SetBool("IsSitting", true);
+            }
+            else
+            {
+                transform.localScale = Vector3.one;
+                animator.SetBool("IsSitting", false);
             }
 
             // Hareketi ve yerçekimini uygula
@@ -198,6 +225,8 @@ namespace EndlessCombat.AI
             IsDead = true;
             if (agent != null) agent.enabled = false;
             
+            EndlessSurvival.World.GameStatsTracker.Instance?.RecordEnemyKilled();
+
             EnableRagdoll();
 
             LootSpawner.DropLoot(dropTable, transform.position);
@@ -257,6 +286,19 @@ namespace EndlessCombat.AI
             
             var mainCol = GetComponent<Collider>();
             if (mainCol != null) mainCol.enabled = false;
+        }
+
+        public void SetState(EnemyState newState)
+        {
+            if (currentState == newState) return;
+            currentState = newState;
+            
+            if (newState == EnemyState.Combat)
+            {
+                // Stop dialogue if alerted
+                var dialogue = GetComponent<EnemyDialogue>();
+                if (dialogue != null) dialogue.StopSpeaking();
+            }
         }
     }
 }

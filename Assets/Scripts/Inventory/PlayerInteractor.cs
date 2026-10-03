@@ -49,7 +49,7 @@ namespace EndlessSurvival.Inventory
                 if (_feedbackTimer <= 0f && feedbackText != null) feedbackText.text = string.Empty;
             }
 
-            if (InventoryUI.IsOpen)
+            if (InventoryUI.IsOpen || EndlessSurvival.Camping.CampfireUI.IsOpen)
             {
                 SetPrompt(null);
                 return;
@@ -64,6 +64,11 @@ namespace EndlessSurvival.Inventory
 
             if (_current != null && InteractPressed())
             {
+                if (Time.unscaledTime - EndlessSurvival.Camping.CampfireUI.LastCloseTime < 0.25f)
+                {
+                    return;
+                }
+
                 string message = _current.Interact(inventory);
                 ShowFeedback(message);
                 _nextScan = 0f;

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8efe3cc10583b2f45a364dc547de08ed, type: 3}
+  m_Name: Dialogue_LighthouseKeeper
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Story.DialogueSet
+  setName: "Fener Bek\xE7isi Thomas Diyaloglar\u0131"
+  lines:
+  - text: "I\u015F\u0131k hi\xE7 s\xF6nmemeli... Y\u0131llard\u0131r bu yoldan kimse
+      ge\xE7medi san\u0131yordum."
+    duration: 4.5
+    speakerIndex: 0
+  - text: "D\xFCnya sustu\u011Funda deniz de \xE7ekildi; geriye sadece bu sonsuz
+      sis ve asfalt kald\u0131."
+    duration: 5
+    speakerIndex: 0
+  - text: "Arabana iyi bak yolcu. Bu yolda durmak \xF6l\xFCm demektir."
+    duration: 4.5
+    speakerIndex: 0
+  - text: "Masan\u0131n \xFCst\xFCnde eski seyir defterimi b\u0131rakt\u0131m. Neler
+      oldu\u011Funu merak ediyorsan oku."
+    duration: 5
+    speakerIndex: 0
+  - text: "Kul\xFCbede biraz yak\u0131t ve temiz su var. Yolculu\u011Funda i\u015Fine
+      yarar, \xE7ekinmeden al."
+    duration: 5
+    speakerIndex: 0
+  pauseBetweenLines: 1.5

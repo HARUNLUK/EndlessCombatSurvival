@@ -101,11 +101,15 @@ namespace EndlessSurvival.Inventory
             var health = GetComponent<PlayerHealth>();
             if (health == null) return "Cannot use this right now";
             if (health.IsDead) return null;
-            if (health.CurrentHealth >= health.maxHealth - 0.5f) return "Health is already full";
+            if (health.CurrentHealth >= health.maxHealth - 0.5f && !health.isBleeding) return "Health is already full";
 
             Storage.Remove(item, 1);
             float healed = health.Heal(item.useAmount);
-            return $"Used {item.DisplayName} (+{Mathf.RoundToInt(healed)} health)";
+            bool stoppedBleed = health.isBleeding;
+            health.StopBleeding();
+
+            string bleedNote = stoppedBleed ? " & Kanama durduruldu!" : "";
+            return $"Used {item.DisplayName} (+{Mathf.RoundToInt(healed)} health{bleedNote})";
         }
 
         /// <summary>Adds items and returns how many units were accepted.</summary>
@@ -128,7 +132,12 @@ namespace EndlessSurvival.Inventory
                 return amount;
             }
 
-            return Storage.Add(item, amount);
+            int added = Storage.Add(item, amount);
+            if (added > 0)
+            {
+                EndlessSurvival.World.GameStatsTracker.Instance?.RecordItemLooted(added);
+            }
+            return added;
         }
 
         public void AddMoney(int amount)

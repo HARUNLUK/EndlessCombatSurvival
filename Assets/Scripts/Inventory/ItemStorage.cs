@@ -26,6 +26,9 @@ namespace EndlessSurvival.Inventory
 
         public event Action Changed;
 
+        /// <summary>Read-only collection of stored items and amounts.</summary>
+        public IReadOnlyDictionary<ItemDefinition, int> Items => _items;
+
         /// <summary>Maximum carry weight in kg. A value of zero or less means unlimited.</summary>
         public float MaxWeight { get; set; }
 
