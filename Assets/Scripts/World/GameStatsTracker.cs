@@ -22,6 +22,9 @@ namespace EndlessSurvival.World
         [Tooltip("Keşfedilen düşman kampı sayısı")]
         public int campsDiscovered = 0;
 
+        [Tooltip("Püskürtülen kamp baskını sayısı")]
+        public int ambushesSurvived = 0;
+
         [Tooltip("Gerçek dünyada geçen oynama süresi (saniye)")]
         public float realTimePlayed = 0f;
 
@@ -65,6 +68,7 @@ namespace EndlessSurvival.World
             enemiesKilled = 0;
             itemsLooted = 0;
             campsDiscovered = 0;
+            ambushesSurvived = 0;
             realTimePlayed = 0f;
             causeOfDeath = "Yolda Yaşamını Yitirdi";
             _hasLastPos = false;
@@ -130,6 +134,23 @@ namespace EndlessSurvival.World
         public void RecordCampDiscovered()
         {
             campsDiscovered++;
+        }
+
+        public void RecordAmbushSurvived()
+        {
+            ambushesSurvived++;
+            Debug.Log($"<color=cyan>[Stats] Kamp baskını başarıyla püskürtüldü! Toplam: {ambushesSurvived}</color>");
+        }
+
+        public void SetStats(float distance, int enemies, int items, int camps, int ambushes, float time)
+        {
+            totalDistanceMeters = distance;
+            enemiesKilled = enemies;
+            itemsLooted = items;
+            campsDiscovered = camps;
+            ambushesSurvived = ambushes;
+            realTimePlayed = time;
+            _hasLastPos = false;
         }
 
         public void SetCauseOfDeath(string cause)

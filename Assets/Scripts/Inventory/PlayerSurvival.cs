@@ -165,6 +165,15 @@ namespace EndlessSurvival.Inventory
             RefreshUI();
         }
 
+        public void SetValues(float hunger, float thirst, float bladder)
+        {
+            EnsureInitialized();
+            _hunger = Mathf.Clamp(hunger, 0f, maxHunger);
+            _thirst = Mathf.Clamp(thirst, 0f, maxThirst);
+            _bladder = Mathf.Clamp(bladder, 0f, maxBladder);
+            RefreshUI();
+        }
+
         public void RefreshUI()
         {
             if (statusText == null) return;

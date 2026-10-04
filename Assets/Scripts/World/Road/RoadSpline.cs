@@ -388,6 +388,14 @@ namespace EndlessSurvival.World.Road
             return CatmullRom(p0, p1, p2, p3, mid);
         }
 
+        /// <summary>
+        /// Evaluates the road spline at local target Z coordinate (alias for GetPointAtZ).
+        /// </summary>
+        public Vector3 SampleAtZ(float targetZ)
+        {
+            return GetPointAtZ(targetZ);
+        }
+
         private static float CatmullRom1D(float p0, float p1, float p2, float p3, float t)
         {
             float t2 = t * t;

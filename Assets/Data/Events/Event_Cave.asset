@@ -18,4 +18,8 @@ MonoBehaviour:
   spawnChance: 0.35
   minChunkInterval: 3
   minChunkIndex: 1
-  lateralDistance: 44
+  lateralDistance: 42
+  placementZone: 1
+  isAllowedOnRoad: 0
+  orientAwayFromRoad: 1
+  minRoadDistance: 36

@@ -327,6 +327,18 @@ namespace EndlessSurvival.Camping
                 sleepReport = result.summary;
             }
 
+            // 1.5. Kamp Baskını Kontrolü (Adım 7.3)
+            bool isAmbushed = false;
+            if (CampAmbushManager.Instance != null && _activeFire != null)
+            {
+                isAmbushed = CampAmbushManager.Instance.RollAmbushOnSleep(_activeFire.transform.position);
+            }
+
+            if (isAmbushed)
+            {
+                sleepReport = "<color=red>⚠️ TEHLİKE: Uykunuz silah ve ayak sesleriyle bölündü!\nDüşmanlar kampınızı bastı!</color>";
+            }
+
             if (_fadeText != null)
             {
                 _fadeText.text = sleepReport;
@@ -339,7 +351,7 @@ namespace EndlessSurvival.Camping
                 var health = player.GetComponent<PlayerHealth>();
                 if (health != null && !health.IsDead)
                 {
-                    health.Heal(40f);
+                    health.Heal(isAmbushed ? 20f : 40f);
                     health.StopBleeding();
                 }
 
@@ -374,6 +386,9 @@ namespace EndlessSurvival.Camping
             {
                 _fadeText.text = "";
             }
+
+            // 3. Otomatik Kayıt (Auto-Save)
+            EndlessSurvival.Save.SaveManager.Instance?.SaveGame(isAutoSave: true);
         }
 
         private void OnBandageClicked()

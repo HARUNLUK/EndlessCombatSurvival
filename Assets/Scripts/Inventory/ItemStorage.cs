@@ -94,5 +94,12 @@ namespace EndlessSurvival.Inventory
             Changed?.Invoke();
             return removed;
         }
+
+        /// <summary>Clears all items in the storage.</summary>
+        public void Clear()
+        {
+            _items.Clear();
+            Changed?.Invoke();
+        }
     }
 }

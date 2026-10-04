@@ -64,6 +64,9 @@ namespace EndlessSurvival.Story
             if (authorText != null) authorText.text = note.author;
             if (bodyText != null) bodyText.text = note.bodyText;
 
+            // Track read note for Save system and story progression
+            EndlessSurvival.Save.SaveManager.Instance?.MarkNoteAsRead(note.noteId);
+
             _isOpen = true;
             notePanel.SetActive(true);
 

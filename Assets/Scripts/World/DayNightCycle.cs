@@ -244,6 +244,16 @@ namespace EndlessSurvival.World
         }
 
         /// <summary>
+        /// Saati doğrudan belirli bir değere ayarlar (Kayıt yükleme).
+        /// </summary>
+        public void SetTime(float hour)
+        {
+            currentHour = Mathf.Repeat(hour, 24f);
+            UpdateLighting(true);
+            OnHourChanged?.Invoke(currentHour);
+        }
+
+        /// <summary>
         /// Kamp uykusu: Eğer gündüzse geceye (21:30), geceyse sabaha (07:30) geçirir.
         /// </summary>
         public (float hoursPassed, string summary) SleepToNextPhase()

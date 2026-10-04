@@ -153,6 +153,14 @@ namespace EndlessSurvival.Inventory
             return _current - before;
         }
 
+        public void SetHealthAndBleed(float health, bool bleeding)
+        {
+            EnsureInitialized();
+            _current = Mathf.Clamp(health, 0f, maxHealth);
+            isBleeding = bleeding;
+            RefreshUI();
+        }
+
         public void RefreshUI()
         {
             if (healthText == null) return;
