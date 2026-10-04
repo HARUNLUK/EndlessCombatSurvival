@@ -29,5 +29,18 @@ namespace EndlessSurvival.Story
 
         [Tooltip("Yol orta çizgisinden sağa veya sola ne kadar uzaklığa yerleştirileceği")]
         public float lateralDistance = 42f;
+
+        [Header("Road Placement Settings")]
+        [Tooltip("Bu etkinliğin yol ile olan konumsal kuralı. OnRoad ise yalnızca yol üstündeki özel noktalara yerleşebilir.")]
+        public EndlessSurvival.World.POI.POIPlacementZone placementZone = EndlessSurvival.World.POI.POIPlacementZone.Roadside;
+
+        [Tooltip("Yol üstü için izin verilmiş özel event mi? True ise yalnızca yol üstü noktalarında çıkar.")]
+        public bool isAllowedOnRoad = false;
+
+        [Tooltip("Yola göre yönelimi: True ise yola doğru değil, yoldan uzağa doğru bakar (Mağara gibi tüneli arkaya uzanan yapılar için)")]
+        public bool orientAwayFromRoad = false;
+
+        [Tooltip("Yol orta çizgisinden olması gereken minimum güvenli mesafe (metre)")]
+        public float minRoadDistance = 35f;
     }
 }

@@ -9,6 +9,13 @@ namespace EndlessSurvival.World.POI
         [Range(0f, 1f)]
         public float spawnChance = 1f;
 
+        [Header("Road Placement Settings")]
+        [Tooltip("Bu nesnenin yol ile olan yerleşim kuralı. OnRoad ise yalnızca yol üstündeki özel noktalara yerleşebilir.")]
+        public POIPlacementZone placementZone = POIPlacementZone.OffRoad;
+
+        [Tooltip("Yol orta çizgisinden olması gereken minimum güvenli mesafe (metre).")]
+        public float minRoadClearance = 45f;
+
         /// <summary>
         /// Called by the parent Chunk after initialization to give the POI its
         /// deterministic random. This replaces the old Start()-based spawn roll

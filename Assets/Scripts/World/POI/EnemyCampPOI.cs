@@ -43,6 +43,8 @@ namespace EndlessSurvival.World.POI
 
         private void Awake()
         {
+            placementZone = POIPlacementZone.OffRoad;
+            minRoadClearance = (campType == CampType.Outpost) ? 55f : 45f;
             actualCampCenter = transform.position;
         }
 
@@ -95,16 +97,39 @@ namespace EndlessSurvival.World.POI
             Vector3 campCenter = transform.position;
             Chunk chunk = GetComponentInParent<Chunk>();
             Terrain tComponent = chunk?.ChunkTerrain;
+            Road.RoadSpline spline = chunk?.GetComponentInChildren<Road.RoadSpline>();
+
+            float flatR = (campType == CampType.Outpost) ? 19f : 12f;
+            float blendR = (campType == CampType.Outpost) ? 12f : 9f;
+            // Yolun şevini ve kampın düzleştirme platformunu korumak için gereken minimum güvenli mesafe
+            float requiredClearance = flatR + blendR + 20f;
 
             if (randomizeCampLocation && chunk != null)
             {
-                float randX = rng.Range(-200f, 200f);
-                if (Mathf.Abs(randX) < 18f)
+                float randZ = rng.Range(70f, 430f);
+                float roadLocalX = 0f;
+                if (spline != null)
                 {
-                    randX = (randX >= 0 ? 18f : -18f) + rng.Range(6f, 40f);
+                    Vector3 roadPt = spline.SampleAtZ(randZ);
+                    roadLocalX = roadPt.x;
                 }
-                float randZ = rng.Range(40f, 460f);
-                campCenter = chunk.transform.position + new Vector3(randX, 0, randZ);
+
+                // Yolun sağına veya soluna, yoldan en az requiredClearance kadar uzağa yerleştir
+                float side = rng.Value < 0.5f ? -1f : 1f;
+                float offset = rng.Range(requiredClearance, requiredClearance + 55f);
+                float campLocalX = roadLocalX + side * offset;
+
+                // Chunk sınırları (-215 ile +215) içinde kalmasını sağla
+                if (campLocalX < -215f || campLocalX > 215f)
+                {
+                    side = -side;
+                    campLocalX = roadLocalX + side * offset;
+                    campLocalX = Mathf.Clamp(campLocalX, -215f, 215f);
+                }
+
+                Vector3 localCampPos = new Vector3(campLocalX, 0f, randZ);
+                campCenter = chunk.transform.TransformPoint(localCampPos);
+
                 if (tComponent != null)
                 {
                     campCenter.y = tComponent.SampleHeight(campCenter) + tComponent.transform.position.y;
@@ -113,12 +138,33 @@ namespace EndlessSurvival.World.POI
             }
             else
             {
+                // Statik/manuel yerleşimde dahi yolun üstüne veya yakınına denk gelmişse yoldan uzağa ötele
+                if (spline != null && chunk != null)
+                {
+                    float distToRoad = spline.GetDistanceToSpline(campCenter);
+                    if (distToRoad < requiredClearance)
+                    {
+                        Vector3 localPos = chunk.transform.InverseTransformPoint(campCenter);
+                        Vector3 roadPt = spline.SampleAtZ(localPos.z);
+                        float side = (localPos.x >= roadPt.x) ? 1f : -1f;
+                        localPos.x = roadPt.x + side * requiredClearance;
+                        localPos.x = Mathf.Clamp(localPos.x, -215f, 215f);
+                        campCenter = chunk.transform.TransformPoint(localPos);
+                    }
+                }
+
                 if (tComponent != null)
                 {
                     campCenter.y = tComponent.SampleHeight(campCenter) + tComponent.transform.position.y;
                     transform.position = campCenter;
                 }
             }
+
+            if (tComponent != null)
+            {
+                EndlessSurvival.World.Road.RoadTerrainAdapter.FlattenTerrainArea(tComponent, campCenter, flatR, blendR, campCenter.y);
+            }
+
             actualCampCenter = transform.position;
 
             // Find any authored seat or guard spots in children

@@ -119,5 +119,109 @@ namespace EndlessSurvival.World.Road
             }
 #endif
         }
+
+        /// <summary>
+        /// Flattens a circular area of terrain around worldCenter into a level platform and blends smoothly into surrounding terrain.
+        /// </summary>
+        public static void FlattenTerrainArea(Terrain terrain, Vector3 worldCenter, float flatRadius, float blendRadius, float? targetWorldY = null)
+        {
+            if (terrain == null) return;
+            EnsureRuntimeTerrainClone(terrain);
+
+            TerrainData td = terrain.terrainData;
+            if (td == null) return;
+
+            int hRes = td.heightmapResolution;
+            Vector3 tSize = td.size; // 500 x 100 x 500
+            Vector3 tPos = terrain.transform.position;
+
+            float targetLocalY = targetWorldY.HasValue ? (targetWorldY.Value - tPos.y) : terrain.SampleHeight(worldCenter);
+
+            float totalRadius = flatRadius + blendRadius;
+
+            // Convert worldCenter to heightmap sample coordinates
+            float normCenterX = (worldCenter.x - tPos.x) / tSize.x;
+            float normCenterZ = (worldCenter.z - tPos.z) / tSize.z;
+
+            int centerSampleX = Mathf.RoundToInt(normCenterX * (hRes - 1));
+            int centerSampleZ = Mathf.RoundToInt(normCenterZ * (hRes - 1));
+
+            int radiusSamplesX = Mathf.CeilToInt((totalRadius / tSize.x) * (hRes - 1));
+            int radiusSamplesZ = Mathf.CeilToInt((totalRadius / tSize.z) * (hRes - 1));
+
+            int minX = Mathf.Clamp(centerSampleX - radiusSamplesX, 0, hRes - 1);
+            int maxX = Mathf.Clamp(centerSampleX + radiusSamplesX, 0, hRes - 1);
+            int minZ = Mathf.Clamp(centerSampleZ - radiusSamplesZ, 0, hRes - 1);
+            int maxZ = Mathf.Clamp(centerSampleZ + radiusSamplesZ, 0, hRes - 1);
+
+            int width = maxX - minX + 1;
+            int height = maxZ - minZ + 1;
+            if (width <= 0 || height <= 0) return;
+
+            float[,] heights = td.GetHeights(minX, minZ, width, height);
+
+            for (int z = 0; z < height; z++)
+            {
+                int sampleZ = minZ + z;
+                float normZ = (float)sampleZ / (hRes - 1);
+                float worldZ = tPos.z + normZ * tSize.z;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int sampleX = minX + x;
+                    float normX = (float)sampleX / (hRes - 1);
+                    float worldX = tPos.x + normX * tSize.x;
+
+                    float dist = Vector2.Distance(new Vector2(worldX, worldZ), new Vector2(worldCenter.x, worldCenter.z));
+                    if (dist > totalRadius) continue;
+
+                    float currentHeightMeters = heights[z, x] * tSize.y;
+                    float finalHeightMeters;
+
+                    if (dist <= flatRadius)
+                    {
+                        finalHeightMeters = targetLocalY;
+                    }
+                    else
+                    {
+                        float blendFactor = (dist - flatRadius) / blendRadius;
+                        float smooth = Mathf.SmoothStep(0f, 1f, blendFactor);
+                        finalHeightMeters = Mathf.Lerp(targetLocalY, currentHeightMeters, smooth);
+                    }
+
+                    heights[z, x] = Mathf.Clamp01(finalHeightMeters / tSize.y);
+                }
+            }
+
+            td.SetHeights(minX, minZ, heights);
+            terrain.Flush();
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(td);
+            }
+#endif
+        }
+
+        public static void EnsureRuntimeTerrainClone(Terrain terrain)
+        {
+            if (terrain == null) return;
+            if (Application.isPlaying && !terrain.gameObject.name.Contains("(RuntimeClone)"))
+            {
+                TerrainLayer[] oldLayers = terrain.terrainData.terrainLayers;
+                Material oldMat = terrain.materialTemplate;
+
+                terrain.terrainData = Object.Instantiate(terrain.terrainData);
+                terrain.terrainData.terrainLayers = oldLayers;
+                terrain.materialTemplate = oldMat;
+
+                terrain.gameObject.name += " (RuntimeClone)";
+                var tCol = terrain.GetComponent<TerrainCollider>();
+                if (tCol != null) tCol.terrainData = terrain.terrainData;
+
+                terrain.allowAutoConnect = false;
+            }
+        }
     }
 }

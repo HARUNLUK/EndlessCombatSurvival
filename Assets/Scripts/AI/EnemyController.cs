@@ -9,12 +9,27 @@ namespace EndlessCombat.AI
     [RequireComponent(typeof(NavMeshAgent))]
     public class EnemyController : MonoBehaviour, IDamageable
     {
-        public enum EnemyState { Idle, Sitting, Patrolling, Combat }
+        public enum EnemyState { Idle, Sitting, Patrolling, Suspicious, Combat }
         
         [Header("Behavior")]
         public EnemyState initialState = EnemyState.Idle;
         private EnemyState currentState;
         public bool IsAlerted => currentState == EnemyState.Combat;
+
+        [Header("Stealth & Perception")]
+        [Tooltip("Düşmanın görüş açısı genişliği (derece)")]
+        public float fieldOfViewAngle = 110f;
+        [Tooltip("Göz yüksekliği (raycast çıkış noktası)")]
+        public float eyeHeight = 1.6f;
+        [Tooltip("Şüphelenme sayacı (0-100)")]
+        public float suspicionMeter = 0f;
+        public float suspicionBuildRate = 50f; // Saniyede dolan şüphe miktarı
+        public float suspicionDecayRate = 20f;  // Saniyede azalan şüphe miktarı
+        [Tooltip("Şüpheli ses veya hareket algılandığında araştırma süresi")]
+        public float investigateDuration = 5f;
+        private Vector3 _investigatePoint;
+        private float _investigateTimer = 0f;
+        private TextMesh _stealthIndicator;
 
         [Header("Stats")]
         public float maxHealth = 100f;
@@ -88,11 +103,22 @@ namespace EndlessCombat.AI
 
             SetupRagdoll();
             DisableRagdoll();
+            SetupStealthIndicator();
         }
 
         private void Update()
         {
-            if (IsDead || target == null) return;
+            if (IsDead) return;
+
+            if (target == null)
+            {
+                var player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null)
+                {
+                    target = player.transform;
+                }
+                else return;
+            }
 
             float distanceToTarget = Vector3.Distance(transform.position, target.position);
             animator.SetFloat("MotionSpeed", 1f);
@@ -105,51 +131,118 @@ namespace EndlessCombat.AI
             // Yerçekimi (Gravity) Hesaplaması
             if (controller.isGrounded)
             {
-                verticalVelocity = -2f; // Yere yapışık kalması için küçük bir eksi değer
+                verticalVelocity = -2f;
             }
             else
             {
-                verticalVelocity += gravity * Time.deltaTime; // Havadaysa düş
+                verticalVelocity += gravity * Time.deltaTime;
             }
 
             Vector3 moveVelocity = Vector3.zero;
 
-            if (distanceToTarget <= attackRange)
+            // 1. Algılama ve Görüş Kontrolü
+            bool canSee = CanSeePlayer(out float sightClarity);
+
+            // Ayak sesi / gürültü duyma kontrolü
+            CheckPlayerNoise();
+
+            if (currentState == EnemyState.Combat)
             {
-                SetState(EnemyState.Combat);
-                animator.SetBool("IsAiming", true);
-                
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
+                // Savaş Durumu
+                suspicionMeter = 100f;
 
-                if (Time.time >= lastAttackTime + attackCooldown)
+                if (distanceToTarget <= attackRange && canSee)
                 {
-                    Attack();
+                    animator.SetBool("IsAiming", true);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
+
+                    if (Time.time >= lastAttackTime + attackCooldown)
+                    {
+                        Attack();
+                    }
+
+                    if (distanceToTarget > stopDist)
+                    {
+                        moveVelocity = direction * (moveSpeed * 0.7f);
+                        isMoving = true;
+                    }
                 }
-
-                if (distanceToTarget > stopDist)
+                else if (distanceToTarget <= detectionRange * 1.3f)
                 {
-                    moveVelocity = direction * (moveSpeed * 0.7f);
-                    isMoving = true;
+                    animator.SetBool("IsAiming", false);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
+
+                    if (distanceToTarget > stopDist)
+                    {
+                        moveVelocity = direction * moveSpeed;
+                        isMoving = true;
+                    }
+                }
+                else
+                {
+                    // Oyuncu çok uzaklaştı veya tamamen kaçtı
+                    animator.SetBool("IsAiming", false);
+                    SetState(EnemyState.Suspicious);
+                    _investigatePoint = target.position;
+                    _investigateTimer = investigateDuration;
                 }
             }
-            else if (distanceToTarget <= detectionRange)
+            else if (currentState == EnemyState.Suspicious)
             {
-                SetState(EnemyState.Combat);
+                // Şüphe Durumu: Şüpheli noktaya doğru bak / ilerle
                 animator.SetBool("IsAiming", false);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
-                
-                if (distanceToTarget > stopDist)
+
+                if (canSee)
                 {
-                    moveVelocity = direction * moveSpeed;
-                    isMoving = true;
+                    // Oyuncuyu doğrudan görmeye devam ediyorsa şüphe barı hızla dolar
+                    suspicionMeter += suspicionBuildRate * sightClarity * Time.deltaTime;
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 8f);
+
+                    if (suspicionMeter >= 100f)
+                    {
+                        SetState(EnemyState.Combat);
+                        AlertNearbyTeammates(transform.position, 25f);
+                    }
+                }
+                else
+                {
+                    // Görüş alanı dışındaysa şüphe barı yavaşça söner
+                    suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * Time.deltaTime);
+
+                    Vector3 toInvestigate = (_investigatePoint - transform.position);
+                    toInvestigate.y = 0;
+                    if (toInvestigate.magnitude > 1.5f && _investigateTimer > 0f)
+                    {
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(toInvestigate.normalized), Time.deltaTime * 6f);
+                        moveVelocity = toInvestigate.normalized * (moveSpeed * 0.5f);
+                        isMoving = true;
+                    }
+
+                    _investigateTimer -= Time.deltaTime;
+                    if (suspicionMeter <= 0f && _investigateTimer <= 0f)
+                    {
+                        SetState(initialState);
+                    }
                 }
             }
             else
             {
+                // Normal / Idle / Sitting / Patrolling
                 animator.SetBool("IsAiming", false);
-                if (currentState == EnemyState.Combat)
+
+                if (canSee)
                 {
-                    SetState(initialState); // Return to initial state if lost target
+                    suspicionMeter += suspicionBuildRate * sightClarity * Time.deltaTime;
+                    if (suspicionMeter > 25f)
+                    {
+                        _investigatePoint = target.position;
+                        _investigateTimer = investigateDuration;
+                        SetState(EnemyState.Suspicious);
+                    }
+                }
+                else
+                {
+                    suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * Time.deltaTime);
                 }
             }
 
@@ -171,6 +264,8 @@ namespace EndlessCombat.AI
             controller.Move(moveVelocity * Time.deltaTime);
 
             animator.SetFloat("Speed", isMoving ? moveSpeed : 0f);
+
+            UpdateStealthIndicator();
         }
 
         private void LateUpdate()
@@ -213,6 +308,11 @@ namespace EndlessCombat.AI
 
             currentHealth -= damage;
             Debug.Log($"{gameObject.name} hasar aldi: {damage}. Kalan Can: {currentHealth}");
+
+            // Hasar alınca anında çatışmaya geç ve etraftakileri uyar
+            suspicionMeter = 100f;
+            SetState(EnemyState.Combat);
+            AlertNearbyTeammates(transform.position, 25f);
 
             if (currentHealth <= 0)
             {
@@ -300,5 +400,149 @@ namespace EndlessCombat.AI
                 if (dialogue != null) dialogue.StopSpeaking();
             }
         }
+
+        #region Stealth & Perception Helpers
+
+        private bool CanSeePlayer(out float sightClarity)
+        {
+            sightClarity = 0f;
+            if (target == null) return false;
+
+            Vector3 eyePos = transform.position + Vector3.up * eyeHeight;
+            Vector3 targetCenter = target.position + Vector3.up * 1.0f;
+            Vector3 dirToTarget = (targetCenter - eyePos);
+            float dist = dirToTarget.magnitude;
+
+            // Menzil hesabı (çömelme ve gece çarpanları)
+            float effectiveRange = detectionRange;
+            var stealthCtrl = EndlessCombat.Combat.PlayerStealthController.Instance;
+            if (stealthCtrl != null && stealthCtrl.IsCrouching)
+            {
+                effectiveRange *= stealthCtrl.crouchVisibilityMultiplier;
+            }
+
+            var cycle = EndlessSurvival.World.DayNightCycle.Instance;
+            if (cycle != null && cycle.IsNight)
+            {
+                effectiveRange *= 0.55f;
+            }
+
+            if (dist > effectiveRange) return false;
+
+            // Görüş açısı (FOV) kontrolü
+            float angle = Vector3.Angle(transform.forward, dirToTarget);
+            if (angle > fieldOfViewAngle * 0.5f)
+            {
+                // Karakter arkadan çok yaklaştığında (1.8 metre) fark edilir
+                if (dist > 1.8f) return false;
+            }
+
+            // Siper / Engel (Raycast) kontrolü
+            int mask = LayerMask.GetMask("Default", "Environment");
+            if (Physics.Raycast(eyePos, dirToTarget.normalized, out RaycastHit hit, dist, mask))
+            {
+                if (!hit.collider.CompareTag("Player"))
+                {
+                    return false;
+                }
+            }
+
+            float distFactor = 1f - Mathf.Clamp01(dist / effectiveRange);
+            sightClarity = Mathf.Clamp01(distFactor * 1.6f);
+            return true;
+        }
+
+        private void CheckPlayerNoise()
+        {
+            if (target == null) return;
+
+            var stealth = EndlessCombat.Combat.PlayerStealthController.Instance;
+            if (stealth != null)
+            {
+                float noiseRadius = stealth.GetCurrentNoiseRadius();
+                if (noiseRadius > 0.01f)
+                {
+                    float dist = Vector3.Distance(transform.position, target.position);
+                    if (dist <= noiseRadius)
+                    {
+                        HearSound(target.position, noiseRadius);
+                    }
+                }
+            }
+        }
+
+        public void HearSound(Vector3 soundOrigin, float radius)
+        {
+            if (IsDead) return;
+
+            if (currentState != EnemyState.Combat)
+            {
+                _investigatePoint = soundOrigin;
+                _investigateTimer = investigateDuration;
+                suspicionMeter = Mathf.Max(suspicionMeter, 50f);
+                SetState(EnemyState.Suspicious);
+            }
+        }
+
+        public void AlertNearbyTeammates(Vector3 center, float radius)
+        {
+            Collider[] hits = Physics.OverlapSphere(center, radius);
+            foreach (var h in hits)
+            {
+                var teammate = h.GetComponent<EnemyController>();
+                if (teammate != null && teammate != this && !teammate.IsDead)
+                {
+                    if (teammate.currentState != EnemyState.Combat)
+                    {
+                        teammate.suspicionMeter = 100f;
+                        teammate.SetState(EnemyState.Combat);
+                    }
+                }
+            }
+        }
+
+        private void SetupStealthIndicator()
+        {
+            GameObject indicatorObj = new GameObject("StealthIndicator");
+            indicatorObj.transform.SetParent(transform, false);
+            indicatorObj.transform.localPosition = new Vector3(0, eyeHeight + 0.5f, 0);
+
+            _stealthIndicator = indicatorObj.AddComponent<TextMesh>();
+            _stealthIndicator.alignment = TextAlignment.Center;
+            _stealthIndicator.anchor = TextAnchor.MiddleCenter;
+            _stealthIndicator.fontSize = 24;
+            _stealthIndicator.characterSize = 0.08f;
+            _stealthIndicator.fontStyle = FontStyle.Bold;
+            _stealthIndicator.text = "";
+        }
+
+        private void UpdateStealthIndicator()
+        {
+            if (_stealthIndicator == null) return;
+
+            // Kameraya dönük tut
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                _stealthIndicator.transform.rotation = Quaternion.LookRotation(_stealthIndicator.transform.position - cam.transform.position);
+            }
+
+            if (currentState == EnemyState.Combat)
+            {
+                _stealthIndicator.color = Color.red;
+                _stealthIndicator.text = "!";
+            }
+            else if (currentState == EnemyState.Suspicious || suspicionMeter > 10f)
+            {
+                _stealthIndicator.color = Color.yellow;
+                _stealthIndicator.text = "?";
+            }
+            else
+            {
+                _stealthIndicator.text = "";
+            }
+        }
+
+        #endregion
     }
 }

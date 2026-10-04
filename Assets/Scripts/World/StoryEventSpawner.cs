@@ -34,27 +34,24 @@ namespace EndlessSurvival.World
         {
             if (availableEvents == null || availableEvents.Length == 0)
             {
-                var evt = Resources.Load<StoryEventDefinition>("Events/Event_Lighthouse");
+                var list = new List<StoryEventDefinition>();
 #if UNITY_EDITOR
-                if (evt == null)
-                {
-                    evt = UnityEditor.AssetDatabase.LoadAssetAtPath<StoryEventDefinition>("Assets/Data/Events/Event_Lighthouse.asset");
-                }
+                var lightEvt = UnityEditor.AssetDatabase.LoadAssetAtPath<StoryEventDefinition>("Assets/Data/Events/Event_Lighthouse.asset");
+                var caveEvt = UnityEditor.AssetDatabase.LoadAssetAtPath<StoryEventDefinition>("Assets/Data/Events/Event_Cave.asset");
+                if (lightEvt != null) list.Add(lightEvt);
+                if (caveEvt != null) list.Add(caveEvt);
 #endif
-                if (evt != null)
+                if (list.Count == 0)
                 {
-                    availableEvents = new StoryEventDefinition[] { evt };
+                    var lightRes = Resources.Load<StoryEventDefinition>("Events/Event_Lighthouse");
+                    var caveRes = Resources.Load<StoryEventDefinition>("Events/Event_Cave");
+                    if (lightRes != null) list.Add(lightRes);
+                    if (caveRes != null) list.Add(caveRes);
                 }
-                else
+
+                if (list.Count > 0)
                 {
-                    var def = ScriptableObject.CreateInstance<StoryEventDefinition>();
-                    def.eventId = "Event_Lighthouse";
-                    def.eventName = "Yalnız Deniz Feneri";
-                    def.spawnChance = 0.38f;
-                    def.minChunkInterval = 3;
-                    def.minChunkIndex = 2;
-                    def.lateralDistance = 45f;
-                    availableEvents = new StoryEventDefinition[] { def };
+                    availableEvents = list.ToArray();
                 }
             }
         }
@@ -80,7 +77,7 @@ namespace EndlessSurvival.World
                 // Şans kontrolü
                 if (rng.Chance(evt.spawnChance))
                 {
-                    if (TryGetRoadsidePosition(rng, evt.lateralDistance, out Vector3 spawnPos, out Quaternion spawnRot))
+                    if (TryGetEventSpawnTransform(chunk, evt, rng, out Vector3 spawnPos, out Quaternion spawnRot))
                     {
                         GameObject spawnedEvent;
                         if (evt.eventPrefab != null)
@@ -106,35 +103,104 @@ namespace EndlessSurvival.World
                             poi.InitializeFromChunk(rng.SubStream("poi_instance"));
                         }
 
-                        Debug.Log($"<color=green>[StoryEventSpawner] '{evt.eventName}' Chunk #{chunkIndex} üzerinde yol kenarına yerleştirildi!</color>");
+                        Debug.Log($"<color=green>[StoryEventSpawner] '{evt.eventName}' Chunk #{chunkIndex} üzerinde yerleştirildi! (Zone: {evt.placementZone})</color>");
                         break; // Bu chunk için bir event yeterli
                     }
                 }
             }
         }
 
-        private bool TryGetRoadsidePosition(SeededRandom rng, float lateralDist, out Vector3 position, out Quaternion rotation)
+#if UNITY_EDITOR
+        public void GenerateEventPreview(SeededRandom rng, Transform container)
+        {
+            EnsureEventsConfigured();
+            if (availableEvents == null || availableEvents.Length == 0) return;
+            Chunk chunk = GetComponentInParent<Chunk>();
+            if (roadSpline == null) roadSpline = GetComponentInChildren<RoadSpline>();
+            if (roadSpline == null) return;
+
+            // Editör önizlemesinde test amacıyla seed'e göre şans kontrolü yap
+            List<StoryEventDefinition> candidates = new List<StoryEventDefinition>();
+            foreach (var evt in availableEvents)
+            {
+                if (evt != null && rng.Chance(evt.spawnChance))
+                {
+                    candidates.Add(evt);
+                }
+            }
+
+            if (candidates.Count == 0) return;
+
+            StoryEventDefinition selectedEvt = rng.Pick(candidates.ToArray());
+            if (selectedEvt == null || selectedEvt.eventPrefab == null) return;
+
+            if (TryGetEventSpawnTransform(chunk, selectedEvt, rng, out Vector3 spawnPos, out Quaternion spawnRot))
+            {
+                GameObject spawned = UnityEditor.PrefabUtility.InstantiatePrefab(selectedEvt.eventPrefab, container) as GameObject;
+                if (spawned != null)
+                {
+                    spawned.transform.position = spawnPos;
+                    spawned.transform.rotation = spawnRot;
+                    spawned.name = $"{selectedEvt.eventName}_Preview";
+
+                    var poi = spawned.GetComponent<PointOfInterest>();
+                    if (poi != null)
+                    {
+                        poi.InitializeFromChunk(rng.SubStream("poi_preview"), container);
+                    }
+
+                    Debug.Log($"<color=green>[StoryEventSpawner Preview] '{selectedEvt.eventName}' önizlemede yerleştirildi! (Zone: {selectedEvt.placementZone})</color>");
+                }
+            }
+        }
+#endif
+
+        private bool TryGetEventSpawnTransform(Chunk chunk, StoryEventDefinition evt, SeededRandom rng, out Vector3 position, out Quaternion rotation)
         {
             position = Vector3.zero;
             rotation = Quaternion.identity;
 
+            if (evt == null) return false;
+            if (chunk == null) chunk = GetComponentInParent<Chunk>();
+            if (roadSpline == null && chunk != null) roadSpline = chunk.GetComponentInChildren<RoadSpline>();
+
+            // 1. ÖZEL DURUM: YOL ÜSTÜ NESNELERİ (Barikat, Kaza, Kontrol Noktası vb.)
+            if (evt.placementZone == POIPlacementZone.OnRoad || evt.isAllowedOnRoad)
+            {
+                if (chunk != null && chunk.TryGetOnRoadPosition(rng, out position, out rotation))
+                {
+                    return true;
+                }
+            }
+
+            // 2. YOL DIŞI VE YOL KENARI NESNELERİ (Mağara, Kamp, Deniz Feneri vb.)
+            // Bu nesneler ASLA yolun üstünde veya yol koridorunda oluşamaz!
             if (roadSpline == null) return false;
 
-            // Yolun ortalarına doğru bir nokta seç (0.35 ile 0.65 arası)
+            float minSafeDist = Mathf.Max(evt.lateralDistance, evt.minRoadDistance, 36f);
             float t = rng.Range(0.35f, 0.65f);
             Transform st = roadSpline.transform;
             Vector3 center = st.TransformPoint(roadSpline.GetPoint(t));
-            Vector3 forward = st.TransformDirection(roadSpline.GetTangent(t));
             Vector3 right = st.TransformDirection(roadSpline.GetRight(t));
 
-            // Sağ mı sol mu? (Rastgele)
             float side = rng.Value < 0.5f ? -1f : 1f;
-            Vector3 probePos = center + right * (side * lateralDist);
+            Vector3 probePos = center + right * (side * minSafeDist);
+
+            if (chunk != null)
+            {
+                Vector3 localInChunk = chunk.transform.InverseTransformPoint(probePos);
+                if (localInChunk.x < -215f || localInChunk.x > 215f)
+                {
+                    side = -side;
+                    probePos = center + right * (side * minSafeDist);
+                    localInChunk = chunk.transform.InverseTransformPoint(probePos);
+                    localInChunk.x = Mathf.Clamp(localInChunk.x, -215f, 215f);
+                    probePos = chunk.transform.TransformPoint(localInChunk);
+                }
+            }
 
             // Zemin yüksekliğini bul
-            Chunk chunk = GetComponentInParent<Chunk>();
             Terrain terrain = chunk != null ? chunk.ChunkTerrain : null;
-
             if (terrain != null)
             {
                 probePos.y = terrain.SampleHeight(probePos) + terrain.transform.position.y;
@@ -144,13 +210,40 @@ namespace EndlessSurvival.World
                 probePos.y = hit.point.y;
             }
 
-            position = probePos;
-            // Yola doğru veya hafif açıyla baksın
-            Vector3 dirToRoad = (center - position).normalized;
-            dirToRoad.y = 0f;
-            if (dirToRoad != Vector3.zero)
+            // Yol orta çizgisine olan mesafeyi kesin olarak doğrula ve garantile
+            float actualDistToRoad = roadSpline.GetDistanceToSpline(probePos);
+            if (actualDistToRoad < minSafeDist)
             {
-                rotation = Quaternion.LookRotation(dirToRoad);
+                Vector3 awayFromRoad = (probePos - center).normalized;
+                awayFromRoad.y = 0;
+                probePos += awayFromRoad * (minSafeDist - actualDistToRoad);
+                if (terrain != null)
+                {
+                    probePos.y = terrain.SampleHeight(probePos) + terrain.transform.position.y;
+                }
+            }
+
+            position = probePos;
+
+            // Yönelim Hesabı:
+            // Mağara gibi yapay derinliği olan nesnelerde (orientAwayFromRoad = true), yapının tüneli (+Z) yoldan uzağa dağa doğru uzanmalıdır.
+            if (evt.orientAwayFromRoad)
+            {
+                Vector3 dirAwayFromRoad = (position - center).normalized;
+                dirAwayFromRoad.y = 0f;
+                if (dirAwayFromRoad != Vector3.zero)
+                {
+                    rotation = Quaternion.LookRotation(dirAwayFromRoad);
+                }
+            }
+            else
+            {
+                Vector3 dirToRoad = (center - position).normalized;
+                dirToRoad.y = 0f;
+                if (dirToRoad != Vector3.zero)
+                {
+                    rotation = Quaternion.LookRotation(dirToRoad);
+                }
             }
 
             return true;

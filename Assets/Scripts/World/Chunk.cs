@@ -153,6 +153,48 @@ namespace EndlessSurvival.World
         [Tooltip("Predefined spawn points inside this chunk for randomized props/hazards/loot")]
         public Transform[] propSpawnPoints;
 
+        [Header("On-Road Spawn Sockets (Yol Üstü Özel Noktalar)")]
+        [Tooltip("Yol üzerinde özel olarak tanımlanmış spawn noktaları (barikatlar, terkedilmiş araçlar, pusu tuzakları vb.). Yalnızca OnRoad olarak işaretlenmiş nesneler burada oluşabilir. Yol dışı nesneler (kamp, mağara, bina) bu noktalarda ve yol koridorunda ASLA oluşamaz.")]
+        public Transform[] onRoadSpawnPoints;
+
+        /// <summary>
+        /// Yol üzerinde tanımlanmış özel noktayı döner. Eğer manuel socket atanmamışsa spline üzerindeki uygun bir noktayı dinamik olarak hesaplar.
+        /// </summary>
+        public bool TryGetOnRoadPosition(SeededRandom rng, out Vector3 position, out Quaternion rotation)
+        {
+            position = Vector3.zero;
+            rotation = Quaternion.identity;
+
+            if (onRoadSpawnPoints != null && onRoadSpawnPoints.Length > 0)
+            {
+                var validPoints = new System.Collections.Generic.List<Transform>();
+                for (int i = 0; i < onRoadSpawnPoints.Length; i++)
+                {
+                    if (onRoadSpawnPoints[i] != null) validPoints.Add(onRoadSpawnPoints[i]);
+                }
+                if (validPoints.Count > 0)
+                {
+                    Transform chosen = rng.Pick(validPoints.ToArray());
+                    position = chosen.position;
+                    rotation = chosen.rotation;
+                    return true;
+                }
+            }
+
+            // Fallback: Spline üzerinden yolun tam orta çizgisinde bir nokta al
+            var spline = GetComponentInChildren<Road.RoadSpline>();
+            if (spline != null)
+            {
+                float t = rng.Range(0.25f, 0.75f);
+                position = spline.transform.TransformPoint(spline.GetPoint(t));
+                Vector3 forward = spline.transform.TransformDirection(spline.GetTangent(t));
+                rotation = Quaternion.LookRotation(forward);
+                return true;
+            }
+
+            return false;
+        }
+
         // Runtime state
         private ChunkManager _manager;
         private int _chunkIndex;
@@ -206,6 +248,14 @@ namespace EndlessSurvival.World
             _campRandom = chunkRng.SubStream("camp");
             _eventsRandom = chunkRng.SubStream("events");
             _notesRandom = chunkRng.SubStream("notes");
+
+            // Initialize or spawn enemy camps (Campfire, Outpost vb.)
+            var campSpawner = GetComponentInChildren<EndlessSurvival.World.POI.EnemyCampSpawner>();
+            if (campSpawner == null)
+            {
+                campSpawner = gameObject.AddComponent<EndlessSurvival.World.POI.EnemyCampSpawner>();
+            }
+            campSpawner.SpawnCampIfEligible(this);
 
             // Initialize all POIs deterministically instead of relying on Unity's Start() order
             var pois = GetComponentsInChildren<PointOfInterest>(true);
@@ -279,6 +329,7 @@ namespace EndlessSurvival.World
             var lootRng = chunkRng.SubStream("loot");
             var poiRng = chunkRng.SubStream("poi");
             var campRng = chunkRng.SubStream("camp");
+            var eventsRng = chunkRng.SubStream("events");
             var notesRng = chunkRng.SubStream("notes");
 
             var lootSpawner = GetComponentInChildren<RoadsideLootSpawner>();
@@ -286,6 +337,12 @@ namespace EndlessSurvival.World
 
             var noteSpawner = GetComponentInChildren<EndlessSurvival.World.POI.NoteSpawner>();
             if (noteSpawner != null) noteSpawner.GenerateNote(notesRng, previewContainer.transform);
+
+            var campSpawner = GetComponentInChildren<EndlessSurvival.World.POI.EnemyCampSpawner>();
+            if (campSpawner != null) campSpawner.GenerateCampPreview(campRng, previewContainer.transform);
+
+            var eventSpawner = GetComponentInChildren<StoryEventSpawner>();
+            if (eventSpawner != null) eventSpawner.GenerateEventPreview(eventsRng, previewContainer.transform);
 
             var pois = GetComponentsInChildren<EndlessSurvival.World.POI.PointOfInterest>(true);
             for (int i = 0; i < pois.Length; i++)
@@ -313,6 +370,19 @@ namespace EndlessSurvival.World
             if (exitSocket != null)
             {
                 Gizmos.DrawWireCube(exitSocket.position, new Vector3(8f, 1f, 2f));
+            }
+
+            if (onRoadSpawnPoints != null)
+            {
+                Gizmos.color = Color.yellow;
+                for (int i = 0; i < onRoadSpawnPoints.Length; i++)
+                {
+                    if (onRoadSpawnPoints[i] != null)
+                    {
+                        Gizmos.DrawWireSphere(onRoadSpawnPoints[i].position, 2f);
+                        Gizmos.DrawRay(onRoadSpawnPoints[i].position, onRoadSpawnPoints[i].forward * 4f);
+                    }
+                }
             }
 
             // Draw bounding box (500x500)

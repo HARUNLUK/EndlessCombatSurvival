@@ -78,8 +78,11 @@ namespace EndlessSurvival.World.Editor
             eventDef.eventPrefab = savedPrefab;
             eventDef.spawnChance = 0.38f;
             eventDef.minChunkInterval = 3;
-            eventDef.minChunkIndex = 2; // 2. chunk'tan itibaren çıkabilsin
-            eventDef.lateralDistance = 45f;
+            eventDef.lateralDistance = 55f;
+            eventDef.placementZone = POIPlacementZone.OffRoad;
+            eventDef.isAllowedOnRoad = false;
+            eventDef.orientAwayFromRoad = false;
+            eventDef.minRoadDistance = 48f;
             EditorUtility.SetDirty(eventDef);
 
             // 5. Chunk Prefab'ına StoryEventSpawner Entegre Et
@@ -140,6 +143,8 @@ namespace EndlessSurvival.World.Editor
             GameObject root = new GameObject("LighthousePOI");
             var poi = root.AddComponent<LighthousePOI>();
             poi.spawnChance = 1f;
+            poi.placementZone = POIPlacementZone.OffRoad;
+            poi.minRoadClearance = 48f;
 
             // 1. Zemin Kulübesi (Keeper's Cabin) - Açık Kapılı ve İçine Girilebilir
             GameObject cabin = new GameObject("KeepersCabin");

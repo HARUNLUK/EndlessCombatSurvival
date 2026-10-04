@@ -445,6 +445,27 @@ namespace EndlessSurvival.World.Road
             );
         }
 
+        /// <summary>
+        /// Calculates the horizontal (X/Z) distance from a given world position to the road centerline.
+        /// </summary>
+        public float GetDistanceToSpline(Vector3 worldPos)
+        {
+            Vector3 localPos = transform.InverseTransformPoint(worldPos);
+            Vector3 roadLocal = SampleAtZ(localPos.z);
+            Vector3 roadWorld = transform.TransformPoint(roadLocal);
+            return Vector2.Distance(new Vector2(worldPos.x, worldPos.z), new Vector2(roadWorld.x, roadWorld.z));
+        }
+
+        /// <summary>
+        /// Gets the world-space road centerline point at the given world Z coordinate.
+        /// </summary>
+        public Vector3 GetRoadCenterWorld(float worldZ)
+        {
+            Vector3 localZPos = transform.InverseTransformPoint(new Vector3(0, 0, worldZ));
+            Vector3 roadLocal = SampleAtZ(localZPos.z);
+            return transform.TransformPoint(roadLocal);
+        }
+
         public float ApproximateLength(int samples = 50)
         {
             float length = 0f;

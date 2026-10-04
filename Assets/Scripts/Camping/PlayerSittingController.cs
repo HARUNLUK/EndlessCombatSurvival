@@ -25,13 +25,8 @@ namespace EndlessSurvival.Camping
 
         private void Update()
         {
-            var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            if (keyboard != null && keyboard.cKey.wasPressedThisFrame)
-            {
-                // UI açıkken veya araçtayken oturulmaz
-                if (CampfireUI.IsOpen || !gameObject.activeInHierarchy) return;
-                ToggleSit();
-            }
+            // C tuşu artık normal gizlilik ve çömelmeye (Crouch) aittir.
+            // Kamp oturması (Camping Sitting Idle) kamp ateşi menüsündeki [Otur] butonundan veya kamp etkileşiminden tetiklenir.
 
             if (_isSitting)
             {

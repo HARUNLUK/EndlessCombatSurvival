@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 492baecdd5060bf41b78cbed506d0a84, type: 3}
+  m_Name: Note_CaveSurvivor
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Story.NoteDefinition
+  title: "Terk Edilmi\u015F Madenin Son G\xFCnl\xFC\u011F\xFC"
+  author: "K\u0131demli Madenci Harun"
+  bodyText: "Giri\u015F \xE7\xF6kt\xFCkten sonra d\u0131\u015Far\u0131yla t\xFCm
+    ba\u011F\u0131m\u0131z koptu. Askeri konvoylar\u0131n sesi de sustu. G\xFCnlerdir
+    yerin alt\u0131nda kaz\u0131yoruz ama d\u0131\u015Far\u0131dan sadece u\u011Fultular
+    geliyor.\n\nYiyece\u011Fimiz azald\u0131k\xE7a i\xE7eridekiler deliriyor. Giri\u015F
+    koridoruna patlay\u0131c\u0131 tuzak teli gerdik; art\u0131k kimseye g\xFCvenimiz
+    kalmad\u0131. E\u011Fer buraya kadar gelebildiysen, \xE7\xF6melerek tuzaklar\u0131
+    ge\xE7meyi ak\u0131l etmi\u015Fsin demektir.\n\nKilerdeki cephaneyi ve konserve
+    yiyecekleri al. Kuzeybat\u0131 galerisindeki dar \xE7atlaktan t\u0131rman; d\u0131\u015Far\u0131daki
+    da\u011F yamac\u0131na, yola \xE7\u0131kan bir patika var.\n\nYukar\u0131da hala
+    ya\u015Fayan birileri kald\u0131 m\u0131, bilmiyorum..."
+  noteId: NOTE_CAVE_MINERS

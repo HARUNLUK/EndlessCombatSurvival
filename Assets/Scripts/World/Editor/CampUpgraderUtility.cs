@@ -6,6 +6,19 @@ using EndlessSurvival.Story;
 
 public class CampUpgraderUtility
 {
+    [InitializeOnLoadMethod]
+    private static void AutoUpgradeCampsOnce()
+    {
+        if (!EditorPrefs.GetBool("Camp_Upgrade_Outpost_v2", false))
+        {
+            EditorPrefs.SetBool("Camp_Upgrade_Outpost_v2", true);
+            EditorApplication.delayCall += () =>
+            {
+                UpgradeCamps();
+            };
+        }
+    }
+
     [MenuItem("Tools/Upgrade Camps")]
     [MenuItem("Endless Survival/Setup Camps & Animations")]
     public static void UpgradeCamps()
@@ -422,13 +435,20 @@ public class CampUpgraderUtility
                 var rootPOI = chunkGo.GetComponent<EnemyCampPOI>();
                 if (rootPOI != null) GameObject.DestroyImmediate(rootPOI);
 
-                // Chunk üzerine Campfire Prefab'ını ekle
-                if (campfirePrefab != null)
+                // Chunk üzerine EnemyCampSpawner bileşenini ekle / güncelle
+                var campSpawner = chunkGo.GetComponentInChildren<EndlessSurvival.World.POI.EnemyCampSpawner>();
+                if (campSpawner == null)
                 {
-                    GameObject campInst = (GameObject)PrefabUtility.InstantiatePrefab(campfirePrefab, chunkGo.transform);
-                    campInst.name = "Enemy Camp";
-                    campInst.transform.localPosition = new Vector3(0, 20f, 250f);
+                    GameObject spawnerObj = new GameObject("EnemyCampSpawner");
+                    spawnerObj.transform.SetParent(chunkGo.transform, false);
+                    campSpawner = spawnerObj.AddComponent<EndlessSurvival.World.POI.EnemyCampSpawner>();
                 }
+
+                var campList = new List<GameObject>();
+                if (campfirePrefab != null) campList.Add(campfirePrefab);
+                if (outpostPrefab != null) campList.Add(outpostPrefab);
+                campSpawner.campPrefabs = campList.ToArray();
+                campSpawner.spawnChance = 1.0f;
 
                 PrefabUtility.SaveAsPrefabAsset(chunkGo, path);
             }

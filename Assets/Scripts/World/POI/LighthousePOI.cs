@@ -71,6 +71,13 @@ namespace EndlessSurvival.World.POI
                 rotatingLanternHead.rotation = Quaternion.Euler(14f, rng.Range(0f, 360f), 0f);
             }
 
+            Chunk chunk = GetComponentInParent<Chunk>();
+            Terrain terrain = chunk != null ? chunk.ChunkTerrain : null;
+            if (terrain != null)
+            {
+                EndlessSurvival.World.Road.RoadTerrainAdapter.FlattenTerrainArea(terrain, transform.position, 14f, 10f, transform.position.y);
+            }
+
             Debug.Log("<color=cyan>[LighthousePOI] Yalnız Deniz Feneri dünyada belirdi!</color>");
         }
 

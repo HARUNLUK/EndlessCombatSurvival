@@ -570,6 +570,9 @@ namespace EndlessCombat.Combat
 
                 if (currentWeapon.TryFire(aimTargetPoint, aimColliderMask, out _))
                 {
+                    // Silah sesi yay (etraftaki düşmanları uyar)
+                    PlayerStealthController.Instance?.EmitGunshotNoise(transform.position);
+
                     // Only trigger fire recoil animation when actively aiming and not already in firing transition
                     if (isAiming && animator != null)
                     {

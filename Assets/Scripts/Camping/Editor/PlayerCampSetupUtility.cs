@@ -194,6 +194,18 @@ namespace EndlessSurvival.Camping.Editor
             if (sittingCtrl == null) sittingCtrl = player.AddComponent<PlayerSittingController>();
             sittingCtrl.sitToggleKey = KeyCode.C;
 
+            // PlayerStealthController (Çömelme & Gizlilik)
+            var stealthCtrl = player.GetComponent<EndlessCombat.Combat.PlayerStealthController>();
+            if (stealthCtrl == null) stealthCtrl = player.AddComponent<EndlessCombat.Combat.PlayerStealthController>();
+
+            // StealthHUD
+            var stealthHUD = Object.FindFirstObjectByType<EndlessSurvival.World.StealthHUD>();
+            if (stealthHUD == null)
+            {
+                var hudObj = new GameObject("StealthHUD");
+                hudObj.AddComponent<EndlessSurvival.World.StealthHUD>();
+            }
+
             // PlayerNeedReliever
             var reliever = player.GetComponent<PlayerNeedReliever>();
             if (reliever == null) reliever = player.AddComponent<PlayerNeedReliever>();
@@ -215,7 +227,7 @@ namespace EndlessSurvival.Camping.Editor
             }
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            Debug.Log("[CampingSetup] Oyuncu 'PlayerCampPlacer', 'PlayerSittingController' ve 'PlayerNeedReliever' ile donatıldı.");
+            Debug.Log("[CampingSetup] Oyuncu 'PlayerCampPlacer', 'PlayerSittingController', 'PlayerStealthController' ve 'PlayerNeedReliever' ile donatıldı.");
         }
 
         private static void EnsureFolder(string path)
