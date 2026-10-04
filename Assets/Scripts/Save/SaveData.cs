@@ -43,6 +43,7 @@ namespace EndlessSurvival.Save
         public float vehicleFuel;
         public float vehicleHealth;
         public List<SavedItemSlot> vehicleStorage = new List<SavedItemSlot>(); // Araç Bagajı / Stash
+        public List<string> installedVehicleMods = new List<string>(); // Takılı modifikasyonlar
 
         [Header("Story & Lore")]
         public List<string> readNoteIds = new List<string>();

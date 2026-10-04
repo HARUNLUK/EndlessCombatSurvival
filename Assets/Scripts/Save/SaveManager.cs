@@ -213,6 +213,12 @@ namespace EndlessSurvival.Save
                             }
                         }
                     }
+
+                    var vehicleMods = vehicle.GetComponent<VehicleModifications>();
+                    if (vehicleMods != null)
+                    {
+                        data.installedVehicleMods = vehicleMods.GetInstalledModNames();
+                    }
                 }
 
                 // 5. Okunan Notlar
@@ -333,6 +339,13 @@ namespace EndlessSurvival.Save
                             if (def != null) vehicleStash.Storage.Add(def, slot.amount);
                         }
                     }
+                }
+
+                // Araç Modifikasyonlarını Geri Yükle
+                var vehicleMods = vehicle.GetComponent<VehicleModifications>();
+                if (vehicleMods != null)
+                {
+                    vehicleMods.RestoreFromSave(data.installedVehicleMods);
                 }
             }
 

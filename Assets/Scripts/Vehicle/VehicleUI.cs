@@ -88,6 +88,11 @@ namespace EndlessSurvival.Vehicle
             if (interactionPromptPanel != null)
             {
                 interactionPromptPanel.SetActive(isNear && !vehicleInteraction.IsPlayerInside);
+                var txt = interactionPromptPanel.GetComponentInChildren<Text>();
+                if (txt != null && !txt.text.Contains("[U]"))
+                {
+                    txt.text += "  |  [U] Modifiye Atölyesi";
+                }
             }
         }
 

@@ -166,6 +166,11 @@ namespace EndlessSurvival.Vehicle
         {
             _rb = GetComponent<Rigidbody>();
             SetupPhysicsProperties();
+
+            if (GetComponent<VehicleModifications>() == null)
+            {
+                gameObject.AddComponent<VehicleModifications>();
+            }
         }
 
         private void SetupPhysicsProperties()
