@@ -525,6 +525,22 @@ namespace EndlessSurvival.World.Editor
             blockadeGo.SetActive(false);
             chunk.backBlockade = blockadeGo;
 
+            // Environment Vegetation Spawner (Forest Trees, Rocks, Bushes)
+            var vegSpawner = chunkGo.AddComponent<ChunkVegetationSpawner>();
+            vegSpawner.targetBiome = biome;
+            string treeDir = "Assets/Prefabs/Environment/Trees";
+            GameObject pine = AssetDatabase.LoadAssetAtPath<GameObject>($"{treeDir}/Tree_Pine_Blocky.prefab");
+            GameObject oak = AssetDatabase.LoadAssetAtPath<GameObject>($"{treeDir}/Tree_Oak_Blocky.prefab");
+            GameObject dead = AssetDatabase.LoadAssetAtPath<GameObject>($"{treeDir}/Tree_Dead_Blocky.prefab");
+            GameObject rock = AssetDatabase.LoadAssetAtPath<GameObject>($"{treeDir}/Rock_Forest_Blocky.prefab");
+            GameObject bush = AssetDatabase.LoadAssetAtPath<GameObject>($"{treeDir}/Bush_Forest_Blocky.prefab");
+
+            if (pine != null && oak != null)
+            {
+                vegSpawner.treePrefabs = new GameObject[] { pine, oak, dead != null ? dead : pine };
+                vegSpawner.detailPrefabs = new GameObject[] { bush != null ? bush : rock, rock != null ? rock : bush };
+            }
+
             return chunk;
         }
 

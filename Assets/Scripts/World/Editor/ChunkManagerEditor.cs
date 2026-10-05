@@ -26,6 +26,16 @@ namespace EndlessSurvival.World.Editor
                 SetupSceneChunkManager.SetupInActiveScene();
             }
 
+            GUI.backgroundColor = new Color(0.4f, 0.85f, 0.5f);
+            if (GUILayout.Button("Spawn Editor Preview Chunks (Canlı Önizleme)", GUILayout.Height(30)))
+            {
+                var mgr = (ChunkManager)target;
+                if (mgr != null)
+                {
+                    mgr.SpawnEditorPreviewChunks(2);
+                }
+            }
+
             GUI.backgroundColor = new Color(1.0f, 0.5f, 0.3f);
             if (GUILayout.Button("Clear All Child Chunks", GUILayout.Height(24)))
             {

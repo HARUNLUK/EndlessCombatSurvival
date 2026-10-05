@@ -129,6 +129,20 @@ namespace EndlessSurvival.World
                 }
             }
 
+            // Editör önizlemesinde test amacıyla hiçbir aday şanstan çıkmadıysa bile
+            // sahnede boş kalmaması için ilk uygun eventi (örneğin Mağara) garantili seç
+            if (candidates.Count == 0 && availableEvents.Length > 0)
+            {
+                for (int i = 0; i < availableEvents.Length; i++)
+                {
+                    if (availableEvents[i] != null && availableEvents[i].eventPrefab != null)
+                    {
+                        candidates.Add(availableEvents[i]);
+                        break;
+                    }
+                }
+            }
+
             if (candidates.Count == 0) return;
 
             StoryEventDefinition selectedEvt = rng.Pick(candidates.ToArray());

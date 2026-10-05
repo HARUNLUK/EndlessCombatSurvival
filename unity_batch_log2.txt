@@ -1,0 +1,42 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.5/staging' branch; Version is '6000.5.10f1 (3bd4f66ad299) revision 3921142'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) Professional' Language: 'tr' Physical Memory: 15584 MB
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-HARUNLUK" at "2026-10-05T14:13:32.0413867Z"
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-10-05T14:13:32Z
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 43916, path: "C:/Program Files/Unity Hub/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              f57f46f333474f9fbd8da4d13894ae29
+  Correlation Id:          01bbf9f39151d9b0e47476f213509cfa
+  External correlation Id: 1864022297572874773
+  Machine Id:              x7eUqeowrmKk8fqfCJZuDQtBvE0=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-HARUNLUK" (connect: 0.00s, validation: 0.00s, handshake: 0.03s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-HARUNLUK-notifications" at "2026-10-05T14:13:32.0783029Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 18966793819655-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.05s
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.5.10f1\Editor\Unity.exe
+-projectPath
+d:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival
+-quit
+-batchmode
+-executeMethod
+EndlessSurvival.World.Editor.VegetationSetupUtility.SetupForestVegetation
+-logFile
+unity_batch_log2.txt
+Successfully changed project path to: d:\Development\Endless Combat Survival Game\Project\EndlessCombatSurvival
+D:/Development/Endless Combat Survival Game/Project/EndlessCombatSurvival
+Exiting without the bug reporter. Application will terminate with return code 1

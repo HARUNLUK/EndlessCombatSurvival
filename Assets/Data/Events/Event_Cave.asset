@@ -15,9 +15,9 @@ MonoBehaviour:
   eventId: Event_Cave
   eventName: "Terk Edilmi\u015F Maden Ma\u011Faras\u0131"
   eventPrefab: {fileID: 3368548830703418723, guid: 646fef52d3e68d54688fed5876410e85, type: 3}
-  spawnChance: 0.35
-  minChunkInterval: 3
-  minChunkIndex: 1
+  spawnChance: 0.6
+  minChunkInterval: 1
+  minChunkIndex: 0
   lateralDistance: 42
   placementZone: 1
   isAllowedOnRoad: 0

@@ -158,6 +158,11 @@ namespace EndlessSurvival.World
         [Tooltip("Random curve generation (bend count, positions, lengths, offsets)")]
         public RoadCurveSettings curveSettings = new RoadCurveSettings();
 
+        [Header("Vegetation & Environment Settings (Bitki Örtüsü Ayarları)")]
+        [Tooltip("Global vegetation density multiplier applied to spawned chunks (1.0 = normal, 1.5 = denser, 0.5 = sparser)")]
+        [Range(0.2f, 3.0f)]
+        public float globalVegetationDensity = 1.0f;
+
         public enum ElevationSelectionMode
         {
             DynamicWeightedRandom, // Procedurally rolls based on probability, weights, and min/max limits
@@ -237,6 +242,14 @@ namespace EndlessSurvival.World
             if (terrain != null)
             {
                 RoadTerrainAdapter.ConformTerrainToRoad(terrain, spline, roadGen, true);
+            }
+
+            // Regenerate environment vegetation to conform to new terrain heights & road curve
+            var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
+            if (vegSpawner != null)
+            {
+                vegSpawner.densityMultiplier = globalVegetationDensity;
+                vegSpawner.GenerateVegetation();
             }
         }
 
@@ -578,6 +591,30 @@ namespace EndlessSurvival.World
         {
             ClearChildObjects();
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Spawn Editor Preview Chunks")]
+        public void SpawnEditorPreviewChunks(int count = 2)
+        {
+            ClearChildObjects();
+            _activeChunks.Clear();
+            _chunkSeeds.Clear();
+            _totalSpawnedCount = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                SpawnNextChunk();
+            }
+
+            foreach (var chunk in _activeChunks)
+            {
+                if (chunk != null)
+                {
+                    chunk.GenerateEditorPreview(chunk.ChunkSeed);
+                }
+            }
+        }
+#endif
 
         /// <summary>
         /// Generates a random alphanumeric seed text using System.Random (non-deterministic, for first-run only).

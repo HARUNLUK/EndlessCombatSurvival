@@ -91,6 +91,7 @@ namespace EndlessSurvival.World
     /// Represents an individual 500x500 pre-authored parcel/chunk in the infinite road world.
     /// Classified by biome, road topology, and spawn weight parameters.
     /// </summary>
+    [ExecuteAlways]
     public class Chunk : MonoBehaviour
     {
         [Header("Classification & Parameters")]
@@ -230,9 +231,35 @@ namespace EndlessSurvival.World
 
         private void Awake()
         {
-            Transform preview = transform.Find("EditorPreview");
-            if (preview != null) Destroy(preview.gameObject);
+            if (Application.isPlaying)
+            {
+                Transform preview = transform.Find("EditorPreview");
+                if (preview != null) Destroy(preview.gameObject);
+            }
         }
+
+#if UNITY_EDITOR
+        private void OnEnable()
+        {
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorApplication.delayCall += AutoCheckPreview;
+            }
+        }
+
+        private void AutoCheckPreview()
+        {
+            if (this == null || gameObject == null || Application.isPlaying) return;
+            Transform preview = transform.Find("EditorPreview");
+            if (preview == null || preview.childCount == 0)
+            {
+                int seed = string.IsNullOrEmpty(editorPreviewSeed)
+                    ? GetHashCode()
+                    : SeededRandom.HashString(editorPreviewSeed);
+                GenerateEditorPreview(seed);
+            }
+        }
+#endif
 
         public void Initialize(ChunkManager manager, int index, int seed)
         {
@@ -355,6 +382,10 @@ namespace EndlessSurvival.World
 
                 pois[i].InitializeFromChunk(poiSubRng, previewContainer.transform);
             }
+
+            var vegRng = chunkRng.SubStream("vegetation");
+            var vegSpawner = GetComponentInChildren<ChunkVegetationSpawner>();
+            if (vegSpawner != null) vegSpawner.GenerateVegetation(previewContainer.transform, vegRng);
         }
 #endif
 

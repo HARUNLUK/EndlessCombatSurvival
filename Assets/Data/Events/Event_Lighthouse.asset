@@ -15,7 +15,7 @@ MonoBehaviour:
   eventId: Event_Lighthouse
   eventName: "Yaln\u0131z Deniz Feneri"
   eventPrefab: {fileID: 3358206891547483248, guid: 34f1435b85480994d8ceb7ff04071090, type: 3}
-  spawnChance: 0.38
-  minChunkInterval: 3
-  minChunkIndex: 2
+  spawnChance: 0.5
+  minChunkInterval: 2
+  minChunkIndex: 1
   lateralDistance: 45

@@ -40,10 +40,37 @@ namespace EndlessSurvival.World.Editor
             }
 
             EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Editor Preview & Vegetation Controls", EditorStyles.boldLabel);
+
             GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
             if (GUILayout.Button("Randomize Road (Yeniden Rastgele)", GUILayout.Height(28)))
             {
                 Regenerate(chunk);
+            }
+
+            GUI.backgroundColor = new Color(0.2f, 0.7f, 1.0f);
+            if (GUILayout.Button("Refresh All Preview (Ağaçlar + Kamp + Loot)", GUILayout.Height(28)))
+            {
+                int seed = string.IsNullOrEmpty(chunk.editorPreviewSeed) 
+                    ? chunk.GetHashCode() 
+                    : SeededRandom.HashString(chunk.editorPreviewSeed);
+                chunk.GenerateEditorPreview(seed);
+            }
+
+            GUI.backgroundColor = new Color(0.4f, 0.85f, 0.5f);
+            if (GUILayout.Button("Regenerate Trees & Vegetation", GUILayout.Height(26)))
+            {
+                var spawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
+                if (spawner != null) spawner.GenerateVegetation();
+            }
+
+            GUI.backgroundColor = new Color(1.0f, 0.4f, 0.4f);
+            if (GUILayout.Button("Clear Preview", GUILayout.Height(22)))
+            {
+                Transform preview = chunk.transform.Find("EditorPreview");
+                if (preview != null) DestroyImmediate(preview.gameObject);
+                var spawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
+                if (spawner != null) spawner.ClearVegetation();
             }
             GUI.backgroundColor = Color.white;
         }
@@ -96,6 +123,12 @@ namespace EndlessSurvival.World.Editor
             if (terrain != null)
             {
                 RoadTerrainAdapter.ConformTerrainToRoad(terrain, spline, gen, true);
+            }
+
+            var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
+            if (vegSpawner != null)
+            {
+                vegSpawner.GenerateVegetation();
             }
 
             chunk.GenerateEditorPreview(seed);
