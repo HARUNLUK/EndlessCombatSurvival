@@ -234,7 +234,14 @@ namespace EndlessSurvival.World
             if (Application.isPlaying)
             {
                 Transform preview = transform.Find("EditorPreview");
-                if (preview != null) Destroy(preview.gameObject);
+                if (preview != null)
+                {
+                    // Destroy() is deferred to end of frame; rename + deactivate so nothing
+                    // (e.g. ChunkVegetationSpawner) can still find it and parent runtime objects under it.
+                    preview.name = "EditorPreview_Destroying";
+                    preview.gameObject.SetActive(false);
+                    Destroy(preview.gameObject);
+                }
             }
         }
 

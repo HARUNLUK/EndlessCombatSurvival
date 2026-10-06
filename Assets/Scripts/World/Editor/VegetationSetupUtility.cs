@@ -9,7 +9,7 @@ namespace EndlessSurvival.World.Editor
 {
     public static class VegetationSetupUtility
     {
-        private const string PREF_KEY = "Forest_Vegetation_Setup_V8";
+        private const string PREF_KEY = "Forest_Vegetation_Setup_V17_FixedCapsuleProportions";
 
         [InitializeOnLoadMethod]
         private static void AutoRunSetupOnce()
@@ -19,9 +19,93 @@ namespace EndlessSurvival.World.Editor
                 EditorPrefs.SetBool(PREF_KEY, true);
                 EditorApplication.delayCall += () =>
                 {
+                    PurgeAllVegetationContainers();
+                    StripAllVegetationColliders();
                     SetupForestVegetation();
                 };
             }
+        }
+
+        [MenuItem("Endless Survival/Remove All Vegetation Colliders (Trees, Rocks, Bushes)", false, 15)]
+        [MenuItem("Tools/Endless Survival/Remove All Vegetation Colliders (Trees, Rocks, Bushes)", false, 15)]
+        public static void StripAllVegetationColliders()
+        {
+            string[] prefabs = new string[]
+            {
+                "Assets/Prefabs/Environment/Trees/Tree_Pine_Blocky.prefab",
+                "Assets/Prefabs/Environment/Trees/Tree_Oak_Blocky.prefab",
+                "Assets/Prefabs/Environment/Trees/Tree_Dead_Blocky.prefab",
+                "Assets/Prefabs/Environment/Trees/Rock_Forest_Blocky.prefab",
+                "Assets/Prefabs/Environment/Trees/Bush_Forest_Blocky.prefab"
+            };
+
+            foreach (var path in prefabs)
+            {
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                if (root != null)
+                {
+                    var cols = root.GetComponentsInChildren<Collider>(true);
+                    foreach (var col in cols)
+                    {
+                        col.isTrigger = true;
+                    }
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                    PrefabUtility.UnloadPrefabContents(root);
+                }
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("<color=green>[VegetationSetup] Tüm ağaç, kaya ve çalı prefablarının collider'ları Trigger (çarpışmasız) yapıldı! Bounds korundu, fiziksel çarpışma sıfırlandı.</color>");
+        }
+
+        [MenuItem("Endless Survival/Purge All Vegetation_Containers (Terrain Only)", false, 14)]
+        [MenuItem("Tools/Endless Survival/Purge All Vegetation_Containers (Terrain Only)", false, 14)]
+        public static void PurgeAllVegetationContainers()
+        {
+            // 1. Purge from Chunk_Forest_Curve.prefab
+            string chunkPrefabPath = "Assets/Prefabs/Chunks/Chunk_Forest_Curve.prefab";
+            GameObject root = PrefabUtility.LoadPrefabContents(chunkPrefabPath);
+            if (root != null)
+            {
+                for (int i = root.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform c = root.transform.GetChild(i);
+                    if (c.name.StartsWith("Vegetation_Container"))
+                    {
+                        Object.DestroyImmediate(c.gameObject);
+                    }
+                }
+                var spawner = root.GetComponent<ChunkVegetationSpawner>();
+                if (spawner != null)
+                {
+                    spawner.renderMode = ChunkVegetationSpawner.VegetationRenderMode.TerrainTrees;
+                }
+                PrefabUtility.SaveAsPrefabAsset(root, chunkPrefabPath);
+                PrefabUtility.UnloadPrefabContents(root);
+                Debug.Log("<color=green>[Purge] 'Chunk_Forest_Curve.prefab' içindeki tüm Vegetation_Container nesneleri silindi!</color>");
+            }
+
+            // 2. Purge from current scene chunks
+            Chunk[] chunks = Object.FindObjectsByType<Chunk>(FindObjectsSortMode.None);
+            foreach (var chunk in chunks)
+            {
+                for (int i = chunk.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform c = chunk.transform.GetChild(i);
+                    if (c.name.StartsWith("Vegetation_Container"))
+                    {
+                        Object.DestroyImmediate(c.gameObject);
+                    }
+                }
+                var spawner = chunk.GetComponent<ChunkVegetationSpawner>();
+                if (spawner != null)
+                {
+                    spawner.renderMode = ChunkVegetationSpawner.VegetationRenderMode.TerrainTrees;
+                    spawner.GenerateVegetation();
+                }
+                EditorUtility.SetDirty(chunk.gameObject);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("<color=green>[Purge] Sahnedeki tüm chunk'lardan Vegetation_Container nesneleri tamamen temizlendi!</color>");
         }
 
         [MenuItem("Endless Survival/Setup Forest Vegetation (Trees & Environment)", false, 15)]
@@ -84,7 +168,7 @@ namespace EndlessSurvival.World.Editor
             GameObject bushPrefab = CreateOrUpdatePrefab($"{treeFolder}/Bush_Forest_Blocky.prefab", () =>
             {
                 GameObject temp = BuildForestBushRaw(matBush);
-                CollapseToSingleMesh(temp, $"{meshFolder}/Mesh_Bush_Forest.asset", hasCollider: false);
+                CollapseToSingleMesh(temp, $"{meshFolder}/Mesh_Bush_Forest.asset", hasCollider: true);
                 return temp;
             });
 
@@ -115,17 +199,38 @@ namespace EndlessSurvival.World.Editor
                 if (terrain != null && terrain.terrainData != null)
                 {
                     terrain.drawTreesAndFoliage = true;
-                    terrain.treeDistance = 1500f;
-                    terrain.treeBillboardDistance = 1200f;
-                    terrain.treeCrossFadeLength = 30f;
-                    terrain.treeMaximumFullLODCount = 1000;
+                    terrain.treeDistance = 2000f;
+                    terrain.treeBillboardDistance = 2000f;
+                    terrain.treeCrossFadeLength = 0f;
+                    terrain.treeMaximumFullLODCount = 2000;
+                    terrain.Flush();
+                }
+
+                // Completely destroy ANY and ALL Vegetation_Container GameObjects from prefab
+                for (int i = chunkPrefabContents.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = chunkPrefabContents.transform.GetChild(i);
+                    if (child.name.StartsWith("Vegetation_Container"))
+                    {
+                        Object.DestroyImmediate(child.gameObject);
+                    }
                 }
 
                 spawner.GenerateVegetation();
 
+                // Re-verify that no container was left behind
+                for (int i = chunkPrefabContents.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = chunkPrefabContents.transform.GetChild(i);
+                    if (child.name.StartsWith("Vegetation_Container"))
+                    {
+                        Object.DestroyImmediate(child.gameObject);
+                    }
+                }
+
                 PrefabUtility.SaveAsPrefabAsset(chunkPrefabContents, chunkPrefabPath);
                 PrefabUtility.UnloadPrefabContents(chunkPrefabContents);
-                Debug.Log($"<color=green>[VegetationSetup] '{chunkPrefabPath}' Unity Terrain uyumlu tek-mesh ağaçlarıyla güncellendi!</color>");
+                Debug.Log($"<color=green>[VegetationSetup] '{chunkPrefabPath}' Vegetation_Container tamamen silindi, her şey Terrain motoruna taşındı!</color>");
             }
 
             // 4. Sahnede aktif chunk veya ChunkManager varsa güncelle
@@ -166,12 +271,32 @@ namespace EndlessSurvival.World.Editor
                     if (terrain != null)
                     {
                         terrain.drawTreesAndFoliage = true;
-                        terrain.treeDistance = 1500f;
-                        terrain.treeBillboardDistance = 1200f;
-                        terrain.treeMaximumFullLODCount = 1000;
+                        terrain.treeDistance = 2000f;
+                        terrain.treeBillboardDistance = 2000f;
+                        terrain.treeCrossFadeLength = 0f;
+                        terrain.treeMaximumFullLODCount = 2000;
+                        terrain.Flush();
+                    }
+                    // Completely destroy all Vegetation_Container GameObjects on scene chunk
+                    for (int i = chunk.transform.childCount - 1; i >= 0; i--)
+                    {
+                        Transform c = chunk.transform.GetChild(i);
+                        if (c.name.StartsWith("Vegetation_Container"))
+                        {
+                            Object.DestroyImmediate(c.gameObject);
+                        }
                     }
 
                     spawner.GenerateVegetation();
+
+                    for (int i = chunk.transform.childCount - 1; i >= 0; i--)
+                    {
+                        Transform c = chunk.transform.GetChild(i);
+                        if (c.name.StartsWith("Vegetation_Container"))
+                        {
+                            Object.DestroyImmediate(c.gameObject);
+                        }
+                    }
                     chunk.GenerateEditorPreview(chunk.ChunkSeed);
                     EditorUtility.SetDirty(chunk.gameObject);
                     if (chunk.gameObject.scene.IsValid())
@@ -269,23 +394,68 @@ namespace EndlessSurvival.World.Editor
             lodGroup.size = Mathf.Max(1f, savedMesh.bounds.size.magnitude);
             lodGroup.RecalculateBounds();
 
-            if (hasCollider)
+            // Configure tight physical colliders strictly on tree trunks and rock bodies
+            ConfigurePrefabColliders(root, root.name, hasCollider);
+        }
+
+        private static void ConfigurePrefabColliders(GameObject root, string name, bool hasCollider)
+        {
+            // Remove any old colliders
+            var colliders = root.GetComponentsInChildren<Collider>(true);
+            for (int i = colliders.Length - 1; i >= 0; i--)
             {
-                if (root.name.Contains("Rock"))
-                {
-                    BoxCollider col = root.GetComponent<BoxCollider>();
-                    if (col == null) col = root.AddComponent<BoxCollider>();
-                    col.center = savedMesh.bounds.center;
-                    col.size = savedMesh.bounds.size;
-                }
-                else
-                {
-                    CapsuleCollider col = root.GetComponent<CapsuleCollider>();
-                    if (col == null) col = root.AddComponent<CapsuleCollider>();
-                    col.center = new Vector3(0f, savedMesh.bounds.extents.y, 0f);
-                    col.radius = Mathf.Max(0.5f, savedMesh.bounds.extents.x * 0.35f);
-                    col.height = savedMesh.bounds.size.y;
-                }
+                Object.DestroyImmediate(colliders[i]);
+            }
+
+            if (!hasCollider) return;
+
+            // CRITICAL FOR UNITY TERRAIN ENGINE:
+            // Unity Terrain requires a Collider to compute bounds for custom tree prototypes.
+            // By setting isTrigger = true, bounds are computed cleanly with ZERO physical collision!
+            if (name.Contains("Pine"))
+            {
+                CapsuleCollider col = root.AddComponent<CapsuleCollider>();
+                col.center = new Vector3(0f, 2.0f, 0f);
+                col.radius = 0.45f;
+                col.height = 4.0f;
+                col.direction = 1;
+                col.isTrigger = true;
+            }
+            else if (name.Contains("Oak"))
+            {
+                CapsuleCollider col = root.AddComponent<CapsuleCollider>();
+                col.center = new Vector3(0f, 2.1f, 0f);
+                col.radius = 0.50f;
+                col.height = 4.2f;
+                col.direction = 1;
+                col.isTrigger = true;
+            }
+            else if (name.Contains("Dead"))
+            {
+                CapsuleCollider col = root.AddComponent<CapsuleCollider>();
+                col.center = new Vector3(0f, 2.4f, 0f);
+                col.radius = 0.40f;
+                col.height = 4.8f;
+                col.direction = 1;
+                col.isTrigger = true;
+            }
+            else if (name.Contains("Rock"))
+            {
+                CapsuleCollider col = root.AddComponent<CapsuleCollider>();
+                col.center = new Vector3(0.28f, 1.0f, 0f);
+                col.radius = 0.75f;
+                col.height = 2.2f;
+                col.direction = 1;
+                col.isTrigger = true;
+            }
+            else if (name.Contains("Bush"))
+            {
+                CapsuleCollider col = root.AddComponent<CapsuleCollider>();
+                col.center = new Vector3(0.24f, 0.65f, 0.09f);
+                col.radius = 0.5f;
+                col.height = 1.4f;
+                col.direction = 1;
+                col.isTrigger = true;
             }
         }
 

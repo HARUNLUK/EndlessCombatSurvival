@@ -72,6 +72,16 @@ namespace EndlessSurvival.World.Editor
                 var spawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
                 if (spawner != null) spawner.ClearVegetation();
             }
+
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Prefab Kayıt ve Onarım (Overrides)", EditorStyles.boldLabel);
+
+            GUI.backgroundColor = new Color(0.1f, 0.85f, 0.45f);
+            if (GUILayout.Button("💾 Geçersiz Scriptleri Onar & Prefab'a Kaydet", GUILayout.Height(32)))
+            {
+                PrefabMissingScriptFixer.CleanAndApplyToPrefab(chunk);
+            }
+
             GUI.backgroundColor = Color.white;
         }
 

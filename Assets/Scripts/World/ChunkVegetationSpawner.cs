@@ -8,7 +8,7 @@ namespace EndlessSurvival.World
     /// <summary>
     /// Spawns procedural environment vegetation (trees, rocks, bushes) across a chunk.
     /// Supports both:
-    ///  1) Unity Terrain TreeInstance System (Maximum optimization, GPU instancing, zero GameObject overhead)
+    ///  1) Unity Terrain TreeInstance System (Maximum optimization, GPU instancing, zero GameObject overhead, Box+Capsule bounds)
     ///  2) Independent GameObjects (for future physical tree chopping, falling, and survival crafting mechanics)
     /// </summary>
     [ExecuteAlways]
@@ -40,7 +40,7 @@ namespace EndlessSurvival.World
 
         [Header("Render & Optimization Mode (Performans & Çizim Modu)")]
         [Tooltip("TerrainTrees = Unity Terrain GPU instanced ağaç motoru (Maksimum FPS). GameObjects = Fiziksel bağımsız objeler.")]
-        public VegetationRenderMode renderMode = VegetationRenderMode.TerrainTrees;
+        public VegetationRenderMode renderMode = VegetationRenderMode.GameObjects;
 
         [Header("Biome Filtering")]
         [Tooltip("Allowed biomes for this vegetation spawner")]
@@ -114,6 +114,37 @@ namespace EndlessSurvival.World
         }
 
 #if UNITY_EDITOR
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void OnScriptsReloaded()
+        {
+            // When Unity recompiles scripts or domain reloads, flush Terrain tree batch so trees never vanish
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                var spawners = Object.FindObjectsByType<ChunkVegetationSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var spawner in spawners)
+                {
+                    if (spawner != null)
+                    {
+                        spawner.AutoCheckPreview();
+                    }
+                }
+            };
+        }
+
+        private static void DisableTreeColliders(Terrain t)
+        {
+            if (t == null) return;
+            TerrainCollider tCol = t.GetComponent<TerrainCollider>();
+            if (tCol == null) return;
+            UnityEditor.SerializedObject so = new UnityEditor.SerializedObject(tCol);
+            UnityEditor.SerializedProperty prop = so.FindProperty("m_EnableTreeColliders");
+            if (prop != null && prop.boolValue)
+            {
+                prop.boolValue = false;
+                so.ApplyModifiedProperties();
+            }
+        }
+
         private void OnValidate()
         {
             if (!Application.isPlaying && gameObject.scene.name != null)
@@ -122,7 +153,7 @@ namespace EndlessSurvival.World
                 {
                     if (this != null && gameObject != null && !Application.isPlaying)
                     {
-                        GenerateVegetation();
+                        AutoCheckPreview();
                     }
                 };
             }
@@ -134,28 +165,45 @@ namespace EndlessSurvival.World
 #if UNITY_EDITOR
             if (this == null || gameObject == null || Application.isPlaying) return;
             
-            bool hasTrees = false;
+            Chunk chunk = GetComponent<Chunk>();
+            if (chunk == null) chunk = GetComponentInParent<Chunk>();
+            Terrain t = chunk != null ? chunk.ChunkTerrain : GetComponentInChildren<Terrain>();
+            if (t == null && chunk != null) t = chunk.GetComponentInChildren<Terrain>();
+            if (t == null) t = GetComponent<Terrain>();
+            if (t == null) t = GetComponentInParent<Terrain>();
+
             if (renderMode == VegetationRenderMode.TerrainTrees)
             {
-                Terrain t = GetComponentInChildren<Terrain>();
-                if (t != null && t.terrainData != null && t.terrainData.treeInstanceCount > 0)
+                if (t != null && t.terrainData != null)
                 {
-                    hasTrees = true;
+                    DisableTreeColliders(t);
+
+                    if (t.terrainData.treeInstanceCount > 0)
+                    {
+                        // On domain reload / Unity script refresh, Unity's Terrain engine unloads its GPU draw batch.
+                        // Force redraw buffer flush so trees, rocks, and bushes NEVER vanish on Unity refresh!
+                        t.drawTreesAndFoliage = true;
+                        t.treeDistance = 2000f;
+                        t.treeBillboardDistance = 2000f;
+                        t.treeCrossFadeLength = 0f;
+                        t.treeMaximumFullLODCount = 2000;
+                        t.Flush();
+                        UnityEditor.SceneView.RepaintAll();
+                        return;
+                    }
                 }
             }
             else
             {
                 Transform container = transform.Find(CONTAINER_NAME);
+                if (container == null) container = transform.Find("EditorPreview/" + CONTAINER_NAME);
                 if (container != null && container.childCount > 0)
                 {
-                    hasTrees = true;
+                    return;
                 }
             }
 
-            if (!hasTrees)
-            {
-                GenerateVegetation();
-            }
+            GenerateVegetation();
 #endif
         }
 
@@ -163,7 +211,15 @@ namespace EndlessSurvival.World
         {
             if (Application.isPlaying)
             {
-                GenerateVegetation();
+                // ChunkManager already generates vegetation after terrain/road conforming; only fill in if nothing exists yet.
+                Transform existing = transform.Find(CONTAINER_NAME);
+                Terrain t = GetComponentInChildren<Terrain>();
+                bool hasContainer = existing != null && existing.childCount > 0;
+                bool hasTerrainTrees = t != null && t.terrainData != null && t.terrainData.treeInstanceCount > 0;
+                if (!hasContainer && !hasTerrainTrees)
+                {
+                    GenerateVegetation();
+                }
             }
         }
 
@@ -174,19 +230,39 @@ namespace EndlessSurvival.World
         [ContextMenu("Generate Vegetation Now")]
         public void GenerateVegetation(Transform customContainerParent = null, SeededRandom customRng = null)
         {
-            Transform parent = customContainerParent != null ? customContainerParent : transform;
-            Transform vegContainer = parent.Find(CONTAINER_NAME);
-            if (vegContainer == null)
-            {
-                GameObject go = new GameObject(CONTAINER_NAME);
-                go.transform.SetParent(parent, false);
-                vegContainer = go.transform;
-            }
-
-            ClearContainer(vegContainer);
-
             Chunk chunk = GetComponent<Chunk>();
             if (chunk == null) chunk = GetComponentInParent<Chunk>();
+
+            // In TerrainTrees mode, completely eradicate any Vegetation_Container! Everything is on the Terrain!
+            if (renderMode == VegetationRenderMode.TerrainTrees)
+            {
+                DestroyAllVegetationContainers();
+            }
+
+            Transform containerParent = customContainerParent;
+            if (containerParent == null)
+            {
+                Transform ep = null;
+                if (!Application.isPlaying)
+                {
+                    ep = transform.Find("EditorPreview");
+                    if (ep == null && chunk != null) ep = chunk.transform.Find("EditorPreview");
+                }
+                containerParent = ep != null ? ep : transform;
+            }
+
+            Transform vegContainer = null;
+            if (renderMode == VegetationRenderMode.GameObjects)
+            {
+                vegContainer = containerParent.Find(CONTAINER_NAME);
+                if (vegContainer == null)
+                {
+                    GameObject go = new GameObject(CONTAINER_NAME);
+                    go.transform.SetParent(containerParent, false);
+                    vegContainer = go.transform;
+                }
+                ClearContainer(vegContainer);
+            }
 
             // Biome check: Only spawn forest trees on Forest chunks (or if no chunk component)
             if (chunk != null && chunk.biomeType != targetBiome)
@@ -220,7 +296,7 @@ namespace EndlessSurvival.World
             }
 
             // Collect all POI exclusion clearings (camps, caves, lighthouses, etc.)
-            List<PoiExclusionZone> exclusionZones = CollectPoiExclusionZones(chunk, parent);
+            List<PoiExclusionZone> exclusionZones = CollectPoiExclusionZones(chunk, containerParent);
             List<Vector3> placedTreePositions = new List<Vector3>();
 
             // 1. TERRAIN TREES MODE: All trees and detail props managed by Unity Terrain Engine
@@ -247,10 +323,11 @@ namespace EndlessSurvival.World
                             // Convert world coordinates to normalized Terrain coordinates (0 to 1)
                             Vector3 localTerrainPos = terrainComp.transform.InverseTransformPoint(worldPos);
                             float normX = Mathf.Clamp01(localTerrainPos.x / terrainSize.x);
+                            float normY = Mathf.Clamp01(localTerrainPos.y / terrainSize.y);
                             float normZ = Mathf.Clamp01(localTerrainPos.z / terrainSize.z);
 
                             TreeInstance ti = new TreeInstance();
-                            ti.position = new Vector3(normX, 0f, normZ); // In Unity Terrain, Y=0 snaps tree flush onto surface heightmap
+                            ti.position = new Vector3(normX, normY, normZ);
                             ti.widthScale = scale;
                             ti.heightScale = scale;
                             ti.rotation = rng.Range(0f, Mathf.PI * 2f);
@@ -282,10 +359,11 @@ namespace EndlessSurvival.World
 
                             Vector3 localTerrainPos = terrainComp.transform.InverseTransformPoint(worldPos);
                             float normX = Mathf.Clamp01(localTerrainPos.x / terrainSize.x);
+                            float normY = Mathf.Clamp01(localTerrainPos.y / terrainSize.y);
                             float normZ = Mathf.Clamp01(localTerrainPos.z / terrainSize.z);
 
                             TreeInstance ti = new TreeInstance();
-                            ti.position = new Vector3(normX, 0f, normZ);
+                            ti.position = new Vector3(normX, normY, normZ);
                             ti.widthScale = scale;
                             ti.heightScale = scale;
                             ti.rotation = rng.Range(0f, Mathf.PI * 2f);
@@ -299,18 +377,22 @@ namespace EndlessSurvival.World
                     }
                 }
 
-                terrainComp.terrainData.SetTreeInstances(allInstances.ToArray(), true);
+                terrainComp.terrainData.SetTreeInstances(allInstances.ToArray(), false);
                 terrainComp.drawTreesAndFoliage = true;
-                terrainComp.treeDistance = 1500f;
-                terrainComp.treeBillboardDistance = 1200f;
-                terrainComp.treeCrossFadeLength = 30f;
-                terrainComp.treeMaximumFullLODCount = 1000;
+                terrainComp.treeDistance = 2000f;
+                terrainComp.treeBillboardDistance = 2000f;
+                terrainComp.treeCrossFadeLength = 0f;
+                terrainComp.Flush();
 
 #if UNITY_EDITOR
+                DisableTreeColliders(terrainComp);
+
                 if (!Application.isPlaying)
                 {
                     UnityEditor.EditorUtility.SetDirty(terrainComp);
                     UnityEditor.EditorUtility.SetDirty(terrainComp.terrainData);
+                    UnityEditor.AssetDatabase.SaveAssetIfDirty(terrainComp.terrainData);
+                    UnityEditor.SceneView.RepaintAll();
                 }
 #endif
                 Debug.Log($"<color=cyan>[ChunkVegetationSpawner] Başarılı: {allInstances.Count} adet Terrain ağacı ve bitki örtüsü eklendi! (Chunk: {gameObject.name})</color>");
@@ -586,13 +668,42 @@ namespace EndlessSurvival.World
         [ContextMenu("Clear Vegetation")]
         public void ClearVegetation()
         {
-            Transform container = transform.Find(CONTAINER_NAME);
-            if (container != null) ClearContainer(container);
+            if (renderMode == VegetationRenderMode.TerrainTrees)
+            {
+                DestroyAllVegetationContainers();
+            }
+            else
+            {
+                Transform container = transform.Find(CONTAINER_NAME);
+                if (container != null) ClearContainer(container);
+            }
 
             Terrain terrainComp = GetComponentInChildren<Terrain>();
             if (terrainComp != null && terrainComp.terrainData != null)
             {
                 terrainComp.terrainData.SetTreeInstances(new TreeInstance[0], false);
+            }
+        }
+
+        public void DestroyAllVegetationContainers()
+        {
+            Transform searchRoot = transform;
+            Chunk chunk = GetComponent<Chunk>();
+            if (chunk == null) chunk = GetComponentInParent<Chunk>();
+            if (chunk != null) searchRoot = chunk.transform;
+
+            var allTransforms = searchRoot.GetComponentsInChildren<Transform>(true);
+            for (int i = allTransforms.Length - 1; i >= 0; i--)
+            {
+                if (allTransforms[i] != null && allTransforms[i].name.StartsWith(CONTAINER_NAME))
+                {
+#if UNITY_EDITOR
+                    if (!Application.isPlaying)
+                        DestroyImmediate(allTransforms[i].gameObject);
+                    else
+#endif
+                        Destroy(allTransforms[i].gameObject);
+                }
             }
         }
 

@@ -753,33 +753,44 @@ namespace EndlessSurvival.World.Road
 
         private void GenerateGuardrails(bool enabled, float computedOffset, float curbHeight)
         {
-            // Destroy all existing guardrails to prevent duplicates in the same frame
-            Transform existingHolder = transform.Find("Guardrails");
-            while (existingHolder != null)
-            {
-                existingHolder.name = "Guardrails_Destroying";
-                if (Application.isPlaying) Destroy(existingHolder.gameObject);
-                else DestroyImmediate(existingHolder.gameObject);
-                existingHolder = transform.Find("Guardrails");
-            }
-
+            // Clean up any legacy temp holders if present
             Transform oldHolder = transform.Find("Guardrails_Holder");
-            while (oldHolder != null)
+            if (oldHolder != null)
             {
-                oldHolder.name = "Guardrails_Destroying";
                 if (Application.isPlaying) Destroy(oldHolder.gameObject);
                 else DestroyImmediate(oldHolder.gameObject);
-                oldHolder = transform.Find("Guardrails_Holder");
+            }
+            Transform destroyingHolder = transform.Find("Guardrails_Destroying");
+            if (destroyingHolder != null)
+            {
+                if (Application.isPlaying) Destroy(destroyingHolder.gameObject);
+                else DestroyImmediate(destroyingHolder.gameObject);
             }
 
-            if (!enabled) return;
+            Transform existingHolder = transform.Find("Guardrails");
+            if (!enabled)
+            {
+                if (existingHolder != null)
+                {
+                    if (Application.isPlaying) Destroy(existingHolder.gameObject);
+                    else DestroyImmediate(existingHolder.gameObject);
+                }
+                return;
+            }
 
-            GameObject guardrailsGo = new GameObject("Guardrails");
-            guardrailsGo.transform.SetParent(transform, false);
+            GameObject guardrailsGo = existingHolder != null ? existingHolder.gameObject : null;
+            if (guardrailsGo == null)
+            {
+                guardrailsGo = new GameObject("Guardrails");
+                guardrailsGo.transform.SetParent(transform, false);
+            }
 
-            MeshFilter filter = guardrailsGo.AddComponent<MeshFilter>();
-            MeshRenderer renderer = guardrailsGo.AddComponent<MeshRenderer>();
-            MeshCollider collider = guardrailsGo.AddComponent<MeshCollider>();
+            MeshFilter filter = guardrailsGo.GetComponent<MeshFilter>();
+            if (filter == null) filter = guardrailsGo.AddComponent<MeshFilter>();
+            MeshRenderer renderer = guardrailsGo.GetComponent<MeshRenderer>();
+            if (renderer == null) renderer = guardrailsGo.AddComponent<MeshRenderer>();
+            MeshCollider collider = guardrailsGo.GetComponent<MeshCollider>();
+            if (collider == null) collider = guardrailsGo.AddComponent<MeshCollider>();
 
             Mesh mesh = BuildGuardrailMesh(computedOffset, curbHeight);
             if (Application.isPlaying)

@@ -163,6 +163,9 @@ namespace EndlessSurvival.World
         [Range(0.2f, 3.0f)]
         public float globalVegetationDensity = 1.0f;
 
+        [Tooltip("Kapalıysa her chunk prefab'ının kendi ChunkVegetationSpawner.densityMultiplier değeri kullanılır. Açıksa global değer prefab değerini ezer.")]
+        public bool overrideChunkVegetationDensity = false;
+
         public enum ElevationSelectionMode
         {
             DynamicWeightedRandom, // Procedurally rolls based on probability, weights, and min/max limits
@@ -248,7 +251,8 @@ namespace EndlessSurvival.World
             var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
             if (vegSpawner != null)
             {
-                vegSpawner.densityMultiplier = globalVegetationDensity;
+                if (overrideChunkVegetationDensity)
+                    vegSpawner.densityMultiplier = globalVegetationDensity;
                 vegSpawner.GenerateVegetation();
             }
         }

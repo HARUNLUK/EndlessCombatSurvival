@@ -57,6 +57,19 @@ namespace EndlessSurvival.World.Editor
                 EditorUtility.SetDirty(spawner.gameObject);
             }
 
+            GUI.backgroundColor = new Color(0.2f, 0.85f, 0.5f);
+            if (GUILayout.Button("🚫 Tüm Ağaç/Kaya/Çalı Çarpışmalarını İptal Et (No Collision)", GUILayout.Height(28)))
+            {
+                VegetationSetupUtility.StripAllVegetationColliders();
+                VegetationSetupUtility.SetupForestVegetation();
+            }
+
+            GUI.backgroundColor = new Color(1.0f, 0.45f, 0.2f);
+            if (GUILayout.Button("🗑️ Vegetation_Container'ları Tamamen Sil (Terrain Modu)", GUILayout.Height(26)))
+            {
+                VegetationSetupUtility.PurgeAllVegetationContainers();
+            }
+
             // Clear Button
             GUI.backgroundColor = new Color(1.0f, 0.4f, 0.4f);
             if (GUILayout.Button("Temizle (Clear Vegetation)", GUILayout.Height(24)))
@@ -73,10 +86,13 @@ namespace EndlessSurvival.World.Editor
             {
                 EditorGUILayout.LabelField($"Terrain Ağaç Sayısı: {t.terrainData.treeInstanceCount} adet", EditorStyles.miniLabel);
             }
-            Transform container = spawner.transform.Find("Vegetation_Container");
-            if (container != null)
+            if (spawner.renderMode == ChunkVegetationSpawner.VegetationRenderMode.GameObjects)
             {
-                EditorGUILayout.LabelField($"GameObject Bitki Sayısı: {container.childCount} adet", EditorStyles.miniLabel);
+                Transform container = spawner.transform.Find("Vegetation_Container");
+                if (container != null)
+                {
+                    EditorGUILayout.LabelField($"GameObject Bitki Sayısı: {container.childCount} adet", EditorStyles.miniLabel);
+                }
             }
         }
     }
