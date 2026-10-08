@@ -50,6 +50,10 @@ namespace EndlessSurvival.World.Road
             float roadHalfWidth = roadGen != null ? roadGen.GetTotalHalfWidth() : 8.5f;
             float terrainXOffset = terrain.transform.localPosition.x; // Typically -250f
 
+            // Side boundaries (cliffs) are added on top of the natural landscape, outside the road clearance
+            var boundary = terrain.GetComponentInParent<ChunkBoundaryGenerator>();
+            bool useBoundary = boundary != null && boundary.BuildPlan(spline, hRes, terrainSize.z, terrainSize.x * 0.5f);
+
             // Sample row by row along the chunk forward axis (Z = 0 to 500m)
             for (int z = 0; z < hRes; z++)
             {
@@ -87,6 +91,7 @@ namespace EndlessSurvival.World.Road
                         ambientNoise = (perlin * 2f - 1f) * ambientAmplitude;
                     }
                     float naturalLandscapeY = spline.baseElevation + ambientNoise;
+                    if (useBoundary) naturalLandscapeY += boundary.GetHeightOffset(localX, z);
 
                     // Blend road bed into surrounding terrain
                     float finalHeightMeters;

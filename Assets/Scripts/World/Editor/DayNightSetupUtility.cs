@@ -54,13 +54,14 @@ namespace EndlessSurvival.World.Editor
             manager.dayDurationInMinutes = 18f; // 18 gerçek dakika = 24 oyun saati
             manager.isTimeProgressing = true;
             manager.controlFog = true;
+            manager.enableFog = false;
             manager.fogDensity = 0.0022f;
 
             EditorUtility.SetDirty(manager);
 
             // 3. RenderSettings Ambiyans ve Sis
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.fog = true;
+            RenderSettings.fog = false;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogDensity = 0.0022f;
 

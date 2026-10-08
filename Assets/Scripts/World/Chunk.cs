@@ -260,11 +260,17 @@ namespace EndlessSurvival.World
             Transform preview = transform.Find("EditorPreview");
             if (preview == null || preview.childCount == 0)
             {
-                int seed = string.IsNullOrEmpty(editorPreviewSeed)
-                    ? GetHashCode()
-                    : SeededRandom.HashString(editorPreviewSeed);
-                GenerateEditorPreview(seed);
+                GenerateEditorPreview(GetEditorPreviewSeed());
             }
+        }
+
+        /// <summary>Seed used by editor previews: ChunkManager seed if spawned by it, else editorPreviewSeed.</summary>
+        public int GetEditorPreviewSeed()
+        {
+            if (_seed != 0) return _seed;
+            return string.IsNullOrEmpty(editorPreviewSeed)
+                ? GetHashCode()
+                : SeededRandom.HashString(editorPreviewSeed);
         }
 #endif
 
@@ -389,6 +395,23 @@ namespace EndlessSurvival.World
 
                 pois[i].InitializeFromChunk(poiSubRng, previewContainer.transform);
             }
+
+            // Side boundaries: re-shape terrain (cliffs) and place rocks for this preview seed
+            var boundary = GetComponent<ChunkBoundaryGenerator>();
+            if (boundary == null) boundary = gameObject.AddComponent<ChunkBoundaryGenerator>();
+            boundary.SetPreviewSeed(seed);
+
+            Terrain previewTerrain = ChunkTerrain;
+            var previewSpline = GetComponentInChildren<Road.RoadSpline>();
+            if (previewTerrain != null && previewSpline != null)
+            {
+                Road.RoadTerrainAdapter.ConformTerrainToRoad(previewTerrain, previewSpline, GetComponentInChildren<Road.RoadGenerator>(), true);
+            }
+            boundary.SpawnBoundaryRocks(previewContainer.transform, previewTerrain);
+
+            var backdrop = GetComponent<ChunkBackdropGenerator>();
+            if (backdrop == null) backdrop = gameObject.AddComponent<ChunkBackdropGenerator>();
+            backdrop.Generate(previewContainer.transform, previewTerrain);
 
             var vegRng = chunkRng.SubStream("vegetation");
             var vegSpawner = GetComponentInChildren<ChunkVegetationSpawner>();

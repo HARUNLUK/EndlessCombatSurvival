@@ -102,6 +102,7 @@ namespace EndlessSurvival.World
         public LayerMask groundMask = ~0;
 
         private const string CONTAINER_NAME = "Vegetation_Container";
+        private ChunkBoundaryGenerator _boundary;
 
         private void OnEnable()
         {
@@ -232,6 +233,7 @@ namespace EndlessSurvival.World
         {
             Chunk chunk = GetComponent<Chunk>();
             if (chunk == null) chunk = GetComponentInParent<Chunk>();
+            _boundary = chunk != null ? chunk.GetComponent<ChunkBoundaryGenerator>() : null;
 
             // In TerrainTrees mode, completely eradicate any Vegetation_Container! Everything is on the Terrain!
             if (renderMode == VegetationRenderMode.TerrainTrees)
@@ -607,6 +609,12 @@ namespace EndlessSurvival.World
             // Bounds check inside the 500x500 chunk area (-245 to +245 in local coords)
             Vector3 localToChunk = transform.InverseTransformPoint(candidatePos);
             if (Mathf.Abs(localToChunk.x) > 245f || localToChunk.z < 5f || localToChunk.z > 495f)
+            {
+                return false;
+            }
+
+            // Keep cliff faces and boundary rocks free of trees (cliff tops stay forested)
+            if (_boundary != null && _boundary.IsBlockedForVegetation(_boundary.transform.InverseTransformPoint(candidatePos)))
             {
                 return false;
             }

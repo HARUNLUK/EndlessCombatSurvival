@@ -49,12 +49,9 @@ namespace EndlessSurvival.World.Editor
             }
 
             GUI.backgroundColor = new Color(0.2f, 0.7f, 1.0f);
-            if (GUILayout.Button("Refresh All Preview (Ağaçlar + Kamp + Loot)", GUILayout.Height(28)))
+            if (GUILayout.Button("Refresh All Preview (Ağaçlar + Kamp + Loot + Kenarlar)", GUILayout.Height(28)))
             {
-                int seed = string.IsNullOrEmpty(chunk.editorPreviewSeed) 
-                    ? chunk.GetHashCode() 
-                    : SeededRandom.HashString(chunk.editorPreviewSeed);
-                chunk.GenerateEditorPreview(seed);
+                chunk.GenerateEditorPreview(chunk.GetEditorPreviewSeed());
             }
 
             GUI.backgroundColor = new Color(0.4f, 0.85f, 0.5f);

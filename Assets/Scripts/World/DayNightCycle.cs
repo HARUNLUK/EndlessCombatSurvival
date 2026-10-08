@@ -38,6 +38,8 @@ namespace EndlessSurvival.World
 
         [Header("Atmosphere & Fog")]
         public bool controlFog = true;
+        [Tooltip("Kapalıysa sahnedeki sis tamamen kapatılır (controlFog açıkken)")]
+        public bool enableFog = false;
         public float fogDensity = 0.0025f;
 
         // Internal cached colors for smooth transitions
@@ -144,7 +146,7 @@ namespace EndlessSurvival.World
             RenderSettings.ambientMode = AmbientMode.Trilight;
             if (controlFog)
             {
-                RenderSettings.fog = true;
+                RenderSettings.fog = enableFog;
                 RenderSettings.fogMode = FogMode.ExponentialSquared;
                 RenderSettings.fogDensity = fogDensity;
             }
@@ -220,6 +222,7 @@ namespace EndlessSurvival.World
             // 4. Sis Ayarı
             if (controlFog)
             {
+                RenderSettings.fog = enableFog;
                 Color targetFog;
                 if (isDusk)
                     targetFog = _duskFogColor;

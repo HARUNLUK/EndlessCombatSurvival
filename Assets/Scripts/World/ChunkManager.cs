@@ -35,6 +35,10 @@ namespace EndlessSurvival.World
         [Range(1, 5)]
         public int initialChunkCount = 2;
 
+        [Tooltip("Number of ready chunks kept ahead of the chunk the player is in. 1 = entering chunk N spawns chunk N+1's successor.")]
+        [Range(1, 3)]
+        public int chunksAhead = 1;
+
         [Tooltip("Maximum chunks to keep behind the player before unloading")]
         [Range(0, 3)]
         public int maxChunksBehind = 1;
@@ -90,8 +94,14 @@ namespace EndlessSurvival.World
         {
             if (!Application.isPlaying || _activeChunks.Count == 0) return;
 
-            // Fallback safety check: ensure the road ahead is always populated if triggers were missed
-            CheckRoadAheadDistance();
+            // Keep exactly `chunksAhead` chunks in front of the chunk the player is currently in
+            Chunk current = GetChunkContainingTarget();
+            if (current != null)
+            {
+                EnsureChunksAhead(current);
+                // Same cleanup the seal trigger does, in case that trigger is missed
+                UnloadPassedChunks(current);
+            }
         }
 
         public void SpawnInitialChunks()
@@ -241,11 +251,21 @@ namespace EndlessSurvival.World
                 ApplySequentialElevationPreset(chunk, roadGen, spline);
             }
 
-            // Conform and deform terrain underneath and around the road seamlessly
+            // Side boundaries (cliffs / giant rocks) so the world edge is never visible
+            var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
+            if (boundary == null) boundary = chunk.gameObject.AddComponent<ChunkBoundaryGenerator>();
+
+            // Conform and deform terrain underneath and around the road seamlessly (also raises boundary cliffs)
             if (terrain != null)
             {
                 RoadTerrainAdapter.ConformTerrainToRoad(terrain, spline, roadGen, true);
             }
+            boundary.SpawnBoundaryRocks(chunk.transform, terrain);
+
+            // Background mountains outside the boundary (seamless across chunks via global Z noise)
+            var backdrop = chunk.GetComponent<ChunkBackdropGenerator>();
+            if (backdrop == null) backdrop = chunk.gameObject.AddComponent<ChunkBackdropGenerator>();
+            backdrop.Generate(chunk.transform, terrain);
 
             // Regenerate environment vegetation to conform to new terrain heights & road curve
             var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
@@ -267,8 +287,9 @@ namespace EndlessSurvival.World
 
             if (config == null) config = new ChunkElevationConfig();
 
-            // First N chunks are kept completely flat and straight as runway
-            bool forceFlat = chunk.ChunkIndex < initialFlatChunks || !enableElevationVariation;
+            // First N chunks are kept flat (no hills/dips) as runway, but may still have gentle curves
+            bool isRunway = chunk.ChunkIndex < initialFlatChunks;
+            bool forceFlat = isRunway || !enableElevationVariation;
             bool rollSuccess = !forceFlat && (rng.Value <= config.elevationChance);
 
             RoadElevationType elevationType = RoadElevationType.Flat;
@@ -322,10 +343,11 @@ namespace EndlessSurvival.World
             }
 
             // Curve layout (bend count, positions, lengths, offsets) is fully random
-            bool curvy = !forceFlat && (forceCurve || rng.Chance(curveSettings.curveChance));
+            bool curvy = forceCurve || rng.Chance(curveSettings.curveChance);
             if (curvy && !forceCurve)
             {
-                sharp = rng.Chance(0.15f);
+                // No hazard chicanes on the runway chunks
+                sharp = !isRunway && rng.Chance(0.15f);
                 if (elevationType == RoadElevationType.Flat)
                     cross = sharp ? RoadCrossSectionPreset.HazardFortified : RoadCrossSectionPreset.FullHighway;
             }
@@ -483,10 +505,23 @@ namespace EndlessSurvival.World
         /// </summary>
         public void OnChunkSpawnNextRequested(Chunk chunk)
         {
-            int index = _activeChunks.IndexOf(chunk);
-            if (index >= 0 && index >= _activeChunks.Count - 2)
+            // Same rule as the per-frame check, so the trigger never spawns earlier than intended
+            EnsureChunksAhead(chunk);
+        }
+
+        /// <summary>
+        /// Spawns chunks until there are `chunksAhead` chunks after the given chunk.
+        /// Start: chunk 1 + 2 exist. Entering chunk 2 (end of chunk 1) spawns chunk 3, entering chunk 3 spawns chunk 4...
+        /// </summary>
+        private void EnsureChunksAhead(Chunk current)
+        {
+            int index = _activeChunks.IndexOf(current);
+            if (index < 0) return;
+
+            int ahead = _activeChunks.Count - 1 - index;
+            for (int i = ahead; i < chunksAhead; i++)
             {
-                SpawnNextChunk();
+                if (SpawnNextChunk() == null) break;
             }
         }
 
@@ -518,8 +553,8 @@ namespace EndlessSurvival.World
                 }
             }
 
-            // Enforce maxActiveChunks limit
-            while (_activeChunks.Count > maxActiveChunks)
+            // Enforce maxActiveChunks limit, but never unload the chunk the player is in (or anything ahead of it)
+            while (_activeChunks.Count > maxActiveChunks && _activeChunks[0] != currentChunk)
             {
                 UnloadOldestChunk();
             }
@@ -538,22 +573,20 @@ namespace EndlessSurvival.World
             }
         }
 
-        private void CheckRoadAheadDistance()
+        /// <summary>Returns the active chunk whose 0..chunkLength forward span contains the player/vehicle.</summary>
+        private Chunk GetChunkContainingTarget()
         {
             Transform target = GetTargetTransform();
-            if (target == null || _activeChunks.Count == 0) return;
+            if (target == null) return null;
 
-            Chunk lastChunk = _activeChunks[_activeChunks.Count - 1];
-            if (lastChunk == null) return;
-
-            Vector3 endPos = lastChunk.exitSocket != null ? lastChunk.exitSocket.position : lastChunk.transform.position + lastChunk.transform.forward * lastChunk.chunkLength;
-            float distToEnd = Vector3.Distance(target.position, endPos);
-
-            // If player is within 450m of the absolute end of all active chunks, spawn next
-            if (distToEnd < 450f)
+            for (int i = _activeChunks.Count - 1; i >= 0; i--)
             {
-                SpawnNextChunk();
+                Chunk chunk = _activeChunks[i];
+                if (chunk == null) continue;
+                float localZ = chunk.transform.InverseTransformPoint(target.position).z;
+                if (localZ >= 0f && localZ < chunk.chunkLength) return chunk;
             }
+            return null;
         }
 
         private Transform GetTargetTransform()
