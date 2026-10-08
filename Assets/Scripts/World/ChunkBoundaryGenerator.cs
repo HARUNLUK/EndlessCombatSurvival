@@ -234,8 +234,15 @@ namespace EndlessSurvival.World
                 float peak = rng.Range(settings.minCliffHeight, settings.maxCliffHeight);
                 float innerTarget = rng.Range(settings.minInnerEdge, settings.maxInnerEdge);
                 float rampTarget = rng.Range(settings.minRampWidth, settings.maxRampWidth);
+                // Any seam touching a Field chunk is flat, so cliffs fade out toward open plains.
+                // Both chunks at a seam see the same biomes, so they agree on the value.
+                bool isField = chunk != null && chunk.IsField;
+                bool prevField = chunk != null && chunk.PrevBiome == ChunkBiomeType.Field;
+                bool nextField = chunk != null && chunk.NextBiome == ChunkBiomeType.Field;
                 float seamA = SeamHeight(worldSeed, startSeam, s);
                 float seamB = SeamHeight(worldSeed, startSeam + 1, s);
+                if (isField || prevField) seamA = 0f;
+                if (isField || nextField) seamB = 0f;
 
                 for (int r = 0; r < rows; r++)
                 {
@@ -260,6 +267,7 @@ namespace EndlessSurvival.World
                             break;
                     }
                     h *= 1f + (Mathf.PerlinNoise(side.noiseOffset, z * 0.012f) - 0.5f) * 0.35f * w;
+                    if (isField) h = 0f; // open plains: edges come from FieldEdgeGenerator, not cliffs
 
                     float ramp = Mathf.Lerp(seamRampWidth, rampTarget, wSoft);
                     float edgeNoise = (Mathf.PerlinNoise(side.noiseOffset + 50f, z * 0.015f) - 0.5f) * 2f * 12f * w;
@@ -508,7 +516,7 @@ namespace EndlessSurvival.World
             if (!boundaryEnabled || parent == null) return;
 
             Chunk chunk = GetChunk();
-            if (chunk == null) return;
+            if (chunk == null || chunk.IsField) return; // fields have fences/trees/corn/streams instead
 
             if (_sides == null)
             {

@@ -12,7 +12,8 @@ namespace EndlessSurvival.World
         RuinedCity,
         Wasteland,
         Snow,
-        Coast
+        Coast,
+        Field
     }
 
     public enum CoastSide
@@ -130,6 +131,15 @@ namespace EndlessSurvival.World
         public bool coastContinuesAtEnd = true;
 
         public bool IsCoast => biomeType == ChunkBiomeType.Coast;
+        public bool IsField => biomeType == ChunkBiomeType.Field;
+
+        // Neighbor biomes, set by ChunkManager from the biome plan. Without that info (a lone chunk
+        // previewed in the editor) both neighbors are assumed to be the same biome, i.e. seamless.
+        [System.NonSerialized] public bool hasNeighborInfo;
+        [System.NonSerialized] public ChunkBiomeType prevBiome;
+        [System.NonSerialized] public ChunkBiomeType nextBiome;
+        public ChunkBiomeType PrevBiome => hasNeighborInfo ? prevBiome : biomeType;
+        public ChunkBiomeType NextBiome => hasNeighborInfo ? nextBiome : biomeType;
         /// <summary>-1 = sea on the left (-X), +1 = sea on the right (+X).</summary>
         public float SeaSign => seaSide == CoastSide.Left ? -1f : 1f;
 
@@ -239,6 +249,27 @@ namespace EndlessSurvival.World
         private SeededRandom _campRandom;
         private SeededRandom _eventsRandom;
         private SeededRandom _notesRandom;
+
+        /// <summary>
+        /// Seed shared by every chunk of the same world (for features that must line up across chunks:
+        /// backdrop mountains, streams, corn strips). Edit-mode lone chunks use their preview seed.
+        /// </summary>
+        public int WorldSeed
+        {
+            get
+            {
+                if (_manager != null)
+                {
+                    // Edit mode: Awake has not resolved the seed yet, fall back to the seed text
+                    return _manager.ResolvedSeed != 0 ? _manager.ResolvedSeed : SeededRandom.HashString(_manager.masterSeed);
+                }
+#if UNITY_EDITOR
+                return GetEditorPreviewSeed();
+#else
+                return _seed;
+#endif
+            }
+        }
 
         public int ChunkIndex => _chunkIndex;
         public ChunkManager Manager => _manager;
@@ -425,6 +456,9 @@ namespace EndlessSurvival.World
             if (boundary == null) boundary = gameObject.AddComponent<ChunkBoundaryGenerator>();
             boundary.SetPreviewSeed(seed);
 
+            var fieldEdges = GetComponent<FieldEdgeGenerator>();
+            if (fieldEdges == null && IsField) fieldEdges = gameObject.AddComponent<FieldEdgeGenerator>();
+
             Terrain previewTerrain = ChunkTerrain;
             var previewSpline = GetComponentInChildren<Road.RoadSpline>();
             if (previewTerrain != null && previewSpline != null)
@@ -436,6 +470,8 @@ namespace EndlessSurvival.World
             var backdrop = GetComponent<ChunkBackdropGenerator>();
             if (backdrop == null) backdrop = gameObject.AddComponent<ChunkBackdropGenerator>();
             backdrop.Generate(previewContainer.transform, previewTerrain);
+
+            if (fieldEdges != null) fieldEdges.Generate(previewContainer.transform, previewTerrain);
 
             // In play mode the endless OceanSurface provides the sea; the preview gets its own water quad
             if (IsCoast) OceanSurface.CreatePreviewQuad(previewContainer.transform, this);

@@ -54,6 +54,10 @@ namespace EndlessSurvival.World.Road
             var boundary = terrain.GetComponentInParent<ChunkBoundaryGenerator>();
             bool useBoundary = boundary != null && boundary.BuildPlan(spline, hRes, terrainSize.z, terrainSize.x * 0.5f, roadHalfWidth);
 
+            // Field (open plains): almost no ambient undulation, stream channels along the edges
+            var field = terrain.GetComponentInParent<FieldEdgeGenerator>();
+            bool useField = field != null && field.BuildPlan(hRes, terrainSize.z, spline);
+
             // Sample row by row along the chunk forward axis (Z = 0 to 500m)
             for (int z = 0; z < hRes; z++)
             {
@@ -75,7 +79,7 @@ namespace EndlessSurvival.World.Road
 
                 // Seamless chunk border edge fade: ensure boundaries at Z=0 and Z=500 cleanly lock to baseline
                 float boundaryFade = Mathf.Clamp01(Mathf.Sin(normalizedZ * Mathf.PI));
-                float ambientAmplitude = boundaryFade * 8.0f;
+                float ambientAmplitude = boundaryFade * 8.0f * (useField ? field.ambientScale : 1f);
 
                 for (int x = 0; x < hRes; x++)
                 {
@@ -92,6 +96,7 @@ namespace EndlessSurvival.World.Road
                     }
                     float naturalLandscapeY = spline.baseElevation + ambientNoise;
                     if (useBoundary) naturalLandscapeY = boundary.ApplyBoundary(localX, z, naturalLandscapeY);
+                    if (useField) naturalLandscapeY = field.ApplyTerrain(localX, z, naturalLandscapeY, roadX, roadY);
 
                     // Blend road bed into surrounding terrain
                     float finalHeightMeters;
@@ -112,14 +117,17 @@ namespace EndlessSurvival.World.Road
 
                     // Seaside road: the sea side drops as a cliff right from the road shoulder
                     if (useBoundary) finalHeightMeters = boundary.ApplyAfterRoad(localX, z, finalHeightMeters, roadBedElevation);
+                    // Field river crossing: channel cut under the road, which then spans it as a bridge
+                    if (useField) finalHeightMeters = field.ApplyAfterRoad(localX, z, finalHeightMeters);
 
                     heights[z, x] = Mathf.Clamp01(finalHeightMeters / terrainSize.y);
                 }
             }
 
             td.SetHeights(0, 0, heights);
-            // Sand on coast beaches (or restore plain grass on non-coast chunks)
-            if (boundary != null) boundary.PaintTerrainLayers(td, heights, terrainXOffset);
+            // Soil on fields / sand on coast beaches (or restore plain grass)
+            if (useField) field.PaintTerrainLayers(td, terrainXOffset);
+            else if (boundary != null) boundary.PaintTerrainLayers(td, heights, terrainXOffset);
             terrain.Flush();
 
 #if UNITY_EDITOR

@@ -283,6 +283,14 @@ namespace EndlessSurvival.World
             bool coastForest = chunk != null && chunk.IsCoast && targetBiome == ChunkBiomeType.Forest && coastDensityMultiplier > 0f;
             if (chunk != null && chunk.biomeType != targetBiome && !coastForest)
             {
+                // Terrain trees live in TerrainData, which starts as a copy of the prefab asset (and edit-mode
+                // previews write their trees into that asset), so clear them explicitly, e.g. on Field chunks
+                Terrain t = chunk.ChunkTerrain;
+                if (t != null && t.terrainData != null && t.terrainData.treeInstanceCount > 0)
+                {
+                    t.terrainData.SetTreeInstances(new TreeInstance[0], false);
+                    t.Flush();
+                }
                 return;
             }
             _densityScale = coastForest ? coastDensityMultiplier : 1f;

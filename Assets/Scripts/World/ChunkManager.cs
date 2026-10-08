@@ -52,9 +52,31 @@ namespace EndlessSurvival.World
         [Tooltip("Biyom bölümleri. Aynı biyom art arda iki bölüm olarak gelmez.")]
         public List<BiomeRunSettings> biomeRuns = new List<BiomeRunSettings>
         {
-            new BiomeRunSettings { biome = ChunkBiomeType.Forest, weight = 55, minLength = 2, maxLength = 5 },
-            new BiomeRunSettings { biome = ChunkBiomeType.Coast, weight = 45, minLength = 2, maxLength = 4 }
+            new BiomeRunSettings { biome = ChunkBiomeType.Forest, weight = 45, minLength = 2, maxLength = 5 },
+            new BiomeRunSettings { biome = ChunkBiomeType.Coast, weight = 30, minLength = 2, maxLength = 4 },
+            new BiomeRunSettings { biome = ChunkBiomeType.Field, weight = 35, minLength = 2, maxLength = 4 }
         };
+
+        // Scenes saved before a biome existed miss its run entry; added once (see EnsureBiomeRunDefaults)
+        [SerializeField, HideInInspector] private int _biomeRunsVersion;
+        private const int BiomeRunsVersion = 1;
+
+        private void OnValidate()
+        {
+            EnsureBiomeRunDefaults();
+        }
+
+        private void EnsureBiomeRunDefaults()
+        {
+            if (_biomeRunsVersion >= BiomeRunsVersion || biomeRuns == null) return;
+
+            // v1: Field biome
+            if (!biomeRuns.Exists(r => r != null && r.biome == ChunkBiomeType.Field))
+            {
+                biomeRuns.Add(new BiomeRunSettings { biome = ChunkBiomeType.Field, weight = 35, minLength = 2, maxLength = 4 });
+            }
+            _biomeRunsVersion = BiomeRunsVersion;
+        }
 
         [Tooltip("Sonsuz deniz yüzeyi materyali (boşsa otomatik üretilir)")]
         public Material oceanMaterial;
@@ -105,6 +127,7 @@ namespace EndlessSurvival.World
                 return;
             }
             Instance = this;
+            EnsureBiomeRunDefaults();
 
             // Resolve the master seed
             if (string.IsNullOrEmpty(masterSeed))
@@ -215,6 +238,17 @@ namespace EndlessSurvival.World
         [Tooltip("Random curve generation (bend count, positions, lengths, offsets)")]
         public RoadCurveSettings curveSettings = new RoadCurveSettings();
 
+        [Header("Field (Düzlük) Eğimleri")]
+        [Tooltip("Düzlük chunk'ının eğimli (yumuşak tepe/çukur/dalgalı) olma ihtimali. Kalanı tamamen düz.")]
+        [Range(0f, 1f)]
+        public float fieldElevationChance = 0.2f;
+        [Tooltip("Düzlükteki tepe yüksekliği aralığı (m). Ormandakinden alçak.")]
+        public float fieldMinHillHeight = 4f;
+        public float fieldMaxHillHeight = 9f;
+        [Tooltip("Düzlükteki çukur derinliği aralığı (m)")]
+        public float fieldMinDipDepth = 3f;
+        public float fieldMaxDipDepth = 7f;
+
         [Header("Vegetation & Environment Settings (Bitki Örtüsü Ayarları)")]
         [Tooltip("Global vegetation density multiplier applied to spawned chunks (1.0 = normal, 1.5 = denser, 0.5 = sparser)")]
         [Range(0.2f, 3.0f)]
@@ -302,6 +336,10 @@ namespace EndlessSurvival.World
             var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
             if (boundary == null) boundary = chunk.gameObject.AddComponent<ChunkBoundaryGenerator>();
 
+            // Field chunks: fences / tree rows / corn / streams instead of cliffs (must exist before terrain conform)
+            var fieldEdges = chunk.GetComponent<FieldEdgeGenerator>();
+            if (fieldEdges == null && chunk.IsField) fieldEdges = chunk.gameObject.AddComponent<FieldEdgeGenerator>();
+
             // Conform and deform terrain underneath and around the road seamlessly (also raises boundary cliffs)
             if (terrain != null)
             {
@@ -313,6 +351,8 @@ namespace EndlessSurvival.World
             var backdrop = chunk.GetComponent<ChunkBackdropGenerator>();
             if (backdrop == null) backdrop = chunk.gameObject.AddComponent<ChunkBackdropGenerator>();
             backdrop.Generate(chunk.transform, terrain);
+
+            if (fieldEdges != null) fieldEdges.Generate(chunk.transform, terrain);
 
             // Regenerate environment vegetation to conform to new terrain heights & road curve
             var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
@@ -336,8 +376,15 @@ namespace EndlessSurvival.World
 
             // First N chunks are kept flat (no hills/dips) as runway, but may still have gentle curves
             bool isRunway = chunk.ChunkIndex < initialFlatChunks;
+            // Field (open plains): mostly flat; with a low chance gentle hills/dips/rolling only, at lower amplitudes
+            bool isField = chunk.IsField;
             bool forceFlat = isRunway || !enableElevationVariation;
-            bool rollSuccess = !forceFlat && (rng.Value <= config.elevationChance);
+            bool rollSuccess = !forceFlat && (rng.Value <= (isField ? fieldElevationChance : config.elevationChance));
+
+            float minHill = isField ? fieldMinHillHeight : config.minHillHeight;
+            float maxHill = isField ? fieldMaxHillHeight : config.maxHillHeight;
+            float minDip = isField ? fieldMinDipDepth : config.minDipDepth;
+            float maxDip = isField ? fieldMaxDipDepth : config.maxDipDepth;
 
             RoadElevationType elevationType = RoadElevationType.Flat;
 
@@ -346,9 +393,9 @@ namespace EndlessSurvival.World
                 int w0 = config.hillWeight;
                 int w1 = w0 + config.valleyWeight;
                 int w2 = w1 + config.rollingHillsWeight;
-                int w3 = w2 + config.mountainPassWeight;
-                int w4 = w3 + config.elevatedChicaneWeight;
-                int totalWeight = Mathf.Max(1, w4 + config.flatWeight);
+                int w3 = w2 + (isField ? 0 : config.mountainPassWeight);
+                int w4 = w3 + (isField ? 0 : config.elevatedChicaneWeight);
+                int totalWeight = Mathf.Max(1, w4 + (isField ? 0 : config.flatWeight));
                 int roll = rng.Range(0, totalWeight);
 
                 if (roll < w0) elevationType = RoadElevationType.HillCrest;
@@ -365,16 +412,16 @@ namespace EndlessSurvival.World
             switch (elevationType)
             {
                 case RoadElevationType.HillCrest:
-                    hill = rng.Range(config.minHillHeight, config.maxHillHeight);
+                    hill = rng.Range(minHill, maxHill);
                     cross = RoadCrossSectionPreset.GuardrailOnly;
                     break;
                 case RoadElevationType.ValleyDip:
-                    dip = rng.Range(config.minDipDepth, config.maxDipDepth);
+                    dip = rng.Range(minDip, maxDip);
                     cross = RoadCrossSectionPreset.OpenRoad;
                     break;
                 case RoadElevationType.RollingHills:
-                    hill = rng.Range(config.minHillHeight, config.maxHillHeight);
-                    dip = rng.Range(config.minDipDepth, config.maxDipDepth);
+                    hill = rng.Range(minHill, maxHill);
+                    dip = rng.Range(minDip, maxDip);
                     cross = RoadCrossSectionPreset.GuardrailOnly;
                     break;
                 case RoadElevationType.MountainPass:
@@ -390,14 +437,17 @@ namespace EndlessSurvival.World
             }
 
             // Curve layout (bend count, positions, lengths, offsets) is fully random
-            bool curvy = forceCurve || rng.Chance(curveSettings.curveChance);
+            // Fields: fewer and never sharp curves
+            bool curvy = forceCurve || rng.Chance(isField ? curveSettings.curveChance * 0.6f : curveSettings.curveChance);
             if (curvy && !forceCurve)
             {
                 // No hazard chicanes on the runway chunks
-                sharp = !isRunway && rng.Chance(0.15f);
+                sharp = !isRunway && !isField && rng.Chance(0.15f);
                 if (elevationType == RoadElevationType.Flat)
                     cross = sharp ? RoadCrossSectionPreset.HazardFortified : RoadCrossSectionPreset.FullHighway;
             }
+            // Country road through the fields: no sidewalks or guardrails
+            if (isField) cross = RoadCrossSectionPreset.OpenRoad;
 
             float peak = spline.SetProceduralPreset(curveSettings, curvy, sharp, elevationType, hill, dip, rng);
 
@@ -499,6 +549,9 @@ namespace EndlessSurvival.World
             BiomePlanEntry entry = GetBiomePlan(index);
             chunk.biomeType = entry.biome;
             chunk.seaSide = entry.seaSide;
+            chunk.hasNeighborInfo = true;
+            chunk.prevBiome = index > 0 ? GetBiomePlan(index - 1).biome : entry.biome;
+            chunk.nextBiome = GetBiomePlan(index + 1).biome;
 
             if (entry.biome == ChunkBiomeType.Coast)
             {

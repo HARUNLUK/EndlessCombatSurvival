@@ -140,6 +140,9 @@ namespace EndlessSurvival.World
                     point.y = tComponent.SampleHeight(probe) + tComponent.transform.position.y;
                     if (point.y < seaY) return false;
                 }
+
+                // Field river crossing: skip points that fall into the channel
+                if (chunk.IsField && point.y < chunk.transform.position.y + chunk.baseElevation - 1.5f) return false;
             }
             else
             {
