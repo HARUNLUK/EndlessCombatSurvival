@@ -62,7 +62,20 @@ namespace EndlessSurvival.World
         public bool boundaryEnabled = true;
 
         [Tooltip("Biyoma göre ayarlar. Chunk'ın biyomu listede yoksa ilk eleman kullanılır.")]
-        public List<BiomeBoundarySettings> biomeSettings = new List<BiomeBoundarySettings> { new BiomeBoundarySettings() };
+        public List<BiomeBoundarySettings> biomeSettings = new List<BiomeBoundarySettings>
+        {
+            new BiomeBoundarySettings(),
+            // Coast: land side only (the sea side uses the coast profile). Lighter, weathered rocks.
+            new BiomeBoundarySettings
+            {
+                biome = ChunkBiomeType.Coast,
+                cliffWeight = 45,
+                rocksWeight = 30,
+                cliffAndRocksWeight = 25,
+                rockColor = new Color(0.45f, 0.44f, 0.41f),
+                mossColor = new Color(0.34f, 0.37f, 0.27f)
+            }
+        };
 
         [Header("Chunk Birleşim Noktaları (Seam)")]
         [Tooltip("Z=0 ve Z=500'de uçurumun başladığı sabit mesafe (komşu chunk'larla eşleşmesi için sabit)")]
@@ -86,6 +99,39 @@ namespace EndlessSurvival.World
         public Material rockMaterialOverride;
         public Material mossMaterialOverride;
 
+        [Header("Deniz Kıyısı (Coast biyomu, deniz tarafı)")]
+        [Tooltip("Kıyı olmayan komşu chunk'a geçişte karadan denize dönüşüm (burun) uzunluğu")]
+        public float coastTransitionLength = 200f;
+        [Tooltip("Yol merkezi ile kıyı çizgisi arası minimum mesafe")]
+        public float shoreRoadGap = 18f;
+        [Range(0f, 1f)]
+        [Tooltip("Chunk ortasında yolun deniz kenarından gitme ihtimali (kalanında yol karanın ortasından gider)")]
+        public float seasideRoadChance = 0.5f;
+        [Tooltip("Yol deniz kenarındayken kıyı çizgisinin yol merkezine uzaklığı")]
+        public float shoreNearMin = 22f;
+        public float shoreNearMax = 40f;
+        [Tooltip("Yol ortadan giderken kıyı çizgisinin chunk merkezine uzaklığı")]
+        public float shoreFarMin = 120f;
+        public float shoreFarMax = 210f;
+        [Tooltip("Karadan kıyıya iniş genişliği. Küçük = dik kayalık kıyı, büyük = yumuşak kumsal")]
+        public float minShoreSlope = 10f;
+        public float maxShoreSlope = 70f;
+        [Tooltip("Kıyı çizgisinden deniz tabanına (Y=0) iniş mesafesi")]
+        public float seabedDropDistance = 55f;
+        [Tooltip("Kıyı inişi bundan dar ise kayalık kıyı sayılır ve kıyıya kayalar dizilir")]
+        public float rockyShoreSlope = 28f;
+        public Color sandColor = new Color(0.80f, 0.72f, 0.52f);
+
+        [Header("Deniz Kenarı Yol Uçurumu")]
+        [Tooltip("Kıyı çizgisi yola bu mesafeden yakınsa (yol merkezinden) yolun deniz tarafı tam uçurum olur")]
+        public float seaCliffFullGap = 55f;
+        [Tooltip("Kıyı çizgisi bu mesafeden uzaksa uçurum yok, normal kıyı inişi")]
+        public float seaCliffNoneGap = 90f;
+        [Tooltip("Yol kenarı ile uçurum ağzı arasındaki dar omuz")]
+        public float seaCliffShoulder = 1.0f;
+        [Tooltip("Uçurum ağzından su seviyesine iniş genişliği (küçük = daha dik)")]
+        public float seaCliffDrop = 6f;
+
         private class SideProfile
         {
             public ChunkBoundaryStyle style;
@@ -94,7 +140,20 @@ namespace EndlessSurvival.World
             public float[] height;
             public float[] fade;
             public float noiseOffset;
+
+            // Coast (only on the sea side of a Coast chunk)
+            public bool isSea;
+            public bool rockyShore;
+            public float[] coast;       // 0 = normal boundary, 1 = full coast
+            public float[] shore;       // shoreline distance from chunk center line
+            public float[] shoreSlope;  // width of the land -> shore descent
+            public float[] seaCliff;    // 0..1: road runs right along the sea -> its sea side is a cliff
         }
+
+        private float[] _roadX;          // road center X per heightmap row
+        private float _roadHalfWidth = 9f;
+        private int _seaIndex = -1;      // index into _sides of the sea side, -1 = no sea
+        private float _seaSign;
 
         private SideProfile[] _sides; // 0 = sol (x<0), 1 = sağ (x>0)
         private int _rows;
@@ -128,9 +187,10 @@ namespace EndlessSurvival.World
         /// <summary>
         /// Her iki taraf için uçurum profilini hesaplar. rows = terrain heightmap satır sayısı.
         /// </summary>
-        public bool BuildPlan(RoadSpline spline, int rows, float length, float halfWidth)
+        public bool BuildPlan(RoadSpline spline, int rows, float length, float halfWidth, float roadHalfWidth = 9f)
         {
             _sides = null;
+            _seaIndex = -1;
             if (!boundaryEnabled || rows < 2) return false;
 
             Chunk chunk = GetChunk();
@@ -140,6 +200,7 @@ namespace EndlessSurvival.World
             _rows = rows;
             _length = length;
             _halfWidth = halfWidth;
+            _roadHalfWidth = roadHalfWidth;
 
             int planSeed = GetPlanSeed(chunk);
             int worldSeed = chunk != null && chunk.Manager != null ? chunk.Manager.ResolvedSeed : planSeed;
@@ -154,6 +215,7 @@ namespace EndlessSurvival.World
                 float z = r / (rows - 1f) * length;
                 roadX[r] = spline != null ? spline.GetPointAtZ(z).x : 0f;
             }
+            _roadX = roadX;
 
             _sides = new SideProfile[2];
             for (int s = 0; s < 2; s++)
@@ -223,20 +285,184 @@ namespace EndlessSurvival.World
                 _sides[s] = side;
             }
 
+            // Coast: the sea side gets a shoreline profile on top of (and blending away from) the normal boundary.
+            // Uses its own random stream so the land side stays identical to a forest chunk with the same seed.
+            if (chunk != null && chunk.IsCoast)
+            {
+                _seaSign = chunk.SeaSign;
+                _seaIndex = _seaSign < 0f ? 0 : 1;
+                BuildCoastProfile(chunk, _sides[_seaIndex], _seaSign, roadX, planSeed, worldSeed, startSeam);
+            }
+
             return true;
         }
 
-        /// <summary>
-        /// Terrain'in doğal yüksekliğine eklenecek uçurum yüksekliği (metre).
-        /// localX chunk yerel X'i, row heightmap satırıdır.
-        /// </summary>
-        public float GetHeightOffset(float localX, int row)
+        private void BuildCoastProfile(Chunk chunk, SideProfile side, float sign, float[] roadX, int planSeed, int worldSeed, int startSeam)
         {
-            if (_sides == null) return 0f;
+            int sideIndex = sign < 0f ? 0 : 1;
+            var rng = new SeededRandom(SeededRandom.Combine(planSeed, "coast"));
+
+            bool seasideRoad = rng.Chance(seasideRoadChance);
+            float shoreMid = seasideRoad ? rng.Range(shoreNearMin, shoreNearMax) : rng.Range(shoreFarMin, shoreFarMax);
+            float slopeMid = rng.Range(minShoreSlope, maxShoreSlope);
+            float noiseOffset = rng.Range(0f, 1000f);
+
+            SeamShore(worldSeed, startSeam, sideIndex, out float shoreA, out float slopeA);
+            SeamShore(worldSeed, startSeam + 1, sideIndex, out float shoreB, out float slopeB);
+
+            side.isSea = true;
+            side.rockyShore = slopeMid < rockyShoreSlope;
+            side.coast = new float[_rows];
+            side.shore = new float[_rows];
+            side.shoreSlope = new float[_rows];
+            side.seaCliff = new float[_rows];
+
+            for (int r = 0; r < _rows; r++)
+            {
+                float z = r / (_rows - 1f) * _length;
+                float t = z / _length;
+                float w = Mathf.Clamp01(Mathf.Sin(t * Mathf.PI));
+                float wSoft = Mathf.Sqrt(w);
+
+                // Coast fades in/out where the neighbor chunk is not a coast on the same side (headland)
+                float cStart = chunk.coastContinuesAtStart ? 1f : Mathf.SmoothStep(0f, 1f, z / coastTransitionLength);
+                float cEnd = chunk.coastContinuesAtEnd ? 1f : Mathf.SmoothStep(0f, 1f, (_length - z) / coastTransitionLength);
+                side.coast[r] = Mathf.Min(cStart, cEnd);
+
+                float seamShore = Mathf.Lerp(shoreA, shoreB, Mathf.SmoothStep(0f, 1f, t));
+                float shore = Mathf.Lerp(seamShore, shoreMid, wSoft)
+                              + (Mathf.PerlinNoise(noiseOffset, z * 0.01f) - 0.5f) * 2f * 15f * w;
+                shore = Mathf.Max(shore, roadX[r] * sign + shoreRoadGap);
+                side.shore[r] = Mathf.Min(shore, _halfWidth - 30f);
+
+                // Shoreline close to the road -> the road's sea side becomes a cliff straight into the water
+                float gap = side.shore[r] - roadX[r] * sign;
+                side.seaCliff[r] = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(seaCliffFullGap, seaCliffNoneGap, gap));
+
+                side.shoreSlope[r] = Mathf.Lerp(Mathf.Lerp(slopeA, slopeB, t), slopeMid, wSoft);
+            }
+        }
+
+        /// <summary>
+        /// Shoreline values at seam i, shared by both coast chunks that meet there.
+        /// </summary>
+        private void SeamShore(int worldSeed, int seamIndex, int side, out float shore, out float slope)
+        {
+            int seed = SeededRandom.Combine(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "coast_seam"), seamIndex), side);
+            var rng = new SeededRandom(seed);
+            shore = rng.Chance(0.4f) ? rng.Range(shoreNearMin, shoreNearMax) : rng.Range(shoreFarMin, shoreFarMax);
+            slope = rng.Range(minShoreSlope, maxShoreSlope);
+        }
+
+        /// <summary>
+        /// Final terrain height (meters) for a heightmap sample: natural landscape + boundary cliff,
+        /// replaced by the coast profile on the sea side of a Coast chunk.
+        /// </summary>
+        public float ApplyBoundary(float localX, int row, float naturalY)
+        {
+            if (_sides == null) return naturalY;
             row = Mathf.Clamp(row, 0, _rows - 1);
             SideProfile side = _sides[localX < 0f ? 0 : 1];
+            float absX = Mathf.Abs(localX);
 
-            float d = Mathf.Abs(localX) - side.inner[row];
+            float y = naturalY + CliffOffset(side, absX, row);
+
+            if (_seaIndex >= 0)
+            {
+                // Signed distance toward the sea, evaluated across the whole row (also on the land half when the
+                // shoreline comes close to the center line), so the profile has no step at X = 0
+                SideProfile sea = _sides[_seaIndex];
+                float c = sea.coast[row];
+                float xs = localX * _seaSign;
+                if (c > 0f && xs - sea.shore[row] > -sea.shoreSlope[row])
+                {
+                    y = Mathf.Lerp(y, CoastHeight(sea, xs, row, naturalY), c);
+                }
+            }
+            return y;
+        }
+
+        /// <summary>
+        /// Applied after the road bed has been blended in: where the road runs right along the sea,
+        /// the terrain drops as a cliff straight from the road shoulder into the water (overrides the
+        /// adapter's wide road blend on the sea side). Only ever lowers the terrain.
+        /// </summary>
+        public float ApplyAfterRoad(float localX, int row, float height, float roadBedY)
+        {
+            if (_sides == null || _seaIndex < 0) return height;
+            row = Mathf.Clamp(row, 0, _rows - 1);
+            SideProfile sea = _sides[_seaIndex];
+
+            float w = sea.seaCliff[row] * sea.coast[row];
+            if (w <= 0f) return height;
+
+            // Distance seaward from the cliff lip (road edge + shoulder)
+            float d = (localX - _roadX[row]) * _seaSign - (_roadHalfWidth + seaCliffShoulder);
+            if (d <= 0f) return height;
+
+            float waterline = WorldConstants.SeaLevel - 1.5f;
+            float y;
+            if (d < seaCliffDrop)
+            {
+                y = Mathf.Lerp(roadBedY, waterline, d / Mathf.Max(0.5f, seaCliffDrop));
+            }
+            else
+            {
+                float u = Mathf.Clamp01((d - seaCliffDrop) / Mathf.Max(1f, seabedDropDistance));
+                y = Mathf.Lerp(waterline, 0f, Mathf.SmoothStep(0f, 1f, u));
+            }
+
+            return Mathf.Lerp(height, Mathf.Min(height, y), w);
+        }
+
+        /// <summary>
+        /// 0..1: how strongly the road runs directly along a sea cliff at this Z (used to thin out vegetation).
+        /// </summary>
+        public float GetSeasideRoadWeight(float localZ)
+        {
+            if (_sides == null || _seaIndex < 0) return 0f;
+            SideProfile sea = _sides[_seaIndex];
+            float f = Mathf.Clamp01(localZ / _length) * (_rows - 1);
+            int i0 = Mathf.FloorToInt(f);
+            int i1 = Mathf.Min(i0 + 1, _rows - 1);
+            float t = f - i0;
+            return Mathf.Lerp(sea.seaCliff[i0] * sea.coast[i0], sea.seaCliff[i1] * sea.coast[i1], t);
+        }
+
+        private float CoastHeight(SideProfile side, float seawardX, int row, float naturalY)
+        {
+            float d = seawardX - side.shore[row]; // > 0 = seaward of the shoreline
+            float slope = Mathf.Max(1f, side.shoreSlope[row]);
+            float shoreTop = WorldConstants.SeaLevel + 0.5f;
+
+            if (d <= -slope) return naturalY;
+            if (d <= 0f)
+            {
+                float t = (d + slope) / slope;
+                return Mathf.Lerp(naturalY, shoreTop, Mathf.SmoothStep(0f, 1f, t));
+            }
+
+            float u = Mathf.Clamp01(d / Mathf.Max(1f, seabedDropDistance));
+            return Mathf.Lerp(shoreTop, 0f, Mathf.SmoothStep(0f, 1f, u));
+        }
+
+        /// <summary>
+        /// 0..1: how much of the given chunk-local position belongs to the sea (0 on land sides / non-coast chunks).
+        /// </summary>
+        public float GetSeaWeight(float localX, float localZ)
+        {
+            if (_sides == null) return 0f;
+            SideProfile side = _sides[localX < 0f ? 0 : 1];
+            if (!side.isSea) return 0f;
+            float f = Mathf.Clamp01(localZ / _length) * (_rows - 1);
+            int i0 = Mathf.FloorToInt(f);
+            int i1 = Mathf.Min(i0 + 1, _rows - 1);
+            return Mathf.Lerp(side.coast[i0], side.coast[i1], f - i0);
+        }
+
+        private float CliffOffset(SideProfile side, float absX, int row)
+        {
+            float d = absX - side.inner[row];
             if (d <= 0f) return 0f;
 
             float u = Mathf.Clamp01(d / Mathf.Max(1f, side.ramp[row]));
@@ -288,7 +514,9 @@ namespace EndlessSurvival.World
             {
                 int rows = terrain != null && terrain.terrainData != null ? terrain.terrainData.heightmapResolution : 129;
                 float halfWidth = terrain != null && terrain.terrainData != null ? terrain.terrainData.size.x * 0.5f : 250f;
-                BuildPlan(chunk.GetComponentInChildren<RoadSpline>(), rows, chunk.chunkLength, halfWidth);
+                var roadGen = chunk.GetComponentInChildren<RoadGenerator>();
+                BuildPlan(chunk.GetComponentInChildren<RoadSpline>(), rows, chunk.chunkLength, halfWidth,
+                    roadGen != null ? roadGen.GetTotalHalfWidth() : 9f);
                 if (_sides == null) return;
             }
 
@@ -310,6 +538,13 @@ namespace EndlessSurvival.World
 
                 while (z < _length)
                 {
+                    // No boundary wall on the open sea
+                    if (side.isSea && GetSeaWeight(sign, z) > 0.3f)
+                    {
+                        z += settings.rockSpacing * 0.5f;
+                        continue;
+                    }
+
                     SampleSide(side, z, out float inner, out float ramp, out float h);
                     bool needRocks = side.style != ChunkBoundaryStyle.Cliff || h < rockFillHeight;
                     if (!needRocks)
@@ -339,6 +574,144 @@ namespace EndlessSurvival.World
                     z += settings.rockSpacing * rng.Range(0.7f, 1.15f) * Mathf.Max(1f, size / avgSize);
                 }
             }
+
+            SpawnShoreRocks(container, chunk, terrain, rockMat, mossMat);
+        }
+
+        /// <summary>
+        /// Rocky coasts: smaller rock clusters scattered along the waterline.
+        /// </summary>
+        private void SpawnShoreRocks(Transform container, Chunk chunk, Terrain terrain, Material rockMat, Material mossMat)
+        {
+            for (int s = 0; s < 2; s++)
+            {
+                SideProfile side = _sides[s];
+                if (!side.isSea) continue;
+
+                float sign = s == 0 ? -1f : 1f;
+                var rng = new SeededRandom(SeededRandom.Combine(GetPlanSeed(chunk), "shore_rocks"));
+                float z = rng.Range(0f, 10f);
+
+                while (z < _length)
+                {
+                    float step = rng.Range(14f, 26f);
+                    float f = Mathf.Clamp01(z / _length) * (_rows - 1);
+                    int i = Mathf.RoundToInt(f);
+                    // Sea cliff along the road: rocks in the surf at the cliff foot. Otherwise only rocky shores get rocks.
+                    bool atCliff = side.seaCliff[i] > 0.5f;
+
+                    if ((atCliff || side.rockyShore) && GetSeaWeight(sign, z) > 0.6f && rng.Chance(atCliff ? 0.55f : 0.65f))
+                    {
+                        float roadEdge = _roadX[i] * sign + _roadHalfWidth;
+                        float d = atCliff
+                            ? roadEdge + seaCliffShoulder + seaCliffDrop + rng.Range(1f, 9f)
+                            : side.shore[i] - side.shoreSlope[i] * rng.Range(0f, 0.5f) + rng.Range(-2f, 8f);
+                        float size = rng.Range(5f, 12f);
+                        d = Mathf.Max(d, roadEdge + size * 0.6f + 3f); // never on the road
+                        if (d < _halfWidth - size)
+                        {
+                            SpawnCluster(container, chunk, terrain, sign * d, z, size, rng, rockMat, mossMat);
+                        }
+                    }
+                    z += step;
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // Terrain painting (sand on coasts)
+        // ---------------------------------------------------------------
+
+        private static TerrainLayer s_runtimeSandLayer;
+
+        /// <summary>
+        /// Coast chunks: paints sand on the beach / seabed. Other chunks: restores the single grass layer
+        /// (edit-mode previews share one TerrainData asset, so a previous coast preview must be undone).
+        /// heights = normalized heightmap just written by the terrain adapter.
+        /// </summary>
+        public void PaintTerrainLayers(TerrainData td, float[,] heights, float terrainXOffset)
+        {
+            if (td == null || heights == null) return;
+            TerrainLayer[] layers = td.terrainLayers;
+            if (layers == null || layers.Length == 0 || layers[0] == null) return;
+
+            bool coast = _sides != null && (_sides[0].isSea || _sides[1].isSea);
+            int res = td.alphamapResolution;
+
+            if (!coast)
+            {
+                if (layers.Length > 1)
+                {
+                    td.terrainLayers = new[] { layers[0] };
+                    var full = new float[res, res, 1];
+                    for (int y = 0; y < res; y++)
+                        for (int x = 0; x < res; x++)
+                            full[y, x, 0] = 1f;
+                    td.SetAlphamaps(0, 0, full);
+                }
+                return;
+            }
+
+            TerrainLayer sand = GetSandLayer();
+            if (sand == null) return;
+            if (layers.Length != 2 || layers[1] != sand)
+            {
+                td.terrainLayers = new[] { layers[0], sand };
+            }
+
+            int hRes = heights.GetLength(0);
+            Vector3 size = td.size;
+            var alphas = new float[res, res, 2];
+
+            for (int y = 0; y < res; y++)
+            {
+                float nz = y / (res - 1f);
+                float localZ = nz * size.z;
+                for (int x = 0; x < res; x++)
+                {
+                    float nx = x / (res - 1f);
+                    float h = SampleNormalizedHeight(heights, hRes, nx, nz) * size.y;
+                    float localX = terrainXOffset + nx * size.x;
+
+                    // Sand on the beach band and seabed, only on the sea side
+                    float sandW = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(WorldConstants.SeaLevel + 2.5f, WorldConstants.SeaLevel + 6f, h));
+                    sandW *= GetSeaWeight(localX, localZ);
+
+                    alphas[y, x, 0] = 1f - sandW;
+                    alphas[y, x, 1] = sandW;
+                }
+            }
+            td.SetAlphamaps(0, 0, alphas);
+        }
+
+        private static float SampleNormalizedHeight(float[,] heights, int hRes, float nx, float nz)
+        {
+            float fx = nx * (hRes - 1), fz = nz * (hRes - 1);
+            int x0 = Mathf.FloorToInt(fx), z0 = Mathf.FloorToInt(fz);
+            int x1 = Mathf.Min(x0 + 1, hRes - 1), z1 = Mathf.Min(z0 + 1, hRes - 1);
+            float tx = fx - x0, tz = fz - z0;
+            float a = Mathf.Lerp(heights[z0, x0], heights[z0, x1], tx);
+            float b = Mathf.Lerp(heights[z1, x0], heights[z1, x1], tx);
+            return Mathf.Lerp(a, b, tz);
+        }
+
+        private TerrainLayer GetSandLayer()
+        {
+#if UNITY_EDITOR
+            // Edit mode writes into the prefab's TerrainData asset, so the layer must be an asset too
+            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<TerrainLayer>("Assets/Prefabs/Chunks/TerrainLayers/Layer_Desert.terrainlayer");
+            if (asset != null) return asset;
+#endif
+            if (s_runtimeSandLayer == null)
+            {
+                var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false) { name = "Tex_Sand_Runtime" };
+                var pixels = new Color[16];
+                for (int i = 0; i < pixels.Length; i++) pixels[i] = sandColor;
+                tex.SetPixels(pixels);
+                tex.Apply();
+                s_runtimeSandLayer = new TerrainLayer { name = "Layer_Sand_Runtime", diffuseTexture = tex, tileSize = new Vector2(12f, 12f) };
+            }
+            return s_runtimeSandLayer;
         }
 
         private void SpawnCluster(Transform container, Chunk chunk, Terrain terrain, float localX, float localZ, float size,

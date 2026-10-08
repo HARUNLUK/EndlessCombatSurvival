@@ -121,13 +121,25 @@ namespace EndlessSurvival.World
             Vector3 right = st.TransformDirection(spline.GetRight(t));
 
             float side = rng.Value < 0.5f ? -1f : 1f;
-            Vector3 probe = center + right * side * rng.Range(minLateralDistance, maxLateralDistance);
+            float lateral = rng.Range(minLateralDistance, maxLateralDistance);
+            Vector3 probe = center + right * side * lateral;
 
             point = probe;
-            Terrain tComponent = spline.GetComponentInParent<Chunk>()?.ChunkTerrain;
+            Chunk chunk = spline.GetComponentInParent<Chunk>();
+            Terrain tComponent = chunk != null ? chunk.ChunkTerrain : null;
             if (tComponent != null)
             {
                 point.y = tComponent.SampleHeight(probe) + tComponent.transform.position.y;
+
+                // Coast: loot that would land in the sea goes to the other side of the road
+                float seaY = chunk.transform.position.y + WorldConstants.SeaLevel + 1f;
+                if (chunk.IsCoast && point.y < seaY)
+                {
+                    probe = center - right * side * lateral;
+                    point = probe;
+                    point.y = tComponent.SampleHeight(probe) + tComponent.transform.position.y;
+                    if (point.y < seaY) return false;
+                }
             }
             else
             {

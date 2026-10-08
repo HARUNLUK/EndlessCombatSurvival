@@ -198,6 +198,8 @@ namespace EndlessSurvival.World
             Vector3 right = st.TransformDirection(roadSpline.GetRight(t));
 
             float side = rng.Value < 0.5f ? -1f : 1f;
+            // Kıyı chunk'ında mağara/fener gibi yapılar her zaman kara tarafında olur
+            if (chunk != null) side = chunk.GetLandSide(side);
             Vector3 probePos = center + right * (side * minSafeDist);
 
             if (chunk != null)
@@ -205,7 +207,7 @@ namespace EndlessSurvival.World
                 Vector3 localInChunk = chunk.transform.InverseTransformPoint(probePos);
                 if (localInChunk.x < -215f || localInChunk.x > 215f)
                 {
-                    side = -side;
+                    if (!chunk.IsCoast) side = -side;
                     probePos = center + right * (side * minSafeDist);
                     localInChunk = chunk.transform.InverseTransformPoint(probePos);
                     localInChunk.x = Mathf.Clamp(localInChunk.x, -215f, 215f);

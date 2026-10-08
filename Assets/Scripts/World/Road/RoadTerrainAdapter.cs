@@ -52,7 +52,7 @@ namespace EndlessSurvival.World.Road
 
             // Side boundaries (cliffs) are added on top of the natural landscape, outside the road clearance
             var boundary = terrain.GetComponentInParent<ChunkBoundaryGenerator>();
-            bool useBoundary = boundary != null && boundary.BuildPlan(spline, hRes, terrainSize.z, terrainSize.x * 0.5f);
+            bool useBoundary = boundary != null && boundary.BuildPlan(spline, hRes, terrainSize.z, terrainSize.x * 0.5f, roadHalfWidth);
 
             // Sample row by row along the chunk forward axis (Z = 0 to 500m)
             for (int z = 0; z < hRes; z++)
@@ -91,7 +91,7 @@ namespace EndlessSurvival.World.Road
                         ambientNoise = (perlin * 2f - 1f) * ambientAmplitude;
                     }
                     float naturalLandscapeY = spline.baseElevation + ambientNoise;
-                    if (useBoundary) naturalLandscapeY += boundary.GetHeightOffset(localX, z);
+                    if (useBoundary) naturalLandscapeY = boundary.ApplyBoundary(localX, z, naturalLandscapeY);
 
                     // Blend road bed into surrounding terrain
                     float finalHeightMeters;
@@ -110,11 +110,16 @@ namespace EndlessSurvival.World.Road
                         finalHeightMeters = naturalLandscapeY;
                     }
 
+                    // Seaside road: the sea side drops as a cliff right from the road shoulder
+                    if (useBoundary) finalHeightMeters = boundary.ApplyAfterRoad(localX, z, finalHeightMeters, roadBedElevation);
+
                     heights[z, x] = Mathf.Clamp01(finalHeightMeters / terrainSize.y);
                 }
             }
 
             td.SetHeights(0, 0, heights);
+            // Sand on coast beaches (or restore plain grass on non-coast chunks)
+            if (boundary != null) boundary.PaintTerrainLayers(td, heights, terrainXOffset);
             terrain.Flush();
 
 #if UNITY_EDITOR

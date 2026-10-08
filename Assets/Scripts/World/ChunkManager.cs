@@ -30,6 +30,46 @@ namespace EndlessSurvival.World
         [Tooltip("Optional list fallback")]
         public List<Chunk> chunkPrefabs = new List<Chunk>();
 
+        [System.Serializable]
+        public class BiomeRunSettings
+        {
+            public ChunkBiomeType biome = ChunkBiomeType.Forest;
+            [Tooltip("Bu biyomun bir sonraki bölüm olarak seçilme ağırlığı")]
+            [Range(0, 100)] public int weight = 50;
+            [Tooltip("Bölümün kaç chunk süreceği (min-max)")]
+            [Range(1, 20)] public int minLength = 2;
+            [Range(1, 20)] public int maxLength = 4;
+        }
+
+        [Header("Biome Sequence (Biyom Sırası)")]
+        [Tooltip("Kapalıysa her chunk prefab'ın kendi biyomunu kullanır")]
+        public bool enableBiomeVariation = true;
+
+        [Tooltip("Başlangıçta garanti orman chunk sayısı")]
+        [Range(1, 10)]
+        public int initialForestChunks = 2;
+
+        [Tooltip("Biyom bölümleri. Aynı biyom art arda iki bölüm olarak gelmez.")]
+        public List<BiomeRunSettings> biomeRuns = new List<BiomeRunSettings>
+        {
+            new BiomeRunSettings { biome = ChunkBiomeType.Forest, weight = 55, minLength = 2, maxLength = 5 },
+            new BiomeRunSettings { biome = ChunkBiomeType.Coast, weight = 45, minLength = 2, maxLength = 4 }
+        };
+
+        [Tooltip("Sonsuz deniz yüzeyi materyali (boşsa otomatik üretilir)")]
+        public Material oceanMaterial;
+
+        private struct BiomePlanEntry
+        {
+            public ChunkBiomeType biome;
+            public CoastSide seaSide;
+        }
+
+        private readonly List<BiomePlanEntry> _biomePlan = new List<BiomePlanEntry>();
+        private SeededRandom _biomeRng;
+        private ChunkBiomeType _lastRunBiome;
+        private OceanSurface _ocean;
+
         [Header("Streaming Settings")]
         [Tooltip("Number of chunks to spawn when the game starts")]
         [Range(1, 5)]
@@ -82,6 +122,11 @@ namespace EndlessSurvival.World
         {
             if (chunkPrefab != null || (chunkPrefabs != null && chunkPrefabs.Count > 0))
             {
+                // Endless sea at sea level: visible on coasts, hidden under land elsewhere
+                if (_ocean == null)
+                {
+                    _ocean = OceanSurface.Create(null, initialSpawnPosition.y + WorldConstants.SeaLevel, oceanMaterial);
+                }
                 SpawnInitialChunks();
             }
             else
@@ -140,6 +185,8 @@ namespace EndlessSurvival.World
             }
 
             Chunk newChunk = Instantiate(prefab, spawnPos, spawnRot, transform);
+            // Biome must be set before Initialize so camps/events know which side is the sea
+            ApplyBiomePlan(newChunk, _totalSpawnedCount);
             newChunk.Initialize(this, _totalSpawnedCount, chunkSeed);
             ApplyDynamicRoadVariation(newChunk);
 
@@ -443,6 +490,92 @@ namespace EndlessSurvival.World
         }
 
         /// <summary>
+        /// Sets biome + coast data on a freshly instantiated chunk from the deterministic biome plan.
+        /// </summary>
+        private void ApplyBiomePlan(Chunk chunk, int index)
+        {
+            if (!enableBiomeVariation || biomeRuns == null || biomeRuns.Count == 0) return;
+
+            BiomePlanEntry entry = GetBiomePlan(index);
+            chunk.biomeType = entry.biome;
+            chunk.seaSide = entry.seaSide;
+
+            if (entry.biome == ChunkBiomeType.Coast)
+            {
+                // A coast continues into a neighbor only if that neighbor is coast on the same side
+                chunk.coastContinuesAtStart = index > 0 && IsSameCoast(GetBiomePlan(index - 1), entry);
+                chunk.coastContinuesAtEnd = IsSameCoast(GetBiomePlan(index + 1), entry);
+            }
+        }
+
+        private static bool IsSameCoast(BiomePlanEntry a, BiomePlanEntry b)
+        {
+            return a.biome == ChunkBiomeType.Coast && b.biome == ChunkBiomeType.Coast && a.seaSide == b.seaSide;
+        }
+
+        /// <summary>
+        /// Biome for any chunk index. Generated sequentially in runs from the master seed and cached,
+        /// so neighbors can be queried before they are spawned and the same seed always gives the same sequence.
+        /// </summary>
+        private BiomePlanEntry GetBiomePlan(int index)
+        {
+            if (_biomeRng == null)
+            {
+                // Edit mode: Awake has not resolved the seed yet, fall back to the seed text
+                int seed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
+                _biomeRng = new SeededRandom(SeededRandom.Combine(seed, "biome_runs"));
+                _biomePlan.Clear();
+                _lastRunBiome = ChunkBiomeType.Forest;
+            }
+
+            while (_biomePlan.Count <= index)
+            {
+                if (_biomePlan.Count < initialForestChunks)
+                {
+                    _biomePlan.Add(new BiomePlanEntry { biome = ChunkBiomeType.Forest });
+                    _lastRunBiome = ChunkBiomeType.Forest;
+                    continue;
+                }
+
+                // Never repeat the same biome as two consecutive runs (when there is an alternative)
+                var candidates = new List<BiomeRunSettings>();
+                for (int i = 0; i < biomeRuns.Count; i++)
+                {
+                    var run = biomeRuns[i];
+                    if (run != null && run.weight > 0 && run.biome != _lastRunBiome) candidates.Add(run);
+                }
+                if (candidates.Count == 0)
+                {
+                    for (int i = 0; i < biomeRuns.Count; i++)
+                        if (biomeRuns[i] != null && biomeRuns[i].weight > 0) candidates.Add(biomeRuns[i]);
+                }
+                if (candidates.Count == 0)
+                {
+                    _biomePlan.Add(new BiomePlanEntry { biome = ChunkBiomeType.Forest });
+                    continue;
+                }
+
+                BiomeRunSettings chosen = _biomeRng.WeightedPick(candidates, r => r.weight);
+                int length = _biomeRng.Range(chosen.minLength, Mathf.Max(chosen.minLength, chosen.maxLength) + 1);
+                CoastSide side = _biomeRng.Chance(0.5f) ? CoastSide.Left : CoastSide.Right;
+
+                for (int i = 0; i < length; i++)
+                {
+                    _biomePlan.Add(new BiomePlanEntry { biome = chosen.biome, seaSide = side });
+                }
+                _lastRunBiome = chosen.biome;
+            }
+
+            return _biomePlan[index];
+        }
+
+        /// <summary>Planned biome of a chunk index (spawned or not).</summary>
+        public ChunkBiomeType GetPlannedBiome(int index)
+        {
+            return index >= 0 ? GetBiomePlan(index).biome : ChunkBiomeType.Forest;
+        }
+
+        /// <summary>
         /// Selects the next chunk prefab from the pool, ensuring consecutive chunks have different road types.
         /// </summary>
         private Chunk SelectNextPrefab(SeededRandom rng)
@@ -637,6 +770,7 @@ namespace EndlessSurvival.World
             _activeChunks.Clear();
             _chunkSeeds.Clear();
             _totalSpawnedCount = 0;
+            _biomeRng = null; // re-plan biomes from the (possibly changed) seed
 
             for (int i = 0; i < count; i++)
             {

@@ -129,6 +129,10 @@ namespace EndlessSurvival.World
             float dx = rng.Range(0f, 5000f), dy = rng.Range(0f, 5000f);
             float cx = rng.Range(0f, 5000f);
 
+            // On a coast's sea side the mountains sink under the water (headlands where the coast fades in/out)
+            var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
+            const float seabedY = -2f;
+
             // Grid of shared positions (chunk-local)
             var grid = new Vector3[rows, cols];
             for (int r = 0; r < rows; r++)
@@ -136,6 +140,7 @@ namespace EndlessSurvival.World
                 float localZ = r / (rows - 1f) * length;
                 float globalZ = chunk.ChunkIndex * length + localZ;
                 float edgeY = SampleEdgeHeight(chunk, terrain, sign * (halfWidth - 0.1f), localZ);
+                float seaWeight = boundary != null ? boundary.GetSeaWeight(sign, localZ) : 0f;
 
                 for (int c = 0; c < cols; c++)
                 {
@@ -161,6 +166,7 @@ namespace EndlessSurvival.World
                         float target = Mathf.Max(chunk.baseElevation + mountain, edgeY + 12f);
                         float rise = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(u / Mathf.Max(1f, st.riseDistance)));
                         y = Mathf.Lerp(edgeY, target, rise);
+                        y = Mathf.Lerp(y, Mathf.Min(edgeY, seabedY), seaWeight);
                     }
 
                     grid[r, c] = new Vector3(x, y, localZ);

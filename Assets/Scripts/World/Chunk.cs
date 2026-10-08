@@ -11,7 +11,14 @@ namespace EndlessSurvival.World
         Desert,
         RuinedCity,
         Wasteland,
-        Snow
+        Snow,
+        Coast
+    }
+
+    public enum CoastSide
+    {
+        Left,
+        Right
     }
 
     public enum ChunkRoadType
@@ -111,6 +118,29 @@ namespace EndlessSurvival.World
         [Tooltip("Difficulty tier of this chunk (for enemy/loot scaling in later phases)")]
         [Range(1, 5)]
         public int difficultyTier = 1;
+
+        [Header("Coast (Deniz Kıyısı) - sadece biomeType = Coast iken")]
+        [Tooltip("Denizin olduğu taraf. Oyunda ChunkManager biyom sırasına göre ayarlar.")]
+        public CoastSide seaSide = CoastSide.Right;
+
+        [Tooltip("Önceki chunk da aynı taraflı kıyı mı? Değilse chunk başında karadan denize geçiş (burun) oluşur.")]
+        public bool coastContinuesAtStart = true;
+
+        [Tooltip("Sonraki chunk da aynı taraflı kıyı mı? Değilse chunk sonunda denizden karaya geçiş oluşur.")]
+        public bool coastContinuesAtEnd = true;
+
+        public bool IsCoast => biomeType == ChunkBiomeType.Coast;
+        /// <summary>-1 = sea on the left (-X), +1 = sea on the right (+X).</summary>
+        public float SeaSign => seaSide == CoastSide.Left ? -1f : 1f;
+
+        /// <summary>
+        /// Land-only objects (camps, caves, lighthouses) must never be placed on the sea side of a coast chunk.
+        /// Returns the rolled side unchanged for non-coast chunks.
+        /// </summary>
+        public float GetLandSide(float rolledSide)
+        {
+            return IsCoast ? -SeaSign : rolledSide;
+        }
 
         [Header("Elevation & Slope Settings (Eğim Ayarları)")]
         [Tooltip("Whether this chunk overrides the global elevation parameters set on ChunkManager")]
@@ -372,12 +402,6 @@ namespace EndlessSurvival.World
             var eventsRng = chunkRng.SubStream("events");
             var notesRng = chunkRng.SubStream("notes");
 
-            var lootSpawner = GetComponentInChildren<RoadsideLootSpawner>();
-            if (lootSpawner != null) lootSpawner.GenerateLoot(lootRng, previewContainer.transform);
-
-            var noteSpawner = GetComponentInChildren<EndlessSurvival.World.POI.NoteSpawner>();
-            if (noteSpawner != null) noteSpawner.GenerateNote(notesRng, previewContainer.transform);
-
             var campSpawner = GetComponentInChildren<EndlessSurvival.World.POI.EnemyCampSpawner>();
             if (campSpawner != null) campSpawner.GenerateCampPreview(campRng, previewContainer.transform);
 
@@ -412,6 +436,16 @@ namespace EndlessSurvival.World
             var backdrop = GetComponent<ChunkBackdropGenerator>();
             if (backdrop == null) backdrop = gameObject.AddComponent<ChunkBackdropGenerator>();
             backdrop.Generate(previewContainer.transform, previewTerrain);
+
+            // In play mode the endless OceanSurface provides the sea; the preview gets its own water quad
+            if (IsCoast) OceanSurface.CreatePreviewQuad(previewContainer.transform, this);
+
+            // Same order as play mode: loot and notes are placed after the terrain is shaped (never in the sea)
+            var lootSpawner = GetComponentInChildren<RoadsideLootSpawner>();
+            if (lootSpawner != null) lootSpawner.GenerateLoot(lootRng, previewContainer.transform);
+
+            var noteSpawner = GetComponentInChildren<EndlessSurvival.World.POI.NoteSpawner>();
+            if (noteSpawner != null) noteSpawner.GenerateNote(notesRng, previewContainer.transform);
 
             var vegRng = chunkRng.SubStream("vegetation");
             var vegSpawner = GetComponentInChildren<ChunkVegetationSpawner>();

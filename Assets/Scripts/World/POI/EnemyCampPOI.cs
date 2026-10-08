@@ -115,14 +115,15 @@ namespace EndlessSurvival.World.POI
                 }
 
                 // Yolun sağına veya soluna, yoldan en az requiredClearance kadar uzağa yerleştir
-                float side = rng.Value < 0.5f ? -1f : 1f;
+                // Kıyı chunk'ında kamp her zaman kara tarafında olur
+                float side = chunk.GetLandSide(rng.Value < 0.5f ? -1f : 1f);
                 float offset = rng.Range(requiredClearance, requiredClearance + 55f);
                 float campLocalX = roadLocalX + side * offset;
 
                 // Chunk sınırları (-215 ile +215) içinde kalmasını sağla
                 if (campLocalX < -215f || campLocalX > 215f)
                 {
-                    side = -side;
+                    if (!chunk.IsCoast) side = -side;
                     campLocalX = roadLocalX + side * offset;
                     campLocalX = Mathf.Clamp(campLocalX, -215f, 215f);
                 }

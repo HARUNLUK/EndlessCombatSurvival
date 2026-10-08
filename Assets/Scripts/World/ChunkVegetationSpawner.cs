@@ -103,6 +103,18 @@ namespace EndlessSurvival.World
 
         private const string CONTAINER_NAME = "Vegetation_Container";
         private ChunkBoundaryGenerator _boundary;
+        private float _densityScale = 1f;
+        private float _seaFloorY = float.NegativeInfinity;
+
+        [Header("Coast (Deniz Kıyısı)")]
+        [Tooltip("Kıyı chunk'larının kara tarafındaki ağaç yoğunluğu çarpanı (0 = ağaç yok)")]
+        [Range(0f, 1.5f)]
+        public float coastDensityMultiplier = 0.55f;
+        [Tooltip("Deniz seviyesinin bu kadar üstüne kadar (kumsal) ağaç dikilmez")]
+        public float beachClearHeight = 3.5f;
+        [Tooltip("Yolun deniz uçurumu boyunca gittiği kesimlerde bitki örtüsünün kalma ihtimali (0.1 = çok nadir)")]
+        [Range(0f, 1f)]
+        public float seasideVegetationKeepChance = 0.1f;
 
         private void OnEnable()
         {
@@ -266,11 +278,17 @@ namespace EndlessSurvival.World
                 ClearContainer(vegContainer);
             }
 
-            // Biome check: Only spawn forest trees on Forest chunks (or if no chunk component)
-            if (chunk != null && chunk.biomeType != targetBiome)
+            // Biome check: Only spawn forest trees on Forest chunks (or if no chunk component).
+            // Coast chunks also get (sparser) forest on their land side.
+            bool coastForest = chunk != null && chunk.IsCoast && targetBiome == ChunkBiomeType.Forest && coastDensityMultiplier > 0f;
+            if (chunk != null && chunk.biomeType != targetBiome && !coastForest)
             {
                 return;
             }
+            _densityScale = coastForest ? coastDensityMultiplier : 1f;
+            _seaFloorY = chunk != null && chunk.IsCoast
+                ? chunk.transform.position.y + WorldConstants.SeaLevel + beachClearHeight
+                : float.NegativeInfinity;
 
             RoadSpline spline = GetComponentInChildren<RoadSpline>();
             if (spline == null && chunk != null)
@@ -311,7 +329,7 @@ namespace EndlessSurvival.World
                 // A) TREES ON TERRAIN
                 if (treePrefabs != null && treePrefabs.Length > 0)
                 {
-                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier));
+                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
                     int maxAttempts = treeCount * 5;
                     int spawned = 0;
 
@@ -347,7 +365,7 @@ namespace EndlessSurvival.World
                 // B) DETAIL PROPS (ROCKS & BUSHES) ON TERRAIN
                 if (detailPrefabs != null && detailPrefabs.Length > 0)
                 {
-                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier));
+                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
                     int maxAttempts = detailCount * 4;
                     int spawned = 0;
                     int detailProtoOffset = treePrefabs != null ? treePrefabs.Length : 0;
@@ -416,7 +434,7 @@ namespace EndlessSurvival.World
 
                 if (treePrefabs != null && treePrefabs.Length > 0)
                 {
-                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier));
+                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
                     int maxAttempts = treeCount * 5;
                     int spawned = 0;
 
@@ -436,7 +454,7 @@ namespace EndlessSurvival.World
 
                 if (detailPrefabs != null && detailPrefabs.Length > 0)
                 {
-                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier));
+                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
                     int maxAttempts = detailCount * 4;
                     int spawned = 0;
 
@@ -613,10 +631,22 @@ namespace EndlessSurvival.World
                 return false;
             }
 
-            // Keep cliff faces and boundary rocks free of trees (cliff tops stay forested)
-            if (_boundary != null && _boundary.IsBlockedForVegetation(_boundary.transform.InverseTransformPoint(candidatePos)))
+            if (_boundary != null)
             {
-                return false;
+                Vector3 boundaryLocal = _boundary.transform.InverseTransformPoint(candidatePos);
+
+                // Keep cliff faces and boundary rocks free of trees (cliff tops stay forested)
+                if (_boundary.IsBlockedForVegetation(boundaryLocal))
+                {
+                    return false;
+                }
+
+                // Where the road runs along a sea cliff, vegetation is rare (barren, windswept coast)
+                float seaside = _boundary.GetSeasideRoadWeight(boundaryLocal.z);
+                if (seaside > 0.01f && rng.Value < seaside * (1f - seasideVegetationKeepChance))
+                {
+                    return false;
+                }
             }
 
             // POI CLEARING CHECK: Do not spawn trees inside enemy camps, caves, or other POIs!
@@ -649,6 +679,12 @@ namespace EndlessSurvival.World
                 {
                     candidatePos.y = transform.position.y + 20f; // Baseline fallback
                 }
+            }
+
+            // Coast: keep beach and sea free of trees
+            if (candidatePos.y < _seaFloorY)
+            {
+                return false;
             }
 
             // Verify minimum spacing from existing trees

@@ -20,8 +20,19 @@ namespace EndlessSurvival.World.Editor
             var oldElevation = chunk.currentElevationType;
             float oldParam = chunk.currentElevationParam;
             string oldSeed = chunk.editorPreviewSeed;
+            var oldBiome = chunk.biomeType;
+            var oldSeaSide = chunk.seaSide;
+            bool oldCoastStart = chunk.coastContinuesAtStart;
+            bool oldCoastEnd = chunk.coastContinuesAtEnd;
 
             DrawDefaultInspector();
+
+            // Biome / coast change: rebuild the whole preview (terrain, sea, rocks, mountains, trees) without re-rolling the road
+            if (chunk.biomeType != oldBiome || chunk.seaSide != oldSeaSide
+                || chunk.coastContinuesAtStart != oldCoastStart || chunk.coastContinuesAtEnd != oldCoastEnd)
+            {
+                chunk.GenerateEditorPreview(chunk.GetEditorPreviewSeed());
+            }
 
             bool roadChanged = chunk.roadType != oldRoad
                 || chunk.currentElevationType != oldElevation
