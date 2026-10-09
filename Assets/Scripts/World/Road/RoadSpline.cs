@@ -65,15 +65,28 @@ namespace EndlessSurvival.World.Road
 
         /// <summary>
         /// Builds a fully random road: bend count, bend positions along Z, bend lengths and lateral
-        /// offsets are all rolled per call. Entry/exit stay at X=0 and baseElevation so chunks still join.
+        /// offsets are all rolled per call. Entry/exit sit at startX/endX (shared with the neighbors, 0 = center) and
+        /// baseElevation, heading straight along Z, so chunks still join.
         /// Returns the signed lateral offset of the largest bend (0 when straight).
         /// </summary>
+        /// <param name="startX">Lateral road position where it enters the chunk (0 = center). Shared with the previous chunk.</param>
+        /// <param name="endX">Lateral road position where it leaves the chunk. Shared with the next chunk.</param>
         public float SetProceduralPreset(RoadCurveSettings s, bool curvy, bool sharp,
-            RoadElevationType elevation, float hillHeight, float dipDepth, SeededRandom rng)
+            RoadElevationType elevation, float hillHeight, float dipDepth, SeededRandom rng,
+            float startX = 0f, float endX = 0f, float startY = float.NaN, float endY = float.NaN)
         {
             const float edge = 60f;
             const float length = 500f;
+            // Bends never take the road further than this from the chunk center (boundaries/mountains need room)
+            const float maxAbsX = 150f;
             float span = length - 2f * edge;
+
+            // Base line from the entry to the exit position; bends are added on top of it
+            float BaseX(float z) => Mathf.Lerp(startX, endX, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((z - edge) / span)));
+            // Same for the height: the road climbs/descends from the entry to the exit height (mountains), level at both ends
+            if (float.IsNaN(startY)) startY = baseElevation;
+            if (float.IsNaN(endY)) endY = baseElevation;
+            float BaseY(float z) => Mathf.Lerp(startY, endY, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((z - edge) / span)));
 
             int bends = curvy ? rng.Range(s.minBends, s.maxBends + 1) + (sharp ? 2 : 0) : 0;
             int interior = Mathf.Max(bends, elevation == RoadElevationType.Flat ? 1 : 5);
@@ -87,7 +100,7 @@ namespace EndlessSurvival.World.Road
                 total += gaps[i];
             }
 
-            var pts = new List<Vector3> { new Vector3(0f, baseElevation, 0f) };
+            var pts = new List<Vector3> { new Vector3(startX, startY, 0f) };
             float prevZ = edge, prevX = 0f, cum = 0f;
             float sign = rng.Value > 0.5f ? 1f : -1f;
             float peak = 0f;
@@ -97,7 +110,7 @@ namespace EndlessSurvival.World.Road
             {
                 cum += gaps[i];
                 float z = edge + span * (cum / total);
-                float x = 0f;
+                float x = 0f; // bend offset from the base line
 
                 if (curvy && i < bends)
                 {
@@ -105,21 +118,23 @@ namespace EndlessSurvival.World.Road
                     x = sign * rng.Range(minAmp, s.maxShift);
                     x = Mathf.Clamp(x, prevX - s.maxSlope * (z - prevZ), prevX + s.maxSlope * (z - prevZ));
                     float toExit = s.maxSlope * (length - edge - z);
-                    x = Mathf.Clamp(x, -Mathf.Min(s.maxLateral, toExit), Mathf.Min(s.maxLateral, toExit));
+                    float baseX = BaseX(z);
+                    float lateral = Mathf.Min(s.maxLateral, toExit);
+                    x = Mathf.Clamp(x, Mathf.Max(-lateral, -maxAbsX - baseX), Mathf.Min(lateral, maxAbsX - baseX));
                     if (Mathf.Abs(x) > Mathf.Abs(peak)) peak = x;
                 }
 
-                pts.Add(new Vector3(x, baseElevation + ElevationOffset(z / length, elevation, hillHeight, dipDepth), z));
+                pts.Add(new Vector3(BaseX(z) + x, BaseY(z) + ElevationOffset(z / length, elevation, hillHeight, dipDepth), z));
                 prevZ = z;
                 prevX = x;
             }
 
-            pts.Insert(1, new Vector3(0f, baseElevation + ElevationOffset(edge / length, elevation, hillHeight, dipDepth), edge));
-            pts.Add(new Vector3(0f, baseElevation + ElevationOffset((length - edge) / length, elevation, hillHeight, dipDepth), length - edge));
-            pts.Add(new Vector3(0f, baseElevation, length));
+            pts.Insert(1, new Vector3(startX, startY + ElevationOffset(edge / length, elevation, hillHeight, dipDepth), edge));
+            pts.Add(new Vector3(endX, endY + ElevationOffset((length - edge) / length, elevation, hillHeight, dipDepth), length - edge));
+            pts.Add(new Vector3(endX, endY, length));
             waypoints = pts;
 
-            // Soften bends until no turn is tighter than minTurnRadius
+            // Soften bends until no turn is tighter than minTurnRadius (only the bend part, not the base line)
             if (curvy)
             {
                 for (int attempt = 0; attempt < 10 && MinTurnRadius() < s.minTurnRadius; attempt++)
@@ -127,13 +142,17 @@ namespace EndlessSurvival.World.Road
                     for (int i = 0; i < waypoints.Count; i++)
                     {
                         Vector3 wp = waypoints[i];
-                        wp.x *= 0.85f;
+                        float baseX = BaseX(wp.z);
+                        wp.x = baseX + (wp.x - baseX) * 0.85f;
                         waypoints[i] = wp;
                     }
                 }
                 peak = 0f;
                 foreach (var wp in waypoints)
-                    if (Mathf.Abs(wp.x) > Mathf.Abs(peak)) peak = wp.x;
+                {
+                    float bend = wp.x - BaseX(wp.z);
+                    if (Mathf.Abs(bend) > Mathf.Abs(peak)) peak = bend;
+                }
             }
             return peak;
         }

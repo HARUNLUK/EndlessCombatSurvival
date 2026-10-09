@@ -24,7 +24,9 @@ namespace EndlessSurvival.World
         {
             if (roadSpline == null) roadSpline = GetComponentInChildren<RoadSpline>();
             Chunk chunk = GetComponentInParent<Chunk>();
-            if (chunk != null)
+            // ChunkManager chunks spawn their event in Chunk.Initialize (possibly a few frames after this Start,
+            // once the seed streams exist); only stand-alone chunks spawn it here
+            if (chunk != null && chunk.Manager == null && chunk.IsBuilt)
             {
                 SpawnEventIfEligible(chunk);
             }

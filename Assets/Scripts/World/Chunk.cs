@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using EndlessSurvival.World.Road;
 using EndlessSurvival.World.POI;
@@ -11,7 +12,7 @@ namespace EndlessSurvival.World
         Desert,
         RuinedCity,
         Wasteland,
-        Snow,
+        Mountain,
         Coast,
         Field
     }
@@ -20,6 +21,19 @@ namespace EndlessSurvival.World
     {
         Left,
         Right
+    }
+
+    public enum MountainLayout
+    {
+        Valley,     // Yol ortada: iki dağ arasındaki geçit
+        Hillside,   // Dağ yamacı: bir yanda yükselen dağ, diğer yanda aşağıdaki yumuşak vadi
+        Ledge       // Yol kenarda: bir dağın yamacını takip eder, diğer yanı dik uçurum + kanyon (bazen nehir) + karşı dağ
+    }
+
+    public enum MountainVariant
+    {
+        Snowy,      // Karlı dağlar
+        Alpine      // Karsız: çim + kaya, kar sadece zirvelerde
     }
 
     public enum ChunkRoadType
@@ -130,8 +144,29 @@ namespace EndlessSurvival.World
         [Tooltip("Sonraki chunk da aynı taraflı kıyı mı? Değilse chunk sonunda denizden karaya geçiş oluşur.")]
         public bool coastContinuesAtEnd = true;
 
+        [Header("Mountain (Dağ) - sadece biomeType = Mountain iken")]
+        [Tooltip("Karlı veya alpin (karsız). Oyunda bir dağ bölümü boyunca aynıdır.")]
+        public MountainVariant mountainVariant = MountainVariant.Snowy;
+        [Tooltip("Yol ortada (geçit), dağ yamacında, ya da kenarda (uçurum + kanyon). Oyunda yolun konumuna göre ChunkManager seçer.")]
+        public MountainLayout mountainLayout = MountainLayout.Valley;
+        [Tooltip("Yamaç / kenar yerleşiminde dağın yükseldiği taraf (diğer taraf vadi veya uçurum)")]
+        public bool uphillOnRight = true;
+
+        [Header("Yolun Yanal Konumu (chunk merkezine göre)")]
+        [Tooltip("Yolun chunk'a girdiği X (0 = orta). Sadece dağ-dağ birleşimlerinde 0 olmaz; komşu chunk'ın çıkışıyla aynıdır.")]
+        public float roadEntryX = 0f;
+        [Tooltip("Yolun chunk'tan çıktığı X (0 = orta). Komşu chunk'ın girişiyle aynıdır.")]
+        public float roadExitX = 0f;
+
+        [Header("Yol Yüksekliği (chunk sınırlarında)")]
+        [Tooltip("Yolun chunk'a girdiği yükseklik. Dağ dışındaki biyomlarda hep baseElevation (20m); dağlarda 100m+ olabilir. Komşu chunk'ın çıkışıyla aynıdır.")]
+        public float roadEntryY = 20f;
+        [Tooltip("Yolun chunk'tan çıktığı yükseklik. Komşu chunk'ın girişiyle aynıdır.")]
+        public float roadExitY = 20f;
+
         public bool IsCoast => biomeType == ChunkBiomeType.Coast;
         public bool IsField => biomeType == ChunkBiomeType.Field;
+        public bool IsMountain => biomeType == ChunkBiomeType.Mountain;
 
         // Neighbor biomes, set by ChunkManager from the biome plan. Without that info (a lone chunk
         // previewed in the editor) both neighbors are assumed to be the same biome, i.e. seamless.
@@ -140,6 +175,10 @@ namespace EndlessSurvival.World
         [System.NonSerialized] public ChunkBiomeType nextBiome;
         public ChunkBiomeType PrevBiome => hasNeighborInfo ? prevBiome : biomeType;
         public ChunkBiomeType NextBiome => hasNeighborInfo ? nextBiome : biomeType;
+        [System.NonSerialized] public MountainVariant prevMountainVariant;
+        [System.NonSerialized] public MountainVariant nextMountainVariant;
+        public MountainVariant PrevMountainVariant => hasNeighborInfo ? prevMountainVariant : mountainVariant;
+        public MountainVariant NextMountainVariant => hasNeighborInfo ? nextMountainVariant : mountainVariant;
         /// <summary>-1 = sea on the left (-X), +1 = sea on the right (+X).</summary>
         public float SeaSign => seaSide == CoastSide.Left ? -1f : 1f;
 
@@ -149,7 +188,10 @@ namespace EndlessSurvival.World
         /// </summary>
         public float GetLandSide(float rolledSide)
         {
-            return IsCoast ? -SeaSign : rolledSide;
+            if (IsCoast) return -SeaSign;
+            // Cliff road: the other side of the road is a precipice, so land objects go on the mountain side
+            if (IsMountain && mountainLayout == MountainLayout.Ledge) return uphillOnRight ? 1f : -1f;
+            return rolledSide;
         }
 
         [Header("Elevation & Slope Settings (Eğim Ayarları)")]
@@ -271,6 +313,37 @@ namespace EndlessSurvival.World
             }
         }
 
+        /// <summary>
+        /// False while ChunkManager is still building this chunk over several frames (road, terrain, edges...).
+        /// Components that place things on the terrain in Start must wait for <see cref="Built"/>.
+        /// Chunks not built by ChunkManager (scene/editor) count as built.
+        /// </summary>
+        public bool IsBuilt { get; private set; } = true;
+
+        /// <summary>Raised once when a time-sliced build finishes.</summary>
+        public event Action Built;
+
+        public void BeginBuild()
+        {
+            IsBuilt = false;
+        }
+
+        public void MarkBuilt()
+        {
+            if (IsBuilt) return;
+            IsBuilt = true;
+            Action handlers = Built;
+            Built = null;
+            handlers?.Invoke();
+        }
+
+        /// <summary>Runs <paramref name="action"/> now if the chunk is built, otherwise when its build finishes.</summary>
+        public void WhenBuilt(Action action)
+        {
+            if (IsBuilt) action();
+            else Built += action;
+        }
+
         public int ChunkIndex => _chunkIndex;
         public ChunkManager Manager => _manager;
         public int ChunkSeed => _seed;
@@ -337,6 +410,16 @@ namespace EndlessSurvival.World
 
         public void Initialize(ChunkManager manager, int index, int seed)
         {
+            IEnumerator steps = InitializeSteps(manager, index, seed);
+            while (steps.MoveNext()) { }
+        }
+
+        /// <summary>
+        /// Same as <see cref="Initialize"/>, split so a time-sliced chunk build can spawn the camp (with its enemies),
+        /// the POIs and the story event in separate frames.
+        /// </summary>
+        public IEnumerator InitializeSteps(ChunkManager manager, int index, int seed)
+        {
             _manager = manager;
             _chunkIndex = index;
             _seed = seed;
@@ -357,6 +440,7 @@ namespace EndlessSurvival.World
                 campSpawner = gameObject.AddComponent<EndlessSurvival.World.POI.EnemyCampSpawner>();
             }
             campSpawner.SpawnCampIfEligible(this);
+            yield return "camp";
 
             // Initialize all POIs deterministically instead of relying on Unity's Start() order
             var pois = GetComponentsInChildren<PointOfInterest>(true);
@@ -371,6 +455,7 @@ namespace EndlessSurvival.World
 
                 pois[i].InitializeFromChunk(poiSubRng);
             }
+            yield return "pois";
 
             // Initialize or spawn roadside story events (Deniz Feneri vb.)
             var eventSpawner = GetComponentInChildren<StoryEventSpawner>();
@@ -379,10 +464,33 @@ namespace EndlessSurvival.World
                 eventSpawner = gameObject.AddComponent<StoryEventSpawner>();
             }
             eventSpawner.SpawnEventIfEligible(this);
+            yield return "event";
 
             if (backBlockade != null)
             {
                 backBlockade.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Camps, caves and lighthouses are placed in Initialize, before the terrain is shaped. Once it is, move
+        /// each top-level POI (with its enemies/props, which are its children) vertically onto the ground.
+        /// </summary>
+        public void SnapPointsOfInterestToTerrain()
+        {
+            Terrain terrain = ChunkTerrain;
+            if (terrain == null) return;
+
+            var pois = GetComponentsInChildren<PointOfInterest>(true);
+            for (int i = 0; i < pois.Length; i++)
+            {
+                Transform t = pois[i].transform;
+                // Nested POIs move with their parent POI
+                if (t.parent != null && t.parent.GetComponentInParent<PointOfInterest>() != null) continue;
+
+                float ground = terrain.SampleHeight(t.position) + terrain.transform.position.y;
+                float delta = ground - t.position.y;
+                if (Mathf.Abs(delta) > 0.3f) t.position += Vector3.up * delta;
             }
         }
 
@@ -414,6 +522,13 @@ namespace EndlessSurvival.World
 
         public void UnloadChunk()
         {
+            // The runtime TerrainData clone (RoadTerrainAdapter.EnsureRuntimeTerrainClone) is an asset object that
+            // is not freed with the GameObject; without this every passed chunk leaked heights, splat maps and trees
+            Terrain terrain = ChunkTerrain;
+            if (terrain != null && terrain.terrainData != null && terrain.gameObject.name.Contains("(RuntimeClone)"))
+            {
+                Destroy(terrain.terrainData);
+            }
             Destroy(gameObject);
         }
 
@@ -464,6 +579,7 @@ namespace EndlessSurvival.World
             if (previewTerrain != null && previewSpline != null)
             {
                 Road.RoadTerrainAdapter.ConformTerrainToRoad(previewTerrain, previewSpline, GetComponentInChildren<Road.RoadGenerator>(), true);
+                SnapPointsOfInterestToTerrain();
             }
             boundary.SpawnBoundaryRocks(previewContainer.transform, previewTerrain);
 

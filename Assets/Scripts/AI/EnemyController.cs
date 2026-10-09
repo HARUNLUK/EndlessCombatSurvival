@@ -63,6 +63,7 @@ namespace EndlessCombat.AI
         private List<Collider> ragdollColliders = new List<Collider>();
 
         public bool IsDead { get; private set; }
+        private static bool s_missingPlayerLogged;
         private float verticalVelocity;
         private float gravity = -15f;
 
@@ -95,8 +96,10 @@ namespace EndlessCombat.AI
                 {
                     target = player.transform;
                 }
-                else
+                else if (!s_missingPlayerLogged)
                 {
+                    // Once per session: every enemy of every camp would log it otherwise (slow, with stack traces)
+                    s_missingPlayerLogged = true;
                     Debug.LogError("Düşman oyuncuyu bulamadı! Oyuncunun tag'i 'Player' değil veya Target atanmamış.");
                 }
             }

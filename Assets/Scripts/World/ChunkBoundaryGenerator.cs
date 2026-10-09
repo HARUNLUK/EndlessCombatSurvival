@@ -150,6 +150,86 @@ namespace EndlessSurvival.World
             public float[] seaCliff;    // 0..1: road runs right along the sea -> its sea side is a cliff
         }
 
+        [Header("Dağ (Mountain biyomu)")]
+        [Tooltip("Dağ olmayan komşu chunk'tan dağlara geçiş mesafesi (dağlar ve kar bu mesafede başlar)")]
+        public float mountainTransitionLength = 220f;
+        [Tooltip("İki dağ chunk'ının birleştiği noktadaki dağ yüksekliği aralığı (baseline 20m üstü)")]
+        public float mountainSeamMinHeight = 35f;
+        public float mountainSeamMaxHeight = 55f;
+        [Tooltip("Chunk ortasındaki dağ duvarı yüksekliği (baseline üstü). Terrain en fazla 100m olduğu için ~75 üstü düzleşir.")]
+        public float mountainWallMinHeight = 45f;
+        public float mountainWallMaxHeight = 72f;
+        [Tooltip("Geçitte dağın yükselmeye başladığı yol merkezine uzaklık")]
+        public float mountainWallMinFoot = 14f;
+        public float mountainWallMaxFoot = 35f;
+        [Tooltip("Dağ eteğinden zirveye yatay mesafe (küçük = daha dik)")]
+        public float mountainWallMinRamp = 55f;
+        public float mountainWallMaxRamp = 110f;
+        [Tooltip("Dağ yamacı yerleşiminde vadi tarafının yol kotundan ne kadar aşağı indiği")]
+        public float hillsideMinDrop = 10f;
+        public float hillsideMaxDrop = 14f;
+        [Tooltip("Dağ yamacı yerleşiminde vadinin karşı yamacının başladığı mesafe ve yüksekliği")]
+        public float hillsideFarStartMin = 140f;
+        public float hillsideFarStartMax = 190f;
+        public float hillsideFarRise = 30f;
+
+        [Header("Dağ: Kenardan Giden Yol (Ledge) - uçurum, kanyon, karşı dağ")]
+        [Tooltip("Yolun dibindeki dağın yolun hemen kenarından yükselmeye başladığı mesafe")]
+        public float ledgeWallMinFoot = 12f;
+        public float ledgeWallMaxFoot = 20f;
+        [Tooltip("Yol kenarı ile uçurum ağzı arasındaki dar omuz")]
+        public float ledgeCliffShoulder = 1.2f;
+        [Tooltip("Uçurum ağzından kanyon tabanına yatay iniş (küçük = daha dik)")]
+        public float ledgeCliffDrop = 6f;
+        [Tooltip("Kanyon tabanının yol kotunun altındaki derinliği (zemin 3m'nin altına inmez)")]
+        public float canyonDepth = 60f;
+        [Tooltip("Kanyonun karşısındaki dağın başladığı yer: chunk merkez çizgisinden, yolun karşı tarafında")]
+        public float ledgeFarWallMinX = 110f;
+        public float ledgeFarWallMaxX = 160f;
+        [Tooltip("Karşı dağın yüksekliği (baseline üstü)")]
+        public float ledgeFarWallMinHeight = 40f;
+        public float ledgeFarWallMaxHeight = 65f;
+        [Range(0f, 1f)]
+        [Tooltip("Kanyon tabanından nehir akma ihtimali")]
+        public float canyonRiverChance = 0.5f;
+        public float canyonRiverHalfWidth = 8f;
+        public float canyonRiverDepth = 2f;
+
+        [Header("Dağ: Boyama")]
+        [Tooltip("Bu eğimden (tan) dik yamaçlar kaya rengine boyanır (0.7 ≈ 35°)")]
+        public float mountainRockSlope = 0.7f;
+        [Tooltip("Alpin (karsız) dağlarda karın başladığı yükseklik (baseline üstü)")]
+        public float alpineSnowLine = 45f;
+        public Color snowGroundColor = new Color(0.92f, 0.94f, 0.97f);
+        public Color mountainRockColor = new Color(0.42f, 0.42f, 0.44f);
+        public Color canyonRiverColor = new Color(0.16f, 0.32f, 0.38f);
+
+        /// <summary>
+        /// Mountain shape of one side of the road, as the sum of two smooth steps of the distance d from the road:
+        /// a1 * S((d - f1) / r1) + a2 * S((d - f2) / r2). Rising wall: a1 > 0. Valley / precipice side: a1 < 0
+        /// (drop) and a2 > 0 (the mountain across). cliff/river: ledge precipice and canyon river strength.
+        /// </summary>
+        private class MountainSide
+        {
+            public float[] a1, f1, r1, a2, f2, r2, cliff, river;
+            public float[] innerD; // distance from the road where the mountain mesh (ChunkBackdropGenerator) starts
+            public float noiseOffset;
+        }
+
+        /// <summary>Shape parameters of one side at one point (a seam or the chunk middle).</summary>
+        private struct SideShape
+        {
+            public float a1, f1, r1, a2, f2, r2, cliff, river;
+        }
+
+        private MountainSide[] _mtnSides;  // 0 = left of the road, 1 = right of the road
+        private float[] _mtnWeight;        // 0..1 per row: 0 = normal boundary (non-mountain neighbor), 1 = full mountain
+        private bool _hasLedgeCliff;
+        private MountainVariant _mtnVariant;
+        private float[] _roadY;          // road center height per heightmap row
+        private float _baselineY = 20f;  // chunk.baseElevation, cached for per-sample use
+        private List<Vector2> _poiKeepouts = new List<Vector2>(); // chunk-local (x, z) of POIs
+
         private float[] _roadX;          // road center X per heightmap row
         private float _roadHalfWidth = 9f;
         private int _seaIndex = -1;      // index into _sides of the sea side, -1 = no sea
@@ -160,6 +240,8 @@ namespace EndlessSurvival.World
         private float _length;
         private float _halfWidth;
         private readonly List<Vector3> _rockFootprints = new List<Vector3>(); // x, z, radius (chunk local)
+        private Mesh _rockMesh;
+        private readonly List<Mesh> _riverMeshes = new List<Mesh>();
 
         private static readonly Dictionary<Color, Material> _materialCache = new Dictionary<Color, Material>();
 
@@ -191,6 +273,8 @@ namespace EndlessSurvival.World
         {
             _sides = null;
             _seaIndex = -1;
+            _mtnSides = null;
+            _hasLedgeCliff = false;
             if (!boundaryEnabled || rows < 2) return false;
 
             Chunk chunk = GetChunk();
@@ -208,12 +292,17 @@ namespace EndlessSurvival.World
 
             var rng = new SeededRandom(SeededRandom.Combine(planSeed, "boundary"));
             List<Vector2> keepouts = CollectPoiKeepouts(chunk);
+            _poiKeepouts = keepouts;
 
+            _baselineY = chunk != null ? chunk.baseElevation : 20f;
             float[] roadX = new float[rows];
+            _roadY = new float[rows];
             for (int r = 0; r < rows; r++)
             {
                 float z = r / (rows - 1f) * length;
-                roadX[r] = spline != null ? spline.GetPointAtZ(z).x : 0f;
+                Vector3 p = spline != null ? spline.GetPointAtZ(z) : new Vector3(0f, chunk != null ? chunk.baseElevation : 20f, z);
+                roadX[r] = p.x;
+                _roadY[r] = p.y;
             }
             _roadX = roadX;
 
@@ -302,7 +391,392 @@ namespace EndlessSurvival.World
                 BuildCoastProfile(chunk, _sides[_seaIndex], _seaSign, roadX, planSeed, worldSeed, startSeam);
             }
 
+            if (chunk != null && chunk.IsMountain)
+            {
+                BuildMountainProfile(chunk, planSeed, worldSeed, startSeam);
+            }
+
             return true;
+        }
+
+        // ---------------------------------------------------------------
+        // Mountains
+        // ---------------------------------------------------------------
+
+        /// <summary>
+        /// Builds both sides' mountain shape per row. Seam shapes come only from the world seed, seam index and the
+        /// road's lateral offset at that seam (Chunk.roadEntryX / roadExitX), so both chunks at a seam agree.
+        /// A seam where the road runs off-center is a ledge seam: mountain right at the road on the outer side,
+        /// precipice + canyon + far mountain toward the other side.
+        /// </summary>
+        private void BuildMountainProfile(Chunk chunk, int planSeed, int worldSeed, int startSeam)
+        {
+            var rng = new SeededRandom(SeededRandom.Combine(planSeed, "mountain"));
+            _mtnVariant = chunk.mountainVariant;
+            bool prevMtn = chunk.PrevBiome == ChunkBiomeType.Mountain;
+            bool nextMtn = chunk.NextBiome == ChunkBiomeType.Mountain;
+
+            _mtnWeight = new float[_rows];
+            for (int r = 0; r < _rows; r++)
+            {
+                float z = r / (_rows - 1f) * _length;
+                // Fades in from a non-mountain neighbor (its boundary cliffs/rocks meet the seam unchanged)
+                _mtnWeight[r] = Mathf.Min(
+                    prevMtn ? 1f : Mathf.SmoothStep(0f, 1f, z / mountainTransitionLength),
+                    nextMtn ? 1f : Mathf.SmoothStep(0f, 1f, (_length - z) / mountainTransitionLength));
+            }
+
+            MountainLayout layout = chunk.mountainLayout;
+            int uphill = chunk.uphillOnRight ? 1 : 0;
+            float entryX = chunk.roadEntryX, exitX = chunk.roadExitX;
+
+            _mtnSides = new MountainSide[2];
+            for (int s = 0; s < 2; s++)
+            {
+                // Middle of the chunk: this chunk's own shape
+                bool precipice = layout == MountainLayout.Ledge && s != uphill;
+                float midFarX = (s == 0 ? -1f : 1f) * rng.Range(ledgeFarWallMinX, ledgeFarWallMaxX);
+                SideShape mid = ChunkShape(rng, layout, s == uphill, precipice);
+                float midRiver = precipice && rng.Chance(canyonRiverChance) ? 1f : 0f;
+
+                // Seams: shared with the neighbors
+                SideShape seamA = SeamShape(worldSeed, startSeam, s, entryX, out float farA);
+                SideShape seamB = SeamShape(worldSeed, startSeam + 1, s, exitX, out float farB);
+                seamA.f2 = farA > 0f ? Mathf.Abs(farA * (s == 0 ? -1f : 1f) - entryX) : 400f;
+                seamB.f2 = farB > 0f ? Mathf.Abs(farB * (s == 0 ? -1f : 1f) - exitX) : 400f;
+
+                var side = new MountainSide
+                {
+                    a1 = new float[_rows], f1 = new float[_rows], r1 = new float[_rows],
+                    a2 = new float[_rows], f2 = new float[_rows], r2 = new float[_rows],
+                    cliff = new float[_rows], river = new float[_rows], innerD = new float[_rows],
+                    noiseOffset = rng.Range(0f, 1000f)
+                };
+
+                for (int r = 0; r < _rows; r++)
+                {
+                    float t = r / (_rows - 1f);
+                    float wSoft = Mathf.Sqrt(Mathf.Clamp01(Mathf.Sin(t * Mathf.PI)));
+                    float st = Mathf.SmoothStep(0f, 1f, t);
+
+                    // The far wall stays at a fixed position across the chunk while the road moves under it
+                    float midF2 = precipice ? Mathf.Abs(midFarX - _roadX[r]) : mid.f2;
+
+                    side.a1[r] = Mathf.Lerp(Mathf.Lerp(seamA.a1, seamB.a1, st), mid.a1, wSoft);
+                    side.f1[r] = Mathf.Lerp(Mathf.Lerp(seamA.f1, seamB.f1, st), mid.f1, wSoft);
+                    side.r1[r] = Mathf.Lerp(Mathf.Lerp(seamA.r1, seamB.r1, st), mid.r1, wSoft);
+                    side.a2[r] = Mathf.Lerp(Mathf.Lerp(seamA.a2, seamB.a2, st), mid.a2, wSoft);
+                    side.f2[r] = Mathf.Lerp(Mathf.Lerp(seamA.f2, seamB.f2, st), midF2, wSoft);
+                    side.r2[r] = Mathf.Lerp(Mathf.Lerp(seamA.r2, seamB.r2, st), mid.r2, wSoft);
+                    side.cliff[r] = Mathf.Lerp(Mathf.Lerp(seamA.cliff, seamB.cliff, st), mid.cliff, wSoft) * _mtnWeight[r];
+                    side.river[r] = Mathf.Lerp(Mathf.Lerp(seamA.river, seamB.river, st), midRiver, wSoft) * _mtnWeight[r];
+                    if (side.cliff[r] > 0.01f) _hasLedgeCliff = true;
+
+                    // Where the mountain mesh starts: the wall foot (rising side) or the far mountain across the
+                    // valley/canyon (dropping side). Blends continuously while a1 passes through zero.
+                    float wallness = Mathf.Clamp01(side.a1[r] / 10f);
+                    float innerD = Mathf.Lerp(side.f2[r], side.f1[r], wallness);
+
+                    // Camps/caves/lighthouses on this side: the mountain steps back to leave a clearing
+                    float z = t * _length;
+                    float fade = Mathf.Clamp01(Mathf.Sin(t * Mathf.PI));
+                    float sideSign = s == 0 ? -1f : 1f;
+                    for (int k = 0; k < _poiKeepouts.Count; k++)
+                    {
+                        float poiD = (_poiKeepouts[k].x - _roadX[r]) * sideSign;
+                        if (poiD < 5f) continue; // other side of the road
+                        float dz = (z - _poiKeepouts[k].y) / 60f;
+                        float f = Mathf.Exp(-dz * dz) * fade;
+                        innerD = Mathf.Lerp(innerD, Mathf.Max(innerD, poiD + 35f), f);
+                    }
+                    side.innerD[r] = innerD;
+                }
+                _mtnSides[s] = side;
+            }
+        }
+
+        /// <summary>This chunk's own (middle) shape for one side.</summary>
+        private SideShape ChunkShape(SeededRandom rng, MountainLayout layout, bool isUphill, bool precipice)
+        {
+            var shape = new SideShape { f2 = 400f, r2 = 50f };
+            if (precipice)
+            {
+                PrecipiceShape(ref shape, rng.Range(ledgeFarWallMinHeight, ledgeFarWallMaxHeight), rng.Range(30f, 55f));
+            }
+            else if (layout == MountainLayout.Hillside && !isUphill)
+            {
+                // Valley side: drops below the road, then the far slope rises across the valley
+                shape.a1 = -rng.Range(hillsideMinDrop, hillsideMaxDrop);
+                shape.f1 = rng.Range(14f, 24f);
+                shape.r1 = rng.Range(40f, 70f);
+                shape.a2 = -shape.a1 + hillsideFarRise * rng.Range(0.7f, 1.3f);
+                shape.f2 = rng.Range(hillsideFarStartMin, hillsideFarStartMax);
+                shape.r2 = rng.Range(50f, 80f);
+            }
+            else
+            {
+                shape.a1 = rng.Range(mountainWallMinHeight, mountainWallMaxHeight);
+                // Hillside and ledge: the mountain starts right at the road edge
+                shape.f1 = layout == MountainLayout.Valley
+                    ? rng.Range(mountainWallMinFoot, mountainWallMaxFoot)
+                    : rng.Range(ledgeWallMinFoot, ledgeWallMaxFoot);
+                shape.r1 = rng.Range(mountainWallMinRamp, mountainWallMaxRamp);
+            }
+            return shape;
+        }
+
+        /// <summary>Precipice side of a ledge road: down to the canyon floor, mountain across (f2 set by the caller).</summary>
+        private void PrecipiceShape(ref SideShape shape, float farWallHeight, float farRamp)
+        {
+            float drop = canyonDepth; // relative to the road level
+            shape.a1 = -drop;
+            shape.f1 = 10f;
+            shape.r1 = 18f;
+            shape.a2 = drop + farWallHeight;
+            shape.r2 = farRamp;
+            shape.cliff = 1f;
+        }
+
+        /// <summary>
+        /// Shape at seam i for one side (relative to the road). farX: distance of the far wall from the chunk
+        /// center line (0 = none). Depends only on world seed, seam index, side and the road offset at the seam.
+        /// </summary>
+        private SideShape SeamShape(int worldSeed, int seamIndex, int side, float roadOffset, out float farX)
+        {
+            int seed = SeededRandom.Combine(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "mtn_seam"), seamIndex), side);
+            var rng = new SeededRandom(seed);
+            var shape = new SideShape { a1 = rng.Range(mountainSeamMinHeight, mountainSeamMaxHeight), f1 = 30f, r1 = 90f, f2 = 400f, r2 = 50f };
+            farX = 0f;
+
+            if (Mathf.Abs(roadOffset) > 1f)
+            {
+                // Ledge seam: the road runs along the mountain on the side it is offset to
+                int uphill = roadOffset > 0f ? 1 : 0;
+                if (side == uphill)
+                {
+                    shape.f1 = rng.Range(ledgeWallMinFoot, ledgeWallMaxFoot);
+                }
+                else
+                {
+                    PrecipiceShape(ref shape, rng.Range(ledgeFarWallMinHeight, ledgeFarWallMaxHeight), 40f);
+                    farX = rng.Range(ledgeFarWallMinX, ledgeFarWallMaxX);
+                    // River: decided per seam so it continues into the neighbor
+                    var riverRng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "mtn_river"), seamIndex));
+                    shape.river = riverRng.Chance(canyonRiverChance) ? 1f : 0f;
+                }
+            }
+            return shape;
+        }
+
+        private static float Step01(float x)
+        {
+            x = Mathf.Clamp01(x);
+            return x * x * (3f - 2f * x);
+        }
+
+        /// <summary>0 near a POI (flat clearing so camps/caves are not buried or dropped into the canyon), 1 elsewhere.</summary>
+        private float PoiKeepFactor(float localX, float localZ)
+        {
+            float keep = 1f;
+            for (int k = 0; k < _poiKeepouts.Count; k++)
+            {
+                float dx = localX - _poiKeepouts[k].x;
+                float dz = localZ - _poiKeepouts[k].y;
+                keep *= Step01((Mathf.Sqrt(dx * dx + dz * dz) - 25f) / 40f);
+            }
+            return keep;
+        }
+
+        /// <summary>
+        /// Mountain terrain height (meters) at a chunk-local X for a heightmap row. The mountains themselves are
+        /// low-poly meshes (ChunkBackdropGenerator, starting at <see cref="GetMountainInnerX"/>); the terrain only
+        /// does what goes down: the hillside valley and (via MountainCliff) the ledge canyon. It stays near road
+        /// level elsewhere so it never pokes through the mountain meshes.
+        /// </summary>
+        private float MountainHeight(float localX, int row, float naturalY)
+        {
+            float fromRoad = localX - _roadX[row];
+            MountainSide side = _mtnSides[fromRoad >= 0f ? 1 : 0];
+            float d = Mathf.Abs(fromRoad);
+            float z = row / (_rows - 1f) * _length;
+
+            // Only the dropping part of the side shape (valley / canyon floor)
+            float drop = 0f;
+            if (side.a1[row] < 0f)
+            {
+                drop = side.a1[row] * Step01((d - side.f1[row]) / Mathf.Max(1f, side.r1[row]));
+                drop *= PoiKeepFactor(localX, z);
+            }
+
+            // The ground is at road level across the chunk (mountain roads run at 100m+), so the meshes stand on
+            // it and the valley/canyon drop is measured from the road. Calmer ambient undulation keeps it under
+            // the mountain meshes' foot.
+            float ambient = (naturalY - _baselineY) * 0.35f;
+            return _roadY[row] + ambient + drop;
+        }
+
+        /// <summary>Canyon floor height at a row: canyonDepth below the road, never below 3m.</summary>
+        private float CanyonFloorY(int row)
+        {
+            return Mathf.Max(3f, _roadY[row] - canyonDepth);
+        }
+
+        /// <summary>
+        /// Signed chunk-local X where the mountain mesh on one side of the road starts (sideSign -1 = left of
+        /// the road, +1 = right). Pulled back to the terrain edge where the chunk fades to a non-mountain neighbor,
+        /// so it meets that neighbor's ordinary backdrop strip. Returns false on non-mountain chunks.
+        /// </summary>
+        public bool TryGetMountainInnerX(float sideSign, float localZ, out float innerX)
+        {
+            innerX = sideSign * _halfWidth;
+            if (_mtnSides == null) return false;
+
+            float f = Mathf.Clamp01(localZ / _length) * (_rows - 1);
+            int i0 = Mathf.FloorToInt(f);
+            int i1 = Mathf.Min(i0 + 1, _rows - 1);
+            float t = f - i0;
+
+            MountainSide side = _mtnSides[sideSign < 0f ? 0 : 1];
+            float roadX = Mathf.Lerp(_roadX[i0], _roadX[i1], t);
+            float d = Mathf.Lerp(side.innerD[i0], side.innerD[i1], t);
+            float w = Mathf.Lerp(_mtnWeight[i0], _mtnWeight[i1], t);
+
+            // Never beyond the terrain edge on that side
+            float x = roadX + sideSign * d;
+            if (x * sideSign > _halfWidth) x = sideSign * _halfWidth;
+            innerX = Mathf.Lerp(sideSign * _halfWidth, x, w);
+            return true;
+        }
+
+        /// <summary>True if a chunk-local position is inside a mountain mesh (no loot / trees there).</summary>
+        public bool IsInsideMountain(Vector3 chunkLocal)
+        {
+            if (_mtnSides == null) return false;
+            int row = Mathf.Clamp(Mathf.RoundToInt(chunkLocal.z / _length * (_rows - 1)), 0, _rows - 1);
+            float sideSign = chunkLocal.x - _roadX[row] >= 0f ? 1f : -1f;
+            if (!TryGetMountainInnerX(sideSign, chunkLocal.z, out float innerX)) return false;
+            // A couple of meters of margin: the mesh foot rises steeply from its first vertex
+            return (chunkLocal.x - innerX) * sideSign > -2f;
+        }
+
+        /// <summary>
+        /// Ledge roads: right after the road shoulder the terrain falls as a sheer cliff to the canyon floor, up to
+        /// where the mountain across starts; an optional river runs in the middle of the canyon floor.
+        /// Applied after the road blend (only lowers terrain).
+        /// </summary>
+        private float MountainCliff(float localX, int row, float height, float roadBedY)
+        {
+            float fromRoad = localX - _roadX[row];
+            MountainSide side = _mtnSides[fromRoad >= 0f ? 1 : 0];
+            float w = side.cliff[row];
+            if (w <= 0f) return height;
+
+            float lip = _roadHalfWidth + ledgeCliffShoulder;
+            float d = Mathf.Abs(fromRoad) - lip;
+            if (d <= 0f) return height;
+            if (d + lip >= side.f2[row]) return height; // the far mountain takes over
+
+            float z = row / (_rows - 1f) * _length;
+            float floorY = CanyonFloorY(row);
+
+            // River in the middle of the canyon floor
+            float riverW = side.river[row];
+            if (riverW > 0f)
+            {
+                float center = RiverCenterDistance(side, row);
+                float rd = Mathf.Abs(Mathf.Abs(fromRoad) - center);
+                float half = canyonRiverHalfWidth * riverW;
+                float bed = rd <= half ? 1f : 1f - Step01((rd - half) / 5f);
+                floorY -= canyonRiverDepth * bed * riverW;
+            }
+
+            float cliffY = Mathf.Lerp(roadBedY, floorY, Mathf.Clamp01(d / Mathf.Max(0.5f, ledgeCliffDrop)));
+            if (d > ledgeCliffDrop) cliffY = floorY;
+            return Mathf.Lerp(height, Mathf.Min(height, cliffY), w * PoiKeepFactor(localX, z));
+        }
+
+        /// <summary>Distance of the canyon river's center line from the road (middle of the canyon floor).</summary>
+        private float RiverCenterDistance(MountainSide side, int row)
+        {
+            float cliffFoot = _roadHalfWidth + ledgeCliffShoulder + ledgeCliffDrop;
+            return (cliffFoot + side.f2[row]) * 0.5f;
+        }
+
+        /// <summary>0..1: how much of this Z belongs to the mountain shape (0 on non-mountain chunks).</summary>
+        public float GetMountainWeight(float localZ)
+        {
+            if (_mtnSides == null) return 0f;
+            float f = Mathf.Clamp01(localZ / _length) * (_rows - 1);
+            int i0 = Mathf.FloorToInt(f);
+            int i1 = Mathf.Min(i0 + 1, _rows - 1);
+            return Mathf.Lerp(_mtnWeight[i0], _mtnWeight[i1], f - i0);
+        }
+
+        /// <summary>True inside a canyon river (keeps trees out of the water).</summary>
+        public bool IsInCanyonRiver(Vector3 chunkLocal)
+        {
+            if (_mtnSides == null) return false;
+            int row = Mathf.Clamp(Mathf.RoundToInt(chunkLocal.z / _length * (_rows - 1)), 0, _rows - 1);
+            float fromRoad = chunkLocal.x - _roadX[row];
+            MountainSide side = _mtnSides[fromRoad >= 0f ? 1 : 0];
+            if (side.river[row] < 0.1f) return false;
+            return Mathf.Abs(Mathf.Abs(fromRoad) - RiverCenterDistance(side, row)) < canyonRiverHalfWidth + 4f;
+        }
+
+        /// <summary>Water surface strips along the canyon rivers (chunk-local), built into the rocks container.</summary>
+        private void SpawnCanyonRivers(Transform container)
+        {
+            if (_mtnSides == null) return;
+            for (int s = 0; s < 2; s++)
+            {
+                MountainSide side = _mtnSides[s];
+                float sign = s == 0 ? -1f : 1f;
+                var verts = new List<Vector3>();
+                var tris = new List<int>();
+                int prev = -1;
+
+                for (int r = 0; r < _rows; r++)
+                {
+                    float w = side.river[r] * side.cliff[r];
+                    if (w < 0.05f)
+                    {
+                        prev = -1;
+                        continue;
+                    }
+
+                    float z = r / (_rows - 1f) * _length;
+                    float center = _roadX[r] + sign * RiverCenterDistance(side, r);
+                    float half = (canyonRiverHalfWidth + 1f) * w;
+                    float y = CanyonFloorY(r) - 0.6f;
+
+                    int i = verts.Count;
+                    verts.Add(new Vector3(center - half, y, z));
+                    verts.Add(new Vector3(center + half, y, z));
+                    if (prev >= 0)
+                    {
+                        // a = prev left, b = cur left, c = cur right, d = prev right -> faces up
+                        tris.Add(prev); tris.Add(i); tris.Add(i + 1);
+                        tris.Add(prev); tris.Add(i + 1); tris.Add(prev + 1);
+                    }
+                    prev = i;
+                }
+
+                if (tris.Count == 0) continue;
+
+                var mesh = new Mesh { name = $"CanyonRiver_{s}" };
+                mesh.SetVertices(verts);
+                mesh.SetTriangles(tris, 0);
+                mesh.RecalculateNormals();
+                mesh.RecalculateBounds();
+                _riverMeshes.Add(mesh);
+
+                var go = new GameObject("CanyonRiver");
+                go.transform.SetParent(container, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var mr = go.AddComponent<MeshRenderer>();
+                mr.sharedMaterial = GetSharedMaterial(canyonRiverColor);
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
         }
 
         private void BuildCoastProfile(Chunk chunk, SideProfile side, float sign, float[] roadX, int planSeed, int worldSeed, int startSeam)
@@ -387,6 +861,12 @@ namespace EndlessSurvival.World
                     y = Mathf.Lerp(y, CoastHeight(sea, xs, row, naturalY), c);
                 }
             }
+
+            // Mountain: walls beside the road (pass), a valley (hillside) or precipice + canyon + far mountain (ledge)
+            if (_mtnSides != null && _mtnWeight[row] > 0f)
+            {
+                y = Mathf.Lerp(y, MountainHeight(localX, row, naturalY), _mtnWeight[row]);
+            }
             return y;
         }
 
@@ -397,8 +877,13 @@ namespace EndlessSurvival.World
         /// </summary>
         public float ApplyAfterRoad(float localX, int row, float height, float roadBedY)
         {
-            if (_sides == null || _seaIndex < 0) return height;
+            if (_sides == null) return height;
             row = Mathf.Clamp(row, 0, _rows - 1);
+
+            // Mountain ledge road: sheer drop into the canyon on the precipice side
+            if (_hasLedgeCliff) return MountainCliff(localX, row, height, roadBedY);
+
+            if (_seaIndex < 0) return height;
             SideProfile sea = _sides[_seaIndex];
 
             float w = sea.seaCliff[row] * sea.coast[row];
@@ -487,6 +972,7 @@ namespace EndlessSurvival.World
         public bool IsBlockedForVegetation(Vector3 chunkLocal)
         {
             if (_sides == null) return false;
+            if (IsInCanyonRiver(chunkLocal) || IsInsideMountain(chunkLocal)) return true;
 
             SampleSide(_sides[chunkLocal.x < 0f ? 0 : 1], chunkLocal.z, out float inner, out float ramp, out float h);
             float d = Mathf.Abs(chunkLocal.x) - inner;
@@ -512,6 +998,7 @@ namespace EndlessSurvival.World
         public void SpawnBoundaryRocks(Transform parent, Terrain terrain)
         {
             ClearRocks(parent);
+            DestroyRockMesh();
             _rockFootprints.Clear();
             if (!boundaryEnabled || parent == null) return;
 
@@ -531,12 +1018,15 @@ namespace EndlessSurvival.World
             BiomeBoundarySettings settings = GetSettings(chunk);
             var rng = new SeededRandom(SeededRandom.Combine(GetPlanSeed(chunk), "boundary_rocks"));
 
+            // Container sits on the chunk origin so the combined rock mesh can be built in chunk-local space
             Transform container = new GameObject(ROCKS_CONTAINER_NAME).transform;
-            container.SetParent(parent, false);
+            container.SetPositionAndRotation(chunk.transform.position, chunk.transform.rotation);
+            container.SetParent(parent, true);
 
             Material rockMat = rockMaterialOverride != null ? rockMaterialOverride : GetSharedMaterial(settings.rockColor);
             Material mossMat = mossMaterialOverride != null ? mossMaterialOverride : GetSharedMaterial(settings.mossColor);
             float avgSize = (settings.minRockSize + settings.maxRockSize) * 0.5f;
+            var mb = new BoxMeshBuilder(2); // 0 = rock, 1 = moss
 
             for (int s = 0; s < 2; s++)
             {
@@ -546,8 +1036,8 @@ namespace EndlessSurvival.World
 
                 while (z < _length)
                 {
-                    // No boundary wall on the open sea
-                    if (side.isSea && GetSeaWeight(sign, z) > 0.3f)
+                    // No boundary wall on the open sea, nor inside the snow mountains (only at their transitions)
+                    if ((side.isSea && GetSeaWeight(sign, z) > 0.3f) || GetMountainWeight(z) > 0.5f)
                     {
                         z += settings.rockSpacing * 0.5f;
                         continue;
@@ -569,27 +1059,35 @@ namespace EndlessSurvival.World
                         ? inner + rng.Range(-3f, ramp * 0.3f)
                         : inner + rng.Range(0f, 18f);
                     d = Mathf.Min(d, _halfWidth - size * 0.3f);
-                    SpawnCluster(container, chunk, terrain, sign * d, z, size, rng, rockMat, mossMat);
+                    SpawnCluster(mb, container, chunk, terrain, sign * d, z, size, rng);
 
                     if (side.style == ChunkBoundaryStyle.Rocks && rng.Chance(0.6f))
                     {
                         float backSize = size * rng.Range(0.8f, 1.2f);
                         float backD = Mathf.Min(d + rng.Range(size * 0.9f, size * 1.6f), _halfWidth - backSize * 0.3f);
                         float backZ = z + rng.Range(-size * 0.4f, size * 0.4f);
-                        SpawnCluster(container, chunk, terrain, sign * backD, backZ, backSize, rng, rockMat, mossMat);
+                        SpawnCluster(mb, container, chunk, terrain, sign * backD, backZ, backSize, rng);
                     }
 
                     z += settings.rockSpacing * rng.Range(0.7f, 1.15f) * Mathf.Max(1f, size / avgSize);
                 }
             }
 
-            SpawnShoreRocks(container, chunk, terrain, rockMat, mossMat);
+            SpawnShoreRocks(mb, container, chunk, terrain);
+            SpawnCanyonRivers(container);
+
+            if (mb.VertexCount > 0)
+            {
+                _rockMesh = mb.ToMesh($"BoundaryRocks_Chunk{chunk.ChunkIndex}");
+                container.gameObject.AddComponent<MeshFilter>().sharedMesh = _rockMesh;
+                container.gameObject.AddComponent<MeshRenderer>().sharedMaterials = new[] { rockMat, mossMat };
+            }
         }
 
         /// <summary>
         /// Rocky coasts: smaller rock clusters scattered along the waterline.
         /// </summary>
-        private void SpawnShoreRocks(Transform container, Chunk chunk, Terrain terrain, Material rockMat, Material mossMat)
+        private void SpawnShoreRocks(BoxMeshBuilder mb, Transform container, Chunk chunk, Terrain terrain)
         {
             for (int s = 0; s < 2; s++)
             {
@@ -618,7 +1116,7 @@ namespace EndlessSurvival.World
                         d = Mathf.Max(d, roadEdge + size * 0.6f + 3f); // never on the road
                         if (d < _halfWidth - size)
                         {
-                            SpawnCluster(container, chunk, terrain, sign * d, z, size, rng, rockMat, mossMat);
+                            SpawnCluster(mb, container, chunk, terrain, sign * d, z, size, rng);
                         }
                     }
                     z += step;
@@ -646,6 +1144,12 @@ namespace EndlessSurvival.World
             bool coast = _sides != null && (_sides[0].isSea || _sides[1].isSea);
             int res = td.alphamapResolution;
 
+            if (_mtnSides != null)
+            {
+                PaintMountain(td, heights, layers[0]);
+                return;
+            }
+
             if (!coast)
             {
                 if (layers.Length > 1)
@@ -666,6 +1170,8 @@ namespace EndlessSurvival.World
             {
                 td.terrainLayers = new[] { layers[0], sand };
             }
+            RoadTerrainAdapter.LimitRuntimeAlphamapResolution(td);
+            res = td.alphamapResolution;
 
             int hRes = heights.GetLength(0);
             Vector3 size = td.size;
@@ -687,6 +1193,71 @@ namespace EndlessSurvival.World
 
                     alphas[y, x, 0] = 1f - sandW;
                     alphas[y, x, 1] = sandW;
+                }
+            }
+            td.SetAlphamaps(0, 0, alphas);
+        }
+
+        /// <summary>
+        /// Mountain chunks. Snowy: snow everywhere, rock on steep faces. Alpine: grass, rock on steep faces, snow
+        /// only above <see cref="alpineSnowLine"/>. Toward a non-mountain neighbor everything fades back to grass.
+        /// Layers: [grass, snow, rock].
+        /// </summary>
+        private void PaintMountain(TerrainData td, float[,] heights, TerrainLayer grass)
+        {
+            TerrainLayer snow = TerrainLayerLibrary.Get("Layer_Snow", snowGroundColor);
+            TerrainLayer rock = TerrainLayerLibrary.Get("Layer_MountainRock", mountainRockColor);
+            if (snow == null || rock == null) return;
+
+            TerrainLayer[] layers = td.terrainLayers;
+            if (layers.Length != 3 || layers[1] != snow || layers[2] != rock)
+            {
+                td.terrainLayers = new[] { grass, snow, rock };
+            }
+            RoadTerrainAdapter.LimitRuntimeAlphamapResolution(td);
+            int res = td.alphamapResolution;
+
+            int hRes = heights.GetLength(0);
+            Vector3 size = td.size;
+            float cell = size.x / (hRes - 1);          // heightmap sample spacing (m)
+
+            // Slope (tan) once per heightmap sample, then sampled per splat texel
+            var slopes = new float[hRes, hRes];
+            for (int z = 0; z < hRes; z++)
+            {
+                int z0 = Mathf.Max(0, z - 1), z1 = Mathf.Min(hRes - 1, z + 1);
+                for (int x = 0; x < hRes; x++)
+                {
+                    int x0 = Mathf.Max(0, x - 1), x1 = Mathf.Min(hRes - 1, x + 1);
+                    float dhx = (heights[z, x1] - heights[z, x0]) * size.y / ((x1 - x0) * cell);
+                    float dhz = (heights[z1, x] - heights[z0, x]) * size.y / ((z1 - z0) * cell);
+                    slopes[z, x] = Mathf.Sqrt(dhx * dhx + dhz * dhz);
+                }
+            }
+
+            bool snowy = _mtnVariant == MountainVariant.Snowy;
+            var alphas = new float[res, res, 3];
+            for (int y = 0; y < res; y++)
+            {
+                float nz = y / (res - 1f);
+                float mtnW = GetMountainWeight(nz * size.z);
+                float rowRoadY = _roadY[Mathf.Clamp(Mathf.RoundToInt(nz * (_rows - 1)), 0, _rows - 1)];
+                for (int x = 0; x < res; x++)
+                {
+                    float nx = x / (res - 1f);
+                    float slope = SampleNormalizedHeight(slopes, hRes, nx, nz);
+
+                    float rockW = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(mountainRockSlope, mountainRockSlope + 0.45f, slope)) * mtnW;
+                    float snowW = mtnW;
+                    if (!snowy)
+                    {
+                        float aboveRoad = SampleNormalizedHeight(heights, hRes, nx, nz) * size.y - rowRoadY;
+                        snowW *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(alpineSnowLine, alpineSnowLine + 10f, aboveRoad));
+                    }
+                    snowW = Mathf.Max(0f, snowW - rockW);
+                    alphas[y, x, 0] = 1f - snowW - rockW;
+                    alphas[y, x, 1] = snowW;
+                    alphas[y, x, 2] = rockW;
                 }
             }
             td.SetAlphamaps(0, 0, alphas);
@@ -722,18 +1293,20 @@ namespace EndlessSurvival.World
             return s_runtimeSandLayer;
         }
 
-        private void SpawnCluster(Transform container, Chunk chunk, Terrain terrain, float localX, float localZ, float size,
-            SeededRandom rng, Material rockMat, Material mossMat)
+        /// <summary>
+        /// One rock cluster (2-4 tilted boxes). All clusters of a chunk go into one combined mesh (chunk-local);
+        /// only the main piece gets a collider, on its own small GameObject.
+        /// </summary>
+        private void SpawnCluster(BoxMeshBuilder mb, Transform colliderParent, Chunk chunk, Terrain terrain,
+            float localX, float localZ, float size, SeededRandom rng)
         {
             Vector3 world = chunk.transform.TransformPoint(new Vector3(localX, 0f, localZ));
             float groundY = terrain != null
-                ? terrain.SampleHeight(world) + terrain.transform.position.y
-                : chunk.transform.position.y + chunk.baseElevation;
+                ? terrain.SampleHeight(world) + terrain.transform.position.y - chunk.transform.position.y
+                : chunk.baseElevation;
 
-            GameObject cluster = new GameObject("BoundaryRock");
-            cluster.transform.SetParent(container, false);
-            cluster.transform.position = new Vector3(world.x, groundY, world.z);
-            cluster.transform.rotation = chunk.transform.rotation * Quaternion.Euler(0f, rng.Range(0f, 360f), 0f);
+            var clusterPos = new Vector3(localX, groundY, localZ);
+            Quaternion clusterRot = Quaternion.Euler(0f, rng.Range(0f, 360f), 0f);
 
             int pieces = rng.Range(2, 5);
             for (int i = 0; i < pieces; i++)
@@ -750,16 +1323,45 @@ namespace EndlessSurvival.World
                 // Sink into the ground so slopes never show a gap under the rock
                 offset.y = scale.y * 0.5f - pieceSize * 0.25f;
 
-                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                cube.name = $"RockPiece_{i}";
-                cube.transform.SetParent(cluster.transform, false);
-                cube.transform.localPosition = offset;
-                cube.transform.localRotation = Quaternion.Euler(rng.Range(-14f, 14f), rng.Range(0f, 360f), rng.Range(-14f, 14f));
-                cube.transform.localScale = scale;
-                cube.GetComponent<MeshRenderer>().sharedMaterial = (i > 0 && rng.Chance(0.4f)) ? mossMat : rockMat;
+                Vector3 center = clusterPos + clusterRot * offset;
+                Quaternion rot = clusterRot * Quaternion.Euler(rng.Range(-14f, 14f), rng.Range(0f, 360f), rng.Range(-14f, 14f));
+                bool moss = i > 0 && rng.Chance(0.4f);
+                mb.Box(center, scale, rot, moss ? 1 : 0);
+
+                if (i == 0)
+                {
+                    var col = new GameObject("RockCollider");
+                    col.transform.SetParent(colliderParent, false);
+                    col.transform.localPosition = center;
+                    col.transform.localRotation = rot;
+                    col.AddComponent<BoxCollider>().size = scale;
+                }
             }
 
             _rockFootprints.Add(new Vector3(localX, localZ, size * 0.9f));
+        }
+
+        private void DestroyRockMesh()
+        {
+            if (_rockMesh != null)
+            {
+                if (Application.isPlaying) Destroy(_rockMesh);
+                else DestroyImmediate(_rockMesh);
+                _rockMesh = null;
+            }
+
+            for (int i = 0; i < _riverMeshes.Count; i++)
+            {
+                if (_riverMeshes[i] == null) continue;
+                if (Application.isPlaying) Destroy(_riverMeshes[i]);
+                else DestroyImmediate(_riverMeshes[i]);
+            }
+            _riverMeshes.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            DestroyRockMesh();
         }
 
         private static void ClearRocks(Transform parent)

@@ -43,7 +43,9 @@ namespace EndlessSurvival.World
             Chunk chunk = GetComponentInParent<Chunk>();
             SeededRandom rng = chunk != null ? chunk.LootRandom : new SeededRandom(0);
 
-            GenerateLoot(rng, transform);
+            // Wait for the terrain to be shaped when the chunk is built over several frames
+            if (chunk != null) chunk.WhenBuilt(() => GenerateLoot(rng, transform));
+            else GenerateLoot(rng, transform);
         }
 
         public void GenerateLoot(SeededRandom rng, Transform container)
@@ -54,11 +56,9 @@ namespace EndlessSurvival.World
             if (pickupTable != null && pickupTable.pickupPrefab != null)
             {
                 int count = rng.Range(minPickups, maxPickups + 1);
-                int spawned = 0;
                 for (int i = 0; i < count; i++)
                 {
                     if (!TryGetGroundPoint(rng, out Vector3 point)) continue;
-                    spawned++;
                     ItemStack stack = pickupTable.RollSingle(rng);
 #if UNITY_EDITOR
                     if (!Application.isPlaying)
@@ -78,7 +78,6 @@ namespace EndlessSurvival.World
                         WorldPickup.Spawn(pickupTable.pickupPrefab, stack.item, stack.amount, point + Vector3.up * 0.4f, container);
                     }
                 }
-                Debug.Log($"RoadsideLootSpawner: Spawned {spawned}/{count} pickups. (Table: {pickupTable.name})");
             }
             else
             {
@@ -143,6 +142,15 @@ namespace EndlessSurvival.World
 
                 // Field river crossing: skip points that fall into the channel
                 if (chunk.IsField && point.y < chunk.transform.position.y + chunk.baseElevation - 1.5f) return false;
+
+                // Mountains: nothing down in the canyon below the road (the player can't climb back up),
+                // nor inside a mountain mesh beside the road
+                if (chunk.IsMountain)
+                {
+                    if (point.y < center.y - 3f) return false;
+                    var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
+                    if (boundary != null && boundary.IsInsideMountain(chunk.transform.InverseTransformPoint(point))) return false;
+                }
             }
             else
             {

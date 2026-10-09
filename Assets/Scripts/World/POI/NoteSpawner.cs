@@ -23,7 +23,10 @@ namespace EndlessSurvival.World.POI
         {
             Chunk chunk = GetComponentInParent<Chunk>();
             SeededRandom rng = chunk != null ? chunk.NotesRandom : new SeededRandom(0);
-            GenerateNote(rng, transform);
+
+            // Wait for the terrain to be shaped when the chunk is built over several frames
+            if (chunk != null) chunk.WhenBuilt(() => GenerateNote(rng, transform));
+            else GenerateNote(rng, transform);
         }
 
         public void GenerateNote(SeededRandom rng, Transform container)
@@ -70,11 +73,6 @@ namespace EndlessSurvival.World.POI
                     InteractableNote spawnedNote = Instantiate(notePrefab, spawnPos, transform.rotation, container);
                     spawnedNote.noteDefinition = selectedNote;
                 }
-                Debug.Log($"NoteSpawner on {gameObject.name}: Spawned Note '{selectedNote.title}'.");
-            }
-            else
-            {
-                Debug.Log($"NoteSpawner on {gameObject.name}: Chance failed, no note spawned.");
             }
         }
     }

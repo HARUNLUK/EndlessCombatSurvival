@@ -40,8 +40,54 @@ namespace EndlessSurvival.World
         /// <summary>Built-in settings for biomes that need a different horizon than the first list entry.</summary>
         public static BiomeBackdropSettings DefaultFor(ChunkBiomeType biome)
         {
-            if (biome != ChunkBiomeType.Field) return null;
+            if (biome == ChunkBiomeType.Mountain)
+            {
+                // Snowy high mountains: tall ridges starting right at the edge, mostly snow-covered
+                return new BiomeBackdropSettings
+                {
+                    biome = ChunkBiomeType.Mountain,
+                    riseDistance = 55f,   // steep faces: in mountain chunks the strip starts right beside the road
+                    minAboveEdge = 20f,
+                    baseHeight = 130f,
+                    peakAmplitude = 380f,
+                    detailAmplitude = 45f,
+                    ridgeFrequency = 0.0032f,
+                    rockLine = 40f,
+                    snowLine = 70f,
+                    rockSlope = 0.62f,
+                    forestColor = new Color(0.86f, 0.89f, 0.93f),
+                    rockColor = new Color(0.40f, 0.40f, 0.43f),
+                    snowColor = new Color(0.95f, 0.96f, 0.98f)
+                };
+            }
 
+            if (biome != ChunkBiomeType.Field) return null;
+            return FieldDefault();
+        }
+
+        /// <summary>Alpine (snowless) mountains: green lower slopes, rock faces, snow only on the high peaks.</summary>
+        public static BiomeBackdropSettings AlpineMountain()
+        {
+            return new BiomeBackdropSettings
+            {
+                biome = ChunkBiomeType.Mountain,
+                riseDistance = 55f,
+                minAboveEdge = 20f,
+                baseHeight = 120f,
+                peakAmplitude = 340f,
+                detailAmplitude = 40f,
+                ridgeFrequency = 0.0032f,
+                rockLine = 110f,
+                snowLine = 240f,
+                rockSlope = 0.62f,
+                forestColor = new Color(0.20f, 0.33f, 0.17f),
+                rockColor = new Color(0.40f, 0.39f, 0.37f),
+                snowColor = new Color(0.94f, 0.95f, 0.97f)
+            };
+        }
+
+        private static BiomeBackdropSettings FieldDefault()
+        {
             // Open plains: meadow continues flat past the edge, low soft hills only far away on the horizon
             return new BiomeBackdropSettings
             {
@@ -79,7 +125,8 @@ namespace EndlessSurvival.World
         public List<BiomeBackdropSettings> biomeSettings = new List<BiomeBackdropSettings>
         {
             new BiomeBackdropSettings(),
-            BiomeBackdropSettings.DefaultFor(ChunkBiomeType.Field)
+            BiomeBackdropSettings.DefaultFor(ChunkBiomeType.Field),
+            BiomeBackdropSettings.DefaultFor(ChunkBiomeType.Mountain)
         };
 
         [Header("Mesh")]
@@ -108,7 +155,7 @@ namespace EndlessSurvival.World
             if (chunk == null) chunk = GetComponentInParent<Chunk>();
             if (chunk == null) return;
 
-            BiomeBackdropSettings settings = GetSettings(chunk.biomeType);
+            BiomeBackdropSettings settings = GetSettings(chunk.biomeType, chunk.mountainVariant);
             if (settings == null) return;
 
             int worldSeed = chunk.WorldSeed;
@@ -126,10 +173,32 @@ namespace EndlessSurvival.World
                 ChunkBoundaryGenerator.GetSharedMaterial(settings.snowColor)
             };
 
+            // On a coast's sea side the mountains sink under the water; field river crossings continue as a valley
+            var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
+            var fieldEdges = chunk.GetComponent<FieldEdgeGenerator>();
+
             for (int s = 0; s < 2; s++)
             {
                 float sign = s == 0 ? -1f : 1f;
-                Mesh mesh = BuildSideMesh(chunk, terrain, settings, worldSeed, s, sign, halfWidth, length);
+                var ctx = new SideContext
+                {
+                    index = chunk.ChunkIndex,
+                    biome = chunk.biomeType,
+                    prev = chunk.PrevBiome,
+                    next = chunk.NextBiome,
+                    variant = chunk.mountainVariant,
+                    prevVariant = chunk.PrevMountainVariant,
+                    nextVariant = chunk.NextMountainVariant,
+                    baseline = chunk.baseElevation,
+                    length = length,
+                    halfWidth = halfWidth,
+                    innerX = z => boundary != null && boundary.TryGetMountainInnerX(sign, z, out float ix) ? ix : sign * halfWidth,
+                    edgeY = (x, z) => SampleEdgeHeight(chunk, terrain, x - sign * 0.1f, z),
+                    groundWeight = z => boundary != null ? boundary.GetMountainWeight(z) : 0f,
+                    seaWeight = z => boundary != null ? boundary.GetSeaWeight(sign, z) : 0f,
+                    river = fieldEdges != null && fieldEdges.HasRiver ? fieldEdges : null
+                };
+                Mesh mesh = BuildSideMesh(ctx, settings, worldSeed, s, sign);
                 mesh.name = $"Backdrop_{(s == 0 ? "Left" : "Right")}_Chunk{chunk.ChunkIndex}";
                 _ownedMeshes.Add(mesh);
 
@@ -138,7 +207,8 @@ namespace EndlessSurvival.World
                 go.AddComponent<MeshFilter>().sharedMesh = mesh;
                 var mr = go.AddComponent<MeshRenderer>();
                 mr.sharedMaterials = materials;
-                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                // Mountains standing right beside the road cast shadows; far backdrops do not (cost)
+                mr.shadowCastingMode = chunk.IsMountain ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
 
                 if (addCollider)
                 {
@@ -149,8 +219,163 @@ namespace EndlessSurvival.World
             if (Application.isPlaying) EnsureCameraFarClip();
         }
 
-        private Mesh BuildSideMesh(Chunk chunk, Terrain terrain, BiomeBackdropSettings st, int worldSeed, int side, float sign,
-            float halfWidth, float length)
+        /// <summary>
+        /// Silhouette of a chunk that is not loaded yet: both mountain strips (from the biome plan and world seed,
+        /// so they match what the real chunk will show) plus a flat ground stand-in at road level.
+        /// No colliders. Cliffs/coast detail are approximated; the real chunk replaces it far away in the haze.
+        /// </summary>
+        public GameObject GenerateProxy(Transform parent, Vector3 position, Quaternion rotation, int index,
+            ChunkBiomeType biome, ChunkBiomeType prev, ChunkBiomeType next, MountainVariant variant, MountainVariant prevVariant,
+            MountainVariant nextVariant, CoastSide seaSide, bool coastStart, bool coastEnd,
+            int worldSeed, float length, float baseline, float halfWidth, float coastTransition,
+            float roadEntryX = 0f, float roadExitX = 0f, float roadEntryY = float.NaN, float roadExitY = float.NaN)
+        {
+            BiomeBackdropSettings settings = GetSettings(biome, variant);
+            if (!backdropEnabled || settings == null) return null;
+
+            var root = new GameObject($"BackdropProxy_{index}");
+            root.transform.SetPositionAndRotation(position, rotation);
+            root.transform.SetParent(parent, true);
+            var owner = root.AddComponent<OwnedMeshes>();
+
+            Material[] materials =
+            {
+                ChunkBoundaryGenerator.GetSharedMaterial(settings.forestColor),
+                ChunkBoundaryGenerator.GetSharedMaterial(settings.rockColor),
+                ChunkBoundaryGenerator.GetSharedMaterial(settings.snowColor)
+            };
+
+            bool coast = biome == ChunkBiomeType.Coast;
+            float seaSign = seaSide == CoastSide.Left ? -1f : 1f;
+            float transition = Mathf.Max(1f, coastTransition);
+
+            for (int s = 0; s < 2; s++)
+            {
+                float sign = s == 0 ? -1f : 1f;
+                bool seaHere = coast && Mathf.Approximately(sign, seaSign);
+                // Same fade as ChunkBoundaryGenerator's coast profile at headlands
+                System.Func<float, float> sea = z => !seaHere ? 0f : Mathf.Min(
+                    coastStart ? 1f : Mathf.SmoothStep(0f, 1f, z / transition),
+                    coastEnd ? 1f : Mathf.SmoothStep(0f, 1f, (length - z) / transition));
+
+                var ctx = new SideContext
+                {
+                    index = index,
+                    biome = biome,
+                    prev = prev,
+                    next = next,
+                    variant = variant,
+                    prevVariant = prevVariant,
+                    nextVariant = nextVariant,
+                    baseline = baseline,
+                    length = length,
+                    halfWidth = halfWidth,
+                    innerX = z => ProxyMountainInnerX(biome, prev, next, sign, z, length, halfWidth, roadEntryX, roadExitX),
+                    edgeY = (x, z) => biome == ChunkBiomeType.Mountain ? ProxyRoadY(z, length, roadEntryY, roadExitY, baseline) : Mathf.Lerp(baseline, 0f, sea(z)),
+                    groundWeight = z => biome == ChunkBiomeType.Mountain ? ProxyMountainWeight(prev, next, z, length) : 0f,
+                    seaWeight = sea,
+                    river = null
+                };
+
+                Mesh mesh = BuildSideMesh(ctx, settings, worldSeed, s, sign);
+                mesh.name = $"BackdropProxy_{(s == 0 ? "L" : "R")}_{index}";
+                owner.meshes.Add(mesh);
+
+                var go = new GameObject(s == 0 ? "Mountains_Left" : "Mountains_Right");
+                go.transform.SetParent(root.transform, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var mr = go.AddComponent<MeshRenderer>();
+                mr.sharedMaterials = materials;
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+
+            // Flat ground at road level where the terrain will be (only the land half on coasts; the ocean shows on the other)
+            float x0 = coast ? (seaSign > 0f ? -halfWidth : 0f) : -halfWidth;
+            float x1 = coast ? (seaSign > 0f ? 0f : halfWidth) : halfWidth;
+            // Mountain chunks: the ground climbs with the road between its entry and exit heights
+            bool mountain = biome == ChunkBiomeType.Mountain;
+            float y0 = (mountain ? ProxyRoadY(0f, length, roadEntryY, roadExitY, baseline) : baseline) - 0.3f;
+            float y1 = (mountain ? ProxyRoadY(length, length, roadEntryY, roadExitY, baseline) : baseline) - 0.3f;
+            var ground = new Mesh { name = $"BackdropProxy_Ground_{index}" };
+            ground.vertices = new[] { new Vector3(x0, y0, 0f), new Vector3(x0, y1, length), new Vector3(x1, y1, length), new Vector3(x1, y0, 0f) };
+            ground.triangles = new[] { 0, 1, 2, 0, 2, 3 };
+            ground.RecalculateNormals();
+            ground.RecalculateBounds();
+            owner.meshes.Add(ground);
+
+            var groundGo = new GameObject("Ground");
+            groundGo.transform.SetParent(root.transform, false);
+            groundGo.AddComponent<MeshFilter>().sharedMesh = ground;
+            var gmr = groundGo.AddComponent<MeshRenderer>();
+            gmr.sharedMaterial = ChunkBoundaryGenerator.GetSharedMaterial(biome == ChunkBiomeType.Mountain && variant == MountainVariant.Snowy ? ProxySnowGroundColor : ProxyGroundColor);
+            gmr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            if (Application.isPlaying) EnsureCameraFarClip();
+            return root;
+        }
+
+        /// <summary>
+        /// Rough mountain foot for a not-yet-loaded mountain chunk: ~35m beside the road (whose entry/exit offsets
+        /// are known from the plan), pulled back to the terrain edge toward non-mountain neighbors.
+        /// The real chunk replaces it far away in the haze.
+        /// </summary>
+        private static float ProxyMountainInnerX(ChunkBiomeType biome, ChunkBiomeType prev, ChunkBiomeType next, float sign,
+            float z, float length, float halfWidth, float entryX, float exitX)
+        {
+            if (biome != ChunkBiomeType.Mountain) return sign * halfWidth;
+
+            const float foot = 35f;
+            float roadX = Mathf.Lerp(entryX, exitX, ProxyRoadT(z, length));
+            float x = roadX + sign * foot;
+            return Mathf.Lerp(sign * halfWidth, x, ProxyMountainWeight(prev, next, z, length));
+        }
+
+        /// <summary>Same entry -> exit interpolation as RoadSpline's base line (level 60m at both ends).</summary>
+        private static float ProxyRoadT(float z, float length)
+        {
+            const float edge = 60f;
+            return Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((z - edge) / (length - 2f * edge)));
+        }
+
+        private static float ProxyRoadY(float z, float length, float entryY, float exitY, float baseline)
+        {
+            if (float.IsNaN(entryY)) entryY = baseline;
+            if (float.IsNaN(exitY)) exitY = baseline;
+            return Mathf.Lerp(entryY, exitY, ProxyRoadT(z, length));
+        }
+
+        /// <summary>Same fade as ChunkBoundaryGenerator's mountain weight toward non-mountain neighbors.</summary>
+        private static float ProxyMountainWeight(ChunkBiomeType prev, ChunkBiomeType next, float z, float length)
+        {
+            const float transition = 220f;
+            return Mathf.Min(
+                prev == ChunkBiomeType.Mountain ? 1f : Mathf.SmoothStep(0f, 1f, z / transition),
+                next == ChunkBiomeType.Mountain ? 1f : Mathf.SmoothStep(0f, 1f, (length - z) / transition));
+        }
+
+        /// <summary>Close to the terrain's grass layer color.</summary>
+        private static readonly Color ProxyGroundColor = new Color(0.24f, 0.40f, 0.20f);
+        private static readonly Color ProxySnowGroundColor = new Color(0.90f, 0.92f, 0.95f);
+
+        /// <summary>
+        /// Everything one side strip needs to know about its chunk. Built from a real chunk, or from the
+        /// biome plan alone for a proxy (a chunk that is not loaded yet).
+        /// </summary>
+        private struct SideContext
+        {
+            public int index;
+            public ChunkBiomeType biome, prev, next;
+            public MountainVariant variant, prevVariant, nextVariant;
+            public float baseline, length, halfWidth;
+            public System.Func<float, float> innerX;     // localZ -> signed chunk-local X where the strip starts
+                                                         // (±halfWidth = terrain edge; closer to the road inside mountain chunks)
+            public System.Func<float, float, float> edgeY; // (x, localZ) -> chunk-local terrain height where the strip starts
+            public System.Func<float, float> groundWeight; // localZ -> 0..1: mountain heights measured from the strip's foot instead of the baseline
+            public System.Func<float, float> seaWeight;  // localZ -> 0..1 (coast sea side)
+            public FieldEdgeGenerator river;             // field river valley, null if none
+        }
+
+        private Mesh BuildSideMesh(SideContext ctx, BiomeBackdropSettings st, int worldSeed, int side, float sign)
         {
             int rows = Mathf.Max(2, rowsAlongRoad + 1);
             int cols = Mathf.Max(2, columnsOutward + 1);
@@ -161,37 +386,42 @@ namespace EndlessSurvival.World
             float dx = rng.Range(0f, 5000f), dy = rng.Range(0f, 5000f);
             float cx = rng.Range(0f, 5000f);
 
-            // On a coast's sea side the mountains sink under the water (headlands where the coast fades in/out)
-            var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
             const float seabedY = -2f;
-
-            // Field river crossings continue as a valley through the backdrop hills
-            var fieldEdges = chunk.GetComponent<FieldEdgeGenerator>();
-            bool fieldRiver = fieldEdges != null && fieldEdges.HasRiver;
 
             // Different biome next door (e.g. forest mountains -> field hills): both chunks use a 50/50 mix
             // at the shared seam and fade to their own look over biomeBlendDistance
-            BiomeBackdropSettings prevSt = chunk.PrevBiome != chunk.biomeType ? GetSettings(chunk.PrevBiome) : null;
-            BiomeBackdropSettings nextSt = chunk.NextBiome != chunk.biomeType ? GetSettings(chunk.NextBiome) : null;
+            bool prevDiffers = ctx.prev != ctx.biome || (ctx.prev == ChunkBiomeType.Mountain && ctx.prevVariant != ctx.variant);
+            bool nextDiffers = ctx.next != ctx.biome || (ctx.next == ChunkBiomeType.Mountain && ctx.nextVariant != ctx.variant);
+            BiomeBackdropSettings prevSt = prevDiffers ? GetSettings(ctx.prev, ctx.prevVariant) : null;
+            BiomeBackdropSettings nextSt = nextDiffers ? GetSettings(ctx.next, ctx.nextVariant) : null;
             float blend = Mathf.Max(1f, biomeBlendDistance);
+            float length = ctx.length, halfWidth = ctx.halfWidth, baseline = ctx.baseline;
 
             // Grid of shared positions (chunk-local)
             var grid = new Vector3[rows, cols];
+            var rowBase = new float[rows]; // height the mountains of each row are measured from
             for (int r = 0; r < rows; r++)
             {
                 float localZ = r / (rows - 1f) * length;
-                float globalZ = chunk.ChunkIndex * length + localZ;
-                float edgeY = SampleEdgeHeight(chunk, terrain, sign * (halfWidth - 0.1f), localZ);
-                float seaWeight = boundary != null ? boundary.GetSeaWeight(sign, localZ) : 0f;
+                float globalZ = ctx.index * length + localZ;
+                // Mountain chunks: the strip starts at the mountain foot beside the road, not at the terrain edge
+                float innerX = ctx.innerX(localZ);
+                float outerX = sign * (halfWidth + stripDepth);
+                float edgeY = ctx.edgeY(innerX, localZ);
+                // Mountain chunks: the ground is at road level (100m+), mountains rise from there
+                float rowBaseline = Mathf.Lerp(baseline, edgeY, ctx.groundWeight(localZ));
+                rowBase[r] = rowBaseline;
+                float seaWeight = ctx.seaWeight(localZ);
                 float ownFromPrev = prevSt != null ? 0.5f + 0.5f * Mathf.SmoothStep(0f, 1f, localZ / blend) : 1f;
                 float ownFromNext = nextSt != null ? 0.5f + 0.5f * Mathf.SmoothStep(0f, 1f, (length - localZ) / blend) : 1f;
 
                 for (int c = 0; c < cols; c++)
                 {
-                    // Denser columns near the edge, sparser far away (same layout for every biome)
+                    // Denser columns near the start, sparser far away. With the default start (terrain edge) this is
+                    // the same layout for every biome, so neighbors' vertices meet at the seams.
                     float t = c / (cols - 1f);
-                    float u = stripDepth * Mathf.Pow(t, 1.6f);
-                    float x = sign * (halfWidth + u);
+                    float x = Mathf.Lerp(innerX, outerX, Mathf.Pow(t, 1.6f));
+                    float u = Mathf.Abs(x - innerX);
 
                     float y;
                     if (c == 0)
@@ -200,13 +430,13 @@ namespace EndlessSurvival.World
                     }
                     else
                     {
-                        y = HeightAt(st, chunk.baseElevation, edgeY, u, t, globalZ, side, ox, oy, dx, dy, cx);
+                        y = HeightAt(st, rowBaseline, edgeY, u, t, globalZ, side, ox, oy, dx, dy, cx);
                         if (ownFromPrev < 1f)
-                            y = Mathf.Lerp(HeightAt(prevSt, chunk.baseElevation, edgeY, u, t, globalZ, side, ox, oy, dx, dy, cx), y, ownFromPrev);
+                            y = Mathf.Lerp(HeightAt(prevSt, rowBaseline, edgeY, u, t, globalZ, side, ox, oy, dx, dy, cx), y, ownFromPrev);
                         if (ownFromNext < 1f)
-                            y = Mathf.Lerp(HeightAt(nextSt, chunk.baseElevation, edgeY, u, t, globalZ, side, ox, oy, dx, dy, cx), y, ownFromNext);
+                            y = Mathf.Lerp(HeightAt(nextSt, rowBaseline, edgeY, u, t, globalZ, side, ox, oy, dx, dy, cx), y, ownFromNext);
                         y = Mathf.Lerp(y, Mathf.Min(edgeY, seabedY), seaWeight);
-                        if (fieldRiver) y = fieldEdges.ApplyBackdropRiver(x, localZ, u, y);
+                        if (ctx.river != null) y = ctx.river.ApplyBackdropRiver(x, localZ, u, y);
                     }
 
                     grid[r, c] = new Vector3(x, y, localZ);
@@ -225,13 +455,13 @@ namespace EndlessSurvival.World
                     // Winding so faces point up on both sides of the road
                     if (sign > 0f)
                     {
-                        AddTriangle(vertices, bands, st, chunk.baseElevation, a, d, b);
-                        AddTriangle(vertices, bands, st, chunk.baseElevation, b, d, e);
+                        AddTriangle(vertices, bands, st, (rowBase[r] + rowBase[r + 1]) * 0.5f, a, d, b);
+                        AddTriangle(vertices, bands, st, (rowBase[r] + rowBase[r + 1]) * 0.5f, b, d, e);
                     }
                     else
                     {
-                        AddTriangle(vertices, bands, st, chunk.baseElevation, a, b, d);
-                        AddTriangle(vertices, bands, st, chunk.baseElevation, b, e, d);
+                        AddTriangle(vertices, bands, st, (rowBase[r] + rowBase[r + 1]) * 0.5f, a, b, d);
+                        AddTriangle(vertices, bands, st, (rowBase[r] + rowBase[r + 1]) * 0.5f, b, e, d);
                     }
                 }
             }
@@ -297,8 +527,14 @@ namespace EndlessSurvival.World
             return chunk.transform.InverseTransformPoint(new Vector3(world.x, worldY, world.z)).y;
         }
 
-        private BiomeBackdropSettings GetSettings(ChunkBiomeType biome)
+        [Tooltip("Alpin (karsız) dağ alt tipinin arka plan ayarları (Mountain listedeki ayar karlı alt tip içindir)")]
+        public BiomeBackdropSettings alpineMountainSettings = BiomeBackdropSettings.AlpineMountain();
+
+        private BiomeBackdropSettings GetSettings(ChunkBiomeType biome, MountainVariant variant)
         {
+            if (biome == ChunkBiomeType.Mountain && variant == MountainVariant.Alpine && alpineMountainSettings != null)
+                return alpineMountainSettings;
+
             if (biomeSettings != null)
             {
                 for (int i = 0; i < biomeSettings.Count; i++)

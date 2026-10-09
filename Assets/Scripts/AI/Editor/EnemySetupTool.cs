@@ -26,6 +26,9 @@ namespace EndlessCombat.AI.Editor
                 var agent = selected.AddComponent<NavMeshAgent>();
                 agent.speed = 3.5f;
                 agent.stoppingDistance = 10f;
+                // AI moves with a CharacterController (no NavMesh on procedural chunks); an enabled agent
+                // only logs "no valid NavMesh" warnings every time an enemy is spawned
+                agent.enabled = false;
             }
 
             if (selected.GetComponent<EnemyController>() == null)

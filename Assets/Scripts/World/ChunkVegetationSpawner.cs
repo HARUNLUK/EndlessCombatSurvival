@@ -105,6 +105,19 @@ namespace EndlessSurvival.World
         private ChunkBoundaryGenerator _boundary;
         private float _densityScale = 1f;
         private float _seaFloorY = float.NegativeInfinity;
+        private float _treeLineY = float.PositiveInfinity;
+
+        [Header("Mountain (Dağ)")]
+        [Tooltip("Karlı dağ chunk'larındaki ağaç yoğunluğu çarpanı (0 = ağaç yok)")]
+        [Range(0f, 1f)]
+        public float snowyMountainDensity = 0.3f;
+        [Tooltip("Karlı dağlarda ağaç sınırı: yol kotunun (20m) bu kadar üstüne ağaç dikilmez")]
+        public float snowyTreeLine = 22f;
+        [Tooltip("Alpin (karsız) dağ chunk'larındaki ağaç yoğunluğu çarpanı")]
+        [Range(0f, 1.5f)]
+        public float alpineMountainDensity = 0.7f;
+        [Tooltip("Alpin dağlarda ağaç sınırı (yol kotunun üstü)")]
+        public float alpineTreeLine = 40f;
 
         [Header("Coast (Deniz Kıyısı)")]
         [Tooltip("Kıyı chunk'larının kara tarafındaki ağaç yoğunluğu çarpanı (0 = ağaç yok)")]
@@ -224,6 +237,10 @@ namespace EndlessSurvival.World
         {
             if (Application.isPlaying)
             {
+                // A chunk being built over several frames gets its vegetation as the last build step
+                Chunk chunk = GetComponentInParent<Chunk>();
+                if (chunk != null && !chunk.IsBuilt) return;
+
                 // ChunkManager already generates vegetation after terrain/road conforming; only fill in if nothing exists yet.
                 Transform existing = transform.Find(CONTAINER_NAME);
                 Terrain t = GetComponentInChildren<Terrain>();
@@ -281,7 +298,11 @@ namespace EndlessSurvival.World
             // Biome check: Only spawn forest trees on Forest chunks (or if no chunk component).
             // Coast chunks also get (sparser) forest on their land side.
             bool coastForest = chunk != null && chunk.IsCoast && targetBiome == ChunkBiomeType.Forest && coastDensityMultiplier > 0f;
-            if (chunk != null && chunk.biomeType != targetBiome && !coastForest)
+            // Mountain chunks: pines low on the slopes (sparse when snowy), none above the tree line
+            bool alpine = chunk != null && chunk.mountainVariant == MountainVariant.Alpine;
+            float mountainDensity = alpine ? alpineMountainDensity : snowyMountainDensity;
+            bool mountainForest = chunk != null && chunk.IsMountain && targetBiome == ChunkBiomeType.Forest && mountainDensity > 0f;
+            if (chunk != null && chunk.biomeType != targetBiome && !coastForest && !mountainForest)
             {
                 // Terrain trees live in TerrainData, which starts as a copy of the prefab asset (and edit-mode
                 // previews write their trees into that asset), so clear them explicitly, e.g. on Field chunks
@@ -293,10 +314,13 @@ namespace EndlessSurvival.World
                 }
                 return;
             }
-            _densityScale = coastForest ? coastDensityMultiplier : 1f;
+            _densityScale = coastForest ? coastDensityMultiplier : mountainForest ? mountainDensity : 1f;
             _seaFloorY = chunk != null && chunk.IsCoast
                 ? chunk.transform.position.y + WorldConstants.SeaLevel + beachClearHeight
                 : float.NegativeInfinity;
+            _treeLineY = mountainForest
+                ? chunk.transform.position.y + chunk.baseElevation + (alpine ? alpineTreeLine : snowyTreeLine)
+                : float.PositiveInfinity;
 
             RoadSpline spline = GetComponentInChildren<RoadSpline>();
             if (spline == null && chunk != null)
@@ -423,7 +447,6 @@ namespace EndlessSurvival.World
                     UnityEditor.SceneView.RepaintAll();
                 }
 #endif
-                Debug.Log($"<color=cyan>[ChunkVegetationSpawner] Başarılı: {allInstances.Count} adet Terrain ağacı ve bitki örtüsü eklendi! (Chunk: {gameObject.name})</color>");
             }
             else
             {
@@ -479,7 +502,6 @@ namespace EndlessSurvival.World
                     }
                 }
 
-                Debug.Log($"<color=cyan>[ChunkVegetationSpawner] Başarılı: {vegContainer.childCount} adet fiziksel GameObject bitkisi oluşturuldu! (Chunk: {gameObject.name})</color>");
             }
         }
 
@@ -512,6 +534,16 @@ namespace EndlessSurvival.World
                     list.Add(tp);
                 }
             }
+
+            // The cloned TerrainData usually already has exactly these prototypes (copied from the prefab asset);
+            // re-assigning + RefreshPrototypes is expensive, so only do it when something differs
+            TreePrototype[] current = td.treePrototypes;
+            bool same = current != null && current.Length == list.Count;
+            for (int i = 0; same && i < list.Count; i++)
+            {
+                if (current[i] == null || current[i].prefab != list[i].prefab) same = false;
+            }
+            if (same) return;
 
             td.treePrototypes = list.ToArray();
             td.RefreshPrototypes();
@@ -690,7 +722,7 @@ namespace EndlessSurvival.World
             }
 
             // Coast: keep beach and sea free of trees
-            if (candidatePos.y < _seaFloorY)
+            if (candidatePos.y < _seaFloorY || candidatePos.y > _treeLineY)
             {
                 return false;
             }

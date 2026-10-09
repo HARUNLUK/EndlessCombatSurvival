@@ -24,20 +24,34 @@ namespace EndlessSurvival.World.Editor
             var oldSeaSide = chunk.seaSide;
             bool oldCoastStart = chunk.coastContinuesAtStart;
             bool oldCoastEnd = chunk.coastContinuesAtEnd;
+            var oldMountainLayout = chunk.mountainLayout;
+            var oldVariant = chunk.mountainVariant;
+            bool oldUphill = chunk.uphillOnRight;
+            float oldEntryX = chunk.roadEntryX;
+            float oldExitX = chunk.roadExitX;
+            float oldEntryY = chunk.roadEntryY;
+            float oldExitY = chunk.roadExitY;
 
             DrawDefaultInspector();
 
-            // Biome / coast change: rebuild the whole preview (terrain, sea, rocks, mountains, trees) without re-rolling the road
+            // Biome / coast / mountain change: rebuild the whole preview (terrain, sea, rocks, mountains, trees) without re-rolling the road
             if (chunk.biomeType != oldBiome || chunk.seaSide != oldSeaSide
-                || chunk.coastContinuesAtStart != oldCoastStart || chunk.coastContinuesAtEnd != oldCoastEnd)
+                || chunk.coastContinuesAtStart != oldCoastStart || chunk.coastContinuesAtEnd != oldCoastEnd
+                || chunk.mountainLayout != oldMountainLayout || chunk.mountainVariant != oldVariant
+                || chunk.uphillOnRight != oldUphill)
             {
                 chunk.GenerateEditorPreview(chunk.GetEditorPreviewSeed());
             }
 
+            // Moving the road's entry/exit sideways needs a new road shape too
             bool roadChanged = chunk.roadType != oldRoad
                 || chunk.currentElevationType != oldElevation
                 || chunk.editorPreviewSeed != oldSeed
-                || !Mathf.Approximately(chunk.currentElevationParam, oldParam);
+                || !Mathf.Approximately(chunk.currentElevationParam, oldParam)
+                || !Mathf.Approximately(chunk.roadEntryX, oldEntryX)
+                || !Mathf.Approximately(chunk.roadExitX, oldExitX)
+                || !Mathf.Approximately(chunk.roadEntryY, oldEntryY)
+                || !Mathf.Approximately(chunk.roadExitY, oldExitY);
             bool crossChanged = chunk.crossSectionType != oldCross;
 
             if (roadChanged)
@@ -119,12 +133,15 @@ namespace EndlessSurvival.World.Editor
             var editorRng = new SeededRandom(seed);
             
             float peak = spline.SetProceduralPreset(settings, curvy, sharp, chunk.currentElevationType,
-                param, chunk.currentElevationType == RoadElevationType.RollingHills ? param * 0.7f : param, editorRng);
+                param, chunk.currentElevationType == RoadElevationType.RollingHills ? param * 0.7f : param, editorRng,
+                chunk.roadEntryX, chunk.roadExitX, chunk.roadEntryY, chunk.roadExitY);
 
             // Honor requested side: CurvedRight = biggest bend to +X, CurvedLeft = -X
+            // (mirroring is only possible for a centered road; an off-center one must keep its entry/exit X)
+            bool centered = Mathf.Abs(chunk.roadEntryX) < 0.01f && Mathf.Abs(chunk.roadExitX) < 0.01f;
             bool wantRight = chunk.roadType == ChunkRoadType.CurvedRight;
             bool wantLeft = chunk.roadType == ChunkRoadType.CurvedLeft;
-            if ((wantRight && peak < 0f) || (wantLeft && peak > 0f))
+            if (centered && ((wantRight && peak < 0f) || (wantLeft && peak > 0f)))
             {
                 for (int i = 0; i < spline.waypoints.Count; i++)
                 {

@@ -38,9 +38,17 @@ namespace EndlessSurvival.World
 
         [Header("Atmosphere & Fog")]
         public bool controlFog = true;
-        [Tooltip("Kapalıysa sahnedeki sis tamamen kapatılır (controlFog açıkken)")]
+        [Tooltip("Eski yoğun sis (500m'de görüşün ~%70'i kapanır). Açıksa pusun yerine geçer.")]
         public bool enableFog = false;
         public float fogDensity = 0.0025f;
+
+        [Tooltip("Hafif atmosfer pusu: yakın görüş net kalır, uzaktaki dağlar ve yeni yüklenen chunk'lar pusun içinden yumuşakça belirir")]
+        public bool enableHaze = true;
+        [Tooltip("Pus yoğunluğu (ExponentialSquared). 0.00055 ≈ 500m'de %7, 1500m'de %50, 2500m'de %85")]
+        public float hazeDensity = 0.00055f;
+
+        private bool FogActive => enableFog || enableHaze;
+        private float ActiveFogDensity => enableFog ? fogDensity : hazeDensity;
 
         // Internal cached colors for smooth transitions
         private readonly Color _daySunColor = new Color(1.0f, 0.96f, 0.90f);
@@ -146,9 +154,9 @@ namespace EndlessSurvival.World
             RenderSettings.ambientMode = AmbientMode.Trilight;
             if (controlFog)
             {
-                RenderSettings.fog = enableFog;
+                RenderSettings.fog = FogActive;
                 RenderSettings.fogMode = FogMode.ExponentialSquared;
-                RenderSettings.fogDensity = fogDensity;
+                RenderSettings.fogDensity = ActiveFogDensity;
             }
         }
 
@@ -222,7 +230,7 @@ namespace EndlessSurvival.World
             // 4. Sis Ayarı
             if (controlFog)
             {
-                RenderSettings.fog = enableFog;
+                RenderSettings.fog = FogActive;
                 Color targetFog;
                 if (isDusk)
                     targetFog = _duskFogColor;
@@ -232,7 +240,8 @@ namespace EndlessSurvival.World
                     targetFog = Color.Lerp(_nightFogColor, _dayFogColor, dayFactor);
 
                 RenderSettings.fogColor = targetFog;
-                RenderSettings.fogDensity = Mathf.Lerp(fogDensity * 1.4f, fogDensity, dayFactor);
+                float density = ActiveFogDensity;
+                RenderSettings.fogDensity = Mathf.Lerp(density * 1.4f, density, dayFactor);
             }
         }
 

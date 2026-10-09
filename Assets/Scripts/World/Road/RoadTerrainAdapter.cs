@@ -16,7 +16,11 @@ namespace EndlessSurvival.World.Road
         /// <param name="spline">The spline defining road path and elevation</param>
         /// <param name="roadGen">The road generator (provides width and cross-section metrics)</param>
         /// <param name="addAmbientLandscape">Whether to add natural gentle rolling hills in the background</param>
-        public static void ConformTerrainToRoad(Terrain terrain, RoadSpline spline, RoadGenerator roadGen, bool addAmbientLandscape = true)
+        /// <summary>Terrain height range (m) of mountain chunks (default chunks: 100m).</summary>
+        public const float MountainTerrainHeight = 300f;
+
+        /// <param name="paintLayers">False lets the caller run <see cref="PaintTerrainLayers"/> in a later frame (time-sliced chunk build)</param>
+        public static void ConformTerrainToRoad(Terrain terrain, RoadSpline spline, RoadGenerator roadGen, bool addAmbientLandscape = true, bool paintLayers = true)
         {
             if (terrain == null || spline == null) return;
 
@@ -43,8 +47,16 @@ namespace EndlessSurvival.World.Road
             TerrainData td = terrain.terrainData;
             if (td == null) return;
 
+            // Mountain roads run at 100m+: give those terrains more height range. Heights are written in meters
+            // (normalized by size.y below), so neighbors with the default 100m range still meet exactly.
+            Chunk ownerChunk = terrain.GetComponentInParent<Chunk>();
+            if (ownerChunk != null && ownerChunk.IsMountain && td.size.y < MountainTerrainHeight)
+            {
+                td.size = new Vector3(td.size.x, MountainTerrainHeight, td.size.z);
+            }
+
             int hRes = td.heightmapResolution;
-            Vector3 terrainSize = td.size; // 500 x 100 x 500
+            Vector3 terrainSize = td.size; // 500 x 100 (mountains: 300) x 500
             float[,] heights = td.GetHeights(0, 0, hRes, hRes);
 
             float roadHalfWidth = roadGen != null ? roadGen.GetTotalHalfWidth() : 8.5f;
@@ -125,9 +137,7 @@ namespace EndlessSurvival.World.Road
             }
 
             td.SetHeights(0, 0, heights);
-            // Soil on fields / sand on coast beaches (or restore plain grass)
-            if (useField) field.PaintTerrainLayers(td, terrainXOffset);
-            else if (boundary != null) boundary.PaintTerrainLayers(td, heights, terrainXOffset);
+            if (paintLayers) PaintLayers(terrain, heights, useField ? field : null, boundary);
             terrain.Flush();
 
 #if UNITY_EDITOR
@@ -220,6 +230,43 @@ namespace EndlessSurvival.World.Road
                 UnityEditor.EditorUtility.SetDirty(td);
             }
 #endif
+        }
+
+        /// <summary>
+        /// Paints sand (coast) / soil (field) or restores plain grass, using the plans built by the last
+        /// <see cref="ConformTerrainToRoad"/> call. Separate so a chunk build can do it in its own frame.
+        /// </summary>
+        public static void PaintTerrainLayers(Terrain terrain)
+        {
+            if (terrain == null || terrain.terrainData == null) return;
+            TerrainData td = terrain.terrainData;
+            var field = terrain.GetComponentInParent<FieldEdgeGenerator>();
+            var boundary = terrain.GetComponentInParent<ChunkBoundaryGenerator>();
+            int hRes = td.heightmapResolution;
+            PaintLayers(terrain, td.GetHeights(0, 0, hRes, hRes), field != null && field.IsActive ? field : null, boundary);
+            terrain.Flush();
+        }
+
+        private static void PaintLayers(Terrain terrain, float[,] heights, FieldEdgeGenerator field, ChunkBoundaryGenerator boundary)
+        {
+            // Soil on fields / sand on coast beaches (or restore plain grass)
+            float terrainXOffset = terrain.transform.localPosition.x;
+            if (field != null) field.PaintTerrainLayers(terrain.terrainData, terrainXOffset);
+            else if (boundary != null) boundary.PaintTerrainLayers(terrain.terrainData, heights, terrainXOffset);
+        }
+
+        /// <summary>
+        /// Runtime chunk terrains only need coarse sand/soil painting; a 256 splat map (~2m per texel)
+        /// is a quarter of the default 512 work. Edit-mode assets are left untouched.
+        /// </summary>
+        public const int RuntimeAlphamapResolution = 256;
+
+        public static void LimitRuntimeAlphamapResolution(TerrainData td)
+        {
+            if (Application.isPlaying && td != null && td.alphamapResolution > RuntimeAlphamapResolution)
+            {
+                td.alphamapResolution = RuntimeAlphamapResolution;
+            }
         }
 
         public static void EnsureRuntimeTerrainClone(Terrain terrain)

@@ -305,13 +305,13 @@ namespace EndlessSurvival.World.Road
 
                 if (i == 0)
                 {
-                    center = new Vector3(0f, center.y, 0f);
+                    center = new Vector3(center.x, center.y, 0f);
                     right = Vector3.right;
                     normal = Vector3.up;
                 }
                 else if (i == steps)
                 {
-                    center = new Vector3(0f, center.y, 500f);
+                    center = new Vector3(center.x, center.y, 500f);
                     right = Vector3.right;
                     normal = Vector3.up;
                 }
@@ -832,8 +832,8 @@ namespace EndlessSurvival.World.Road
                 Vector3 center = spline.GetPoint(t);
                 Vector3 right = spline.GetRight(t);
 
-                if (i == 0) { center = new Vector3(0f, center.y, 0f); right = Vector3.right; }
-                else if (i == steps) { center = new Vector3(0f, center.y, 500f); right = Vector3.right; }
+                if (i == 0) { center = new Vector3(center.x, center.y, 0f); right = Vector3.right; }
+                else if (i == steps) { center = new Vector3(center.x, center.y, 500f); right = Vector3.right; }
 
                 if (i > 0)
                 {
@@ -988,8 +988,8 @@ namespace EndlessSurvival.World.Road
                 Vector3 right = spline.GetRight(t);
                 Vector3 forward = spline.GetTangent(t);
 
-                if (p == 0) { center = new Vector3(0f, center.y, 0f); right = Vector3.right; forward = Vector3.forward; }
-                else if (p == postCount) { center = new Vector3(0f, center.y, 500f); right = Vector3.right; forward = Vector3.forward; }
+                if (p == 0) { center = new Vector3(center.x, center.y, 0f); right = Vector3.right; forward = Vector3.forward; }
+                else if (p == postCount) { center = new Vector3(center.x, center.y, 500f); right = Vector3.right; forward = Vector3.forward; }
 
                 Vector3 leftPostCenter = center - right * (offset + beamThickness + postHalfW) + Vector3.up * (postBaseY + postHeight * 0.5f);
                 Vector3 rightPostCenter = center + right * (offset + beamThickness + postHalfW) + Vector3.up * (postBaseY + postHeight * 0.5f);

@@ -24,7 +24,9 @@ namespace EndlessSurvival.World.POI
         private void Start()
         {
             Chunk chunk = GetComponentInParent<Chunk>();
-            if (chunk != null)
+            // ChunkManager chunks spawn their camp in Chunk.Initialize (possibly a few frames after this Start,
+            // once the seed streams exist); only stand-alone chunks spawn it here
+            if (chunk != null && chunk.Manager == null && chunk.IsBuilt)
             {
                 SpawnCampIfEligible(chunk);
             }
@@ -64,7 +66,6 @@ namespace EndlessSurvival.World.POI
                 campPOI.InitializeFromChunk(rng);
             }
 
-            Debug.Log($"<color=cyan>[EnemyCampSpawner] Chunk #{chunk.ChunkIndex} için kamp oluşturuldu: {selectedPrefab.name}</color>");
         }
 
 #if UNITY_EDITOR

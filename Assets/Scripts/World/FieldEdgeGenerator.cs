@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using EndlessSurvival.World.POI;
@@ -71,7 +72,7 @@ namespace EndlessSurvival.World
 
         [Header("Tarla")]
         [Tooltip("Sürülmüş tarla şeritlerinin aralığı")]
-        public float furrowSpacing = 3f;
+        public float furrowSpacing = 6f;
         public int minHayBales = 4;
         public int maxHayBales = 12;
         public Color hayColor = new Color(0.78f, 0.66f, 0.32f);
@@ -443,6 +444,8 @@ namespace EndlessSurvival.World
             TerrainLayer soil = GetSoilLayer();
             if (soil == null) return;
             if (layers.Length != 2 || layers[1] != soil) td.terrainLayers = new[] { layers[0], soil };
+            Road.RoadTerrainAdapter.LimitRuntimeAlphamapResolution(td);
+            res = td.alphamapResolution;
 
             Vector3 size = td.size;
             var alphas = new float[res, res, 2];
@@ -493,17 +496,27 @@ namespace EndlessSurvival.World
         /// </summary>
         public void Generate(Transform parent, Terrain terrain)
         {
+            IEnumerator steps = GenerateSteps(parent, terrain);
+            while (steps.MoveNext()) { }
+        }
+
+        /// <summary>
+        /// Same as <see cref="Generate"/>, split into steps (one per side, then river/bridge) so a chunk build
+        /// can spread the work over several frames.
+        /// </summary>
+        public IEnumerator GenerateSteps(Transform parent, Terrain terrain)
+        {
             ClearContainer(parent);
             DestroyOwnedMeshes();
-            if (parent == null) return;
+            if (parent == null) yield break;
 
             Chunk chunk = GetChunk();
-            if (chunk == null || !chunk.IsField || !fieldEdgesEnabled) return;
+            if (chunk == null || !chunk.IsField || !fieldEdgesEnabled) yield break;
 
             if (!_active)
             {
                 int rows = terrain != null && terrain.terrainData != null ? terrain.terrainData.heightmapResolution : 129;
-                if (!BuildPlan(rows, chunk.chunkLength, chunk.GetComponentInChildren<Road.RoadSpline>())) return;
+                if (!BuildPlan(rows, chunk.chunkLength, chunk.GetComponentInChildren<Road.RoadSpline>())) yield break;
             }
 
             var container = new GameObject(CONTAINER_NAME);
@@ -526,7 +539,7 @@ namespace EndlessSurvival.World
                 float sign = s == 0 ? -1f : 1f;
                 SidePlan side = _sides[s];
                 var rng = new SeededRandom(SeededRandom.Combine(seedBase, s));
-                var mb = new MeshBuilder(SubCount + 1); // last submesh = tree trunks
+                var mb = new BoxMeshBuilder(SubCount + 1); // last submesh = tree trunks
                 var sideGo = new GameObject(s == 0 ? "Edge_Left_" + side.style : "Edge_Right_" + side.style);
                 sideGo.transform.SetParent(container.transform, false);
 
@@ -560,9 +573,14 @@ namespace EndlessSurvival.World
                     mats[SubCount] = trunkMat;
                     mr.sharedMaterials = mats;
                 }
+                yield return null;
             }
 
-            if (_hasRiver) BuildRiverAndBridge(container.transform, chunk, terrain);
+            if (_hasRiver)
+            {
+                BuildRiverAndBridge(container.transform, chunk, terrain);
+                yield return null;
+            }
 
             BuildEdgeWalls(container.transform, chunk);
         }
@@ -632,7 +650,7 @@ namespace EndlessSurvival.World
 
             var bridge = new GameObject("Bridge");
             bridge.transform.SetParent(container, false);
-            var mb = new MeshBuilder(2); // 0 = concrete, 1 = deck
+            var mb = new BoxMeshBuilder(2); // 0 = concrete, 1 = deck
 
             int segments = Mathf.Max(1, Mathf.CeilToInt((zEnd - zStart) / 3f));
             float segLen = (zEnd - zStart) / segments;
@@ -706,7 +724,7 @@ namespace EndlessSurvival.World
             };
         }
 
-        private void BuildFence(MeshBuilder mb, GameObject sideGo, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
+        private void BuildFence(BoxMeshBuilder mb, GameObject sideGo, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
         {
             float x = sign * fenceLine;
             int posts = Mathf.FloorToInt(_length / postSpacing);
@@ -777,7 +795,7 @@ namespace EndlessSurvival.World
         /// Tree belt behind the fence: a front line of poplars and several staggered rows behind it,
         /// more oaks toward the back. Belt depth comes from world-continuous noise (lines up across chunks).
         /// </summary>
-        private void BuildTreeRow(MeshBuilder mb, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
+        private void BuildTreeRow(BoxMeshBuilder mb, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
         {
             int sideIdx = sign < 0f ? 0 : 1;
             float noise = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(chunk.WorldSeed, "tree_belt"), sideIdx)).Range(0f, 1000f);
@@ -806,7 +824,7 @@ namespace EndlessSurvival.World
             }
         }
 
-        private void AddTree(MeshBuilder mb, Chunk chunk, Terrain terrain, float x, float z, SeededRandom rng, float broadChance, float heightScale)
+        private void AddTree(BoxMeshBuilder mb, Chunk chunk, Terrain terrain, float x, float z, SeededRandom rng, float broadChance, float heightScale)
         {
             float ground = GroundY(chunk, terrain, x, z);
             float h = rng.Range(minTreeHeight, maxTreeHeight) * heightScale;
@@ -822,7 +840,7 @@ namespace EndlessSurvival.World
             mb.Box(crownCenter + Vector3.up * (crownH * 0.55f), new Vector3(crownW * 0.6f, crownH * 0.25f, crownW * 0.6f), lean, SubCrown);
         }
 
-        private void BuildHayBales(MeshBuilder mb, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
+        private void BuildHayBales(BoxMeshBuilder mb, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
         {
             int count = rng.Range(minHayBales, maxHayBales + 1);
             for (int i = 0; i < count; i++)
@@ -842,7 +860,7 @@ namespace EndlessSurvival.World
             }
         }
 
-        private void BuildCorn(MeshBuilder mb, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
+        private void BuildCorn(BoxMeshBuilder mb, Chunk chunk, Terrain terrain, float sign, SeededRandom rng)
         {
             // Strip depth from a world-continuous noise, so the corn edge lines up with a neighboring corn chunk
             int sideIdx = sign < 0f ? 0 : 1;
@@ -1066,104 +1084,6 @@ namespace EndlessSurvival.World
         private void OnDestroy()
         {
             DestroyOwnedMeshes();
-        }
-
-        /// <summary>
-        /// Collects many boxes into one mesh with several submeshes (one draw call per material).
-        /// </summary>
-        private sealed class MeshBuilder
-        {
-            private readonly List<Vector3> _vertices = new List<Vector3>();
-            private readonly List<Vector3> _normals = new List<Vector3>();
-            private readonly List<int>[] _submeshes;
-
-            private static readonly Vector3[] FaceNormals = { Vector3.right, Vector3.left, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
-            private static readonly Vector3[] FaceU = { Vector3.forward, Vector3.forward, Vector3.right, Vector3.right, Vector3.up, Vector3.up };
-
-            public MeshBuilder(int submeshCount)
-            {
-                _submeshes = new List<int>[submeshCount];
-                for (int i = 0; i < submeshCount; i++) _submeshes[i] = new List<int>();
-            }
-
-            public int VertexCount => _vertices.Count;
-
-            /// <summary>Flat-shaded box (24 vertices).</summary>
-            public void Box(Vector3 center, Vector3 size, Quaternion rot, int submesh)
-            {
-                Vector3 half = size * 0.5f;
-                for (int f = 0; f < 6; f++)
-                {
-                    Vector3 n = FaceNormals[f];
-                    Vector3 u = FaceU[f];
-                    Vector3 v = Vector3.Cross(u, n); // Cross(v, u) == n -> clockwise (front) when seen from outside
-                    float hn = Mathf.Abs(Vector3.Dot(n, half));
-                    float hu = Mathf.Abs(Vector3.Dot(u, half));
-                    float hv = Mathf.Abs(Vector3.Dot(v, half));
-
-                    int start = _vertices.Count;
-                    Vector3 worldN = rot * n;
-                    AddVertex(center + rot * (n * hn - u * hu - v * hv), worldN);
-                    AddVertex(center + rot * (n * hn - u * hu + v * hv), worldN);
-                    AddVertex(center + rot * (n * hn + u * hu + v * hv), worldN);
-                    AddVertex(center + rot * (n * hn + u * hu - v * hv), worldN);
-                    AddQuad(submesh, start, start + 1, start + 2, start + 3);
-                }
-            }
-
-            /// <summary>Cheap box with 8 shared corners (soft normals) for very large counts, e.g. corn.</summary>
-            public void BoxLow(Vector3 center, Vector3 size, Quaternion rot, int submesh)
-            {
-                Vector3 half = size * 0.5f;
-                int start = _vertices.Count;
-                for (int i = 0; i < 8; i++)
-                {
-                    var corner = new Vector3((i & 1) != 0 ? 1f : -1f, (i & 2) != 0 ? 1f : -1f, (i & 4) != 0 ? 1f : -1f);
-                    AddVertex(center + rot * Vector3.Scale(corner, half), (rot * corner).normalized);
-                }
-
-                for (int f = 0; f < 6; f++)
-                {
-                    Vector3 n = FaceNormals[f];
-                    Vector3 u = FaceU[f];
-                    Vector3 v = Vector3.Cross(u, n);
-                    AddQuad(submesh,
-                        start + CornerIndex(n - u - v),
-                        start + CornerIndex(n - u + v),
-                        start + CornerIndex(n + u + v),
-                        start + CornerIndex(n + u - v));
-                }
-            }
-
-            private static int CornerIndex(Vector3 signs)
-            {
-                return (signs.x > 0f ? 1 : 0) + (signs.y > 0f ? 2 : 0) + (signs.z > 0f ? 4 : 0);
-            }
-
-            private void AddVertex(Vector3 position, Vector3 normal)
-            {
-                _vertices.Add(position);
-                _normals.Add(normal);
-            }
-
-            private void AddQuad(int submesh, int a, int b, int c, int d)
-            {
-                List<int> tris = _submeshes[submesh];
-                tris.Add(a); tris.Add(b); tris.Add(c);
-                tris.Add(a); tris.Add(c); tris.Add(d);
-            }
-
-            public Mesh ToMesh(string name)
-            {
-                var mesh = new Mesh { name = name };
-                if (_vertices.Count > 65000) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-                mesh.SetVertices(_vertices);
-                mesh.SetNormals(_normals);
-                mesh.subMeshCount = _submeshes.Length;
-                for (int i = 0; i < _submeshes.Length; i++) mesh.SetTriangles(_submeshes[i], i);
-                mesh.RecalculateBounds();
-                return mesh;
-            }
         }
     }
 }
