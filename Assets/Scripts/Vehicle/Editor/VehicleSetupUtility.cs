@@ -194,9 +194,9 @@ namespace EndlessSurvival.Vehicle.Editor
             // 3. Configure Rigidbody
             Rigidbody rb = pickupGo.GetComponent<Rigidbody>();
             if (rb == null) rb = pickupGo.AddComponent<Rigidbody>();
-            rb.mass = 1650f;
-            rb.linearDamping = 0.08f;
-            rb.angularDamping = 2.0f;
+            rb.mass = 1800f;
+            rb.linearDamping = 0f;
+            rb.angularDamping = 0.05f;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
@@ -290,17 +290,8 @@ namespace EndlessSurvival.Vehicle.Editor
             vc.rearLeftMesh = blMesh;
             vc.rearRightMesh = brMesh;
 
-            vc.motorForce = 2200f;
-            vc.brakeForce = 4000f;
-            vc.maxSteerAngle = 35f;
-            vc.steerSmoothSpeed = 8f;
-            vc.centerOfMassOffset = new Vector3(0f, -0.25f, 0.15f);
-            vc.antiRollForce = 4500f;
-            vc.forwardGrip = 2.8f;
-            vc.sidewaysGrip = 3.4f;
-            vc.tractionAssist = 0.70f;
-            vc.downforce = 140f;
-            vc.coastBrakeTorque = 150f;
+            // Driving feel is tuned by the VehicleController defaults (engine, gearbox, suspension, grip);
+            // only the per-vehicle state is set here.
             vc.currentFuel = 100f;
             vc.maxFuel = 100f;
 
@@ -432,33 +423,8 @@ namespace EndlessSurvival.Vehicle.Editor
                 wc.transform.rotation = vehicleRoot.rotation;
             }
 
-            // Wheel physics parameters tailored for responsive arcade driving with weight and grip
-            wc.mass = 45f;
+            // Suspension and tire friction are applied by VehicleController at runtime; only geometry lives here.
             wc.radius = 0.42f;
-            wc.wheelDampingRate = 0.8f;
-            wc.suspensionDistance = 0.25f;
-
-            JointSpring spring = wc.suspensionSpring;
-            spring.spring = 26000f; // Softened spring to give visible body roll and weight pitch
-            spring.damper = 2800f;
-            spring.targetPosition = 0.45f;
-            wc.suspensionSpring = spring;
-
-            WheelFrictionCurve fFriction = wc.forwardFriction;
-            fFriction.extremumSlip = 0.35f;
-            fFriction.extremumValue = 1.25f;
-            fFriction.asymptoteSlip = 0.80f;
-            fFriction.asymptoteValue = 1.0f;
-            fFriction.stiffness = 2.8f; // High traction
-            wc.forwardFriction = fFriction;
-
-            WheelFrictionCurve sFriction = wc.sidewaysFriction;
-            sFriction.extremumSlip = 0.25f;
-            sFriction.extremumValue = 1.35f;
-            sFriction.asymptoteSlip = 0.65f;
-            sFriction.asymptoteValue = 1.15f;
-            sFriction.stiffness = 3.4f; // Solid lateral grip
-            wc.sidewaysFriction = sFriction;
 
             return wc;
         }

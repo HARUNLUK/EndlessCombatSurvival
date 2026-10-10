@@ -115,7 +115,8 @@ namespace EndlessSurvival.Vehicle
             if (speedText != null)
             {
                 int speed = Mathf.RoundToInt(vehicleController.CurrentSpeedKmh);
-                speedText.text = $"{speed} KM/H";
+                int rpm = Mathf.RoundToInt(vehicleController.EngineRpm / 100f) * 100;
+                speedText.text = $"{speed} KM/H   [{vehicleController.GearLabel}]   {rpm} RPM";
             }
 
             float fuelRatio = vehicleController.maxFuel > 0 ? (vehicleController.currentFuel / vehicleController.maxFuel) : 0f;

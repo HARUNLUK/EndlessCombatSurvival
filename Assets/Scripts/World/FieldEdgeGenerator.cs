@@ -323,6 +323,12 @@ namespace EndlessSurvival.World
 
         public bool HasRiver => _active && _hasRiver;
 
+        /// <summary>True near the river crossing (channel, banks and bridge) within <paramref name="margin"/> meters.</summary>
+        public bool IsNearRiver(Vector3 chunkLocal, float margin)
+        {
+            return _active && InRiverBand(chunkLocal.x, chunkLocal.z, margin);
+        }
+
         /// <summary>
         /// Applied after the road bed is blended in: the river channel is cut under the road too,
         /// so the road crosses it as a bridge (the road mesh has its own collider).

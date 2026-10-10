@@ -254,6 +254,12 @@ namespace EndlessSurvival.World.Road
             return ComputeCrossSection().HalfWidth;
         }
 
+        /// <summary>Half width of the asphalt only (no curbs/sidewalks).</summary>
+        public float GetAsphaltHalfWidth()
+        {
+            return ComputeCrossSection().roadWidth * 0.5f;
+        }
+
         [ContextMenu("Build Road Mesh")]
         public Mesh BuildRoadMesh()
         {

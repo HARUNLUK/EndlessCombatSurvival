@@ -588,6 +588,10 @@ namespace EndlessSurvival.World
                 }
             }
 
+            // Abandoned vehicle wrecks: no trees through the cars
+            var wrecks = chunk != null ? chunk.GetComponent<AbandonedVehicleSpawner>() : null;
+            if (wrecks != null) zones.AddRange(wrecks.VegetationClearings);
+
             if (activeContainer != null && activeContainer != root)
             {
                 foreach (var name in poiNames)

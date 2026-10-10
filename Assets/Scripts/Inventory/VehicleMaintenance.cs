@@ -27,7 +27,7 @@ namespace EndlessSurvival.Inventory
             [Min(1)] public int baseCost = 4;
             [Min(0)] public int costPerLevel = 3;
             [Min(1)] public int maxLevel = 3;
-            [Tooltip("FuelTank: extra max fuel. Engine: extra motor torque. Armor: extra max health.")]
+            [Tooltip("FuelTank: extra max fuel. Engine: extra engine torque (Nm). Armor: extra max health.")]
             public float amountPerLevel = 25f;
             public int level;
 
@@ -53,7 +53,7 @@ namespace EndlessSurvival.Inventory
         public List<UpgradeRule> upgrades = new List<UpgradeRule>
         {
             new UpgradeRule { label = "Fuel Tank", type = UpgradeType.FuelTank, baseCost = 4, costPerLevel = 3, maxLevel = 3, amountPerLevel = 25f },
-            new UpgradeRule { label = "Engine", type = UpgradeType.Engine, baseCost = 2, costPerLevel = 2, maxLevel = 3, amountPerLevel = 200f },
+            new UpgradeRule { label = "Engine", type = UpgradeType.Engine, baseCost = 2, costPerLevel = 2, maxLevel = 3, amountPerLevel = 35f },
             new UpgradeRule { label = "Armor", type = UpgradeType.Armor, baseCost = 4, costPerLevel = 3, maxLevel = 3, amountPerLevel = 25f }
         };
 
@@ -137,7 +137,7 @@ namespace EndlessSurvival.Inventory
                     vehicle.currentFuel += rule.amountPerLevel;
                     break;
                 case UpgradeType.Engine:
-                    vehicle.motorForce += rule.amountPerLevel;
+                    vehicle.maxEngineTorque += rule.amountPerLevel;
                     break;
                 case UpgradeType.Armor:
                     vehicle.maxHealth += rule.amountPerLevel;

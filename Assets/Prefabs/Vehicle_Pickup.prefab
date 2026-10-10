@@ -1883,9 +1883,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8930495351656498723}
   serializedVersion: 5
-  m_Mass: 1650
-  m_LinearDamping: 0.08
-  m_AngularDamping: 2
+  m_Mass: 1800
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -1936,10 +1936,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Vehicle.VehicleController
   driveType: 2
-  motorForce: 2200
-  brakeForce: 4000
   maxSteerAngle: 35
-  steerSmoothSpeed: 8
   frontLeftCollider: {fileID: 7400342412629238337}
   frontRightCollider: {fileID: 976682605976406683}
   rearLeftCollider: {fileID: 2990126122204158121}
@@ -1948,13 +1945,10 @@ MonoBehaviour:
   frontRightMesh: {fileID: 6453259537836222489}
   rearLeftMesh: {fileID: 1019260016387613436}
   rearRightMesh: {fileID: 6082308626625942147}
-  centerOfMassOffset: {x: 0, y: -0.25, z: 0.15}
-  antiRollForce: 4500
-  forwardGrip: 2.8
-  sidewaysGrip: 3.4
-  tractionAssist: 0.7
-  downforce: 140
-  coastBrakeTorque: 150
+  centerOfMassOffset: {x: 0, y: 0.1, z: 0.1}
+  antiRollForce: 10000
+  forwardGrip: 1.3
+  sidewaysGrip: 1.7
   airGravityMultiplier: 2.5
   isDriven: 0
   currentFuel: 100

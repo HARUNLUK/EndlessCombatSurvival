@@ -390,7 +390,13 @@ namespace EndlessSurvival.World
                     while (fieldSteps.MoveNext()) yield return "fieldEdges";
                 }
 
-                // 8) Vegetation, conforming to the final terrain heights & road curve
+                // 8) Abandoned vehicle wrecks on and beside the road (before vegetation: trees keep clear of them)
+                var wrecks = chunk.GetComponent<AbandonedVehicleSpawner>();
+                if (wrecks == null) wrecks = chunk.gameObject.AddComponent<AbandonedVehicleSpawner>();
+                wrecks.Generate(chunk.transform, terrain, chunk.WrecksRandom);
+                yield return "wrecks";
+
+                // 9) Vegetation, conforming to the final terrain heights & road curve
                 var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
                 if (vegSpawner != null)
                 {

@@ -291,6 +291,7 @@ namespace EndlessSurvival.World
         private SeededRandom _campRandom;
         private SeededRandom _eventsRandom;
         private SeededRandom _notesRandom;
+        private SeededRandom _wrecksRandom;
 
         /// <summary>
         /// Seed shared by every chunk of the same world (for features that must line up across chunks:
@@ -362,6 +363,8 @@ namespace EndlessSurvival.World
         public SeededRandom EventsRandom => _eventsRandom;
         /// <summary>Per-chunk deterministic random for readable notes (future).</summary>
         public SeededRandom NotesRandom => _notesRandom;
+        /// <summary>Per-chunk deterministic random for abandoned vehicle wrecks.</summary>
+        public SeededRandom WrecksRandom => _wrecksRandom;
 
         private void Awake()
         {
@@ -432,6 +435,7 @@ namespace EndlessSurvival.World
             _campRandom = chunkRng.SubStream("camp");
             _eventsRandom = chunkRng.SubStream("events");
             _notesRandom = chunkRng.SubStream("notes");
+            _wrecksRandom = chunkRng.SubStream("wrecks");
 
             // Initialize or spawn enemy camps (Campfire, Outpost vb.)
             var campSpawner = GetComponentInChildren<EndlessSurvival.World.POI.EnemyCampSpawner>();
@@ -598,6 +602,10 @@ namespace EndlessSurvival.World
 
             var noteSpawner = GetComponentInChildren<EndlessSurvival.World.POI.NoteSpawner>();
             if (noteSpawner != null) noteSpawner.GenerateNote(notesRng, previewContainer.transform);
+
+            var wrecks = GetComponent<AbandonedVehicleSpawner>();
+            if (wrecks == null) wrecks = gameObject.AddComponent<AbandonedVehicleSpawner>();
+            wrecks.Generate(previewContainer.transform, previewTerrain, chunkRng.SubStream("wrecks"));
 
             var vegRng = chunkRng.SubStream("vegetation");
             var vegSpawner = GetComponentInChildren<ChunkVegetationSpawner>();

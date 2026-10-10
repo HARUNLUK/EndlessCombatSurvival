@@ -222,13 +222,9 @@ namespace EndlessSurvival.Vehicle
 
                 case VehicleModType.OffroadTires:
                     // Arazi yol tutuşunu ve çekiş kontrolünü zirveye taşır
-                    vehicleController.forwardGrip = 4.2f;
-                    vehicleController.sidewaysGrip = 4.8f;
-                    vehicleController.tractionAssist = 0.90f;
-                    vehicleController.ConfigureWheelFriction(vehicleController.frontLeftCollider);
-                    vehicleController.ConfigureWheelFriction(vehicleController.frontRightCollider);
-                    vehicleController.ConfigureWheelFriction(vehicleController.rearLeftCollider);
-                    vehicleController.ConfigureWheelFriction(vehicleController.rearRightCollider);
+                    vehicleController.forwardGrip = 1.5f;
+                    vehicleController.sidewaysGrip = 1.9f;
+                    vehicleController.stabilityAssist = 0.4f;
                     break;
 
                 case VehicleModType.RoofRack:
@@ -264,13 +260,9 @@ namespace EndlessSurvival.Vehicle
                     break;
 
                 case VehicleModType.OffroadTires:
-                    vehicleController.forwardGrip = 2.8f;
-                    vehicleController.sidewaysGrip = 3.4f;
-                    vehicleController.tractionAssist = 0.70f;
-                    vehicleController.ConfigureWheelFriction(vehicleController.frontLeftCollider);
-                    vehicleController.ConfigureWheelFriction(vehicleController.frontRightCollider);
-                    vehicleController.ConfigureWheelFriction(vehicleController.rearLeftCollider);
-                    vehicleController.ConfigureWheelFriction(vehicleController.rearRightCollider);
+                    vehicleController.forwardGrip = 1.3f;
+                    vehicleController.sidewaysGrip = 1.7f;
+                    vehicleController.stabilityAssist = 0.25f;
                     break;
 
                 case VehicleModType.RoofRack:
