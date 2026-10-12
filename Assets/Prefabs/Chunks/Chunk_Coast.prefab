@@ -1,0 +1,1358 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &394080853649814559
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8985098258247683817}
+  - component: {fileID: 512006690976217903}
+  m_Layer: 0
+  m_Name: LeftBoundary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8985098258247683817
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 394080853649814559}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -250, y: 30, z: 250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &512006690976217903
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 394080853649814559}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 40, z: 500}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &807057884526348574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1060372973874766455}
+  - component: {fileID: 1724291244667569626}
+  - component: {fileID: 6928444241200654461}
+  - component: {fileID: 5334201565183323200}
+  m_Layer: 0
+  m_Name: Guardrails
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1060372973874766455
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807057884526348574}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3565612613129197832}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &1724291244667569626
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807057884526348574}
+  m_Mesh: {fileID: 0}
+--- !u!23 &6928444241200654461
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807057884526348574}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 370934bc4e131d44da70eb3051ed25c5, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &5334201565183323200
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807057884526348574}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
+--- !u!1 &819233697436109653
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5656994906135724449}
+  - component: {fileID: 6579326612043379118}
+  - component: {fileID: 2858621719125993235}
+  - component: {fileID: 8893404387937482025}
+  m_Layer: 0
+  m_Name: BackBlockade_Wall
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &5656994906135724449
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 819233697436109653}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 25, z: 2}
+  m_LocalScale: {x: 40, y: 10, z: 2}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &6579326612043379118
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 819233697436109653}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!65 &2858621719125993235
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 819233697436109653}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &8893404387937482025
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 819233697436109653}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 2dc00a265696bad49bb94d2457379be8, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1386100126618630677
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8383247343888686180}
+  - component: {fileID: 873980771130178018}
+  - component: {fileID: 3827231238020448179}
+  m_Layer: 0
+  m_Name: Trigger_SealPassage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8383247343888686180
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1386100126618630677}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 25, z: 40}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &873980771130178018
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1386100126618630677}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 140, y: 15, z: 15}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3827231238020448179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1386100126618630677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 635a5f931b5f6f5459627c2b92e00f12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkTrigger
+  triggerType: 1
+  parentChunk: {fileID: 2334053220824714459}
+--- !u!1 &1440298904599339295
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6823570277302434941}
+  - component: {fileID: 6507530643729725739}
+  - component: {fileID: 3427140421358666262}
+  m_Layer: 0
+  m_Name: Trigger_SpawnNext
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6823570277302434941
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440298904599339295}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 25, z: 380}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &6507530643729725739
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440298904599339295}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 140, y: 20, z: 15}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3427140421358666262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440298904599339295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 635a5f931b5f6f5459627c2b92e00f12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkTrigger
+  triggerType: 0
+  parentChunk: {fileID: 2334053220824714459}
+--- !u!1 &1533943594706705068
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3565612613129197832}
+  - component: {fileID: 7235861993325476862}
+  - component: {fileID: 2788333887041787042}
+  - component: {fileID: 1659402551091043585}
+  - component: {fileID: 4222713232519773946}
+  - component: {fileID: 5227388866876548863}
+  m_Layer: 0
+  m_Name: Spline_Road
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3565612613129197832
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533943594706705068}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1060372973874766455}
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7235861993325476862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533943594706705068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b24f7de7098c85442882200d71a29edc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.Road.RoadSpline
+  waypoints:
+  - {x: -0, y: 20, z: 0}
+  - {x: -0, y: 26.084864, z: 60}
+  - {x: 21.740562, y: 31.999619, z: 124.36522}
+  - {x: -0.6196637, y: 28.152248, z: 190.56502}
+  - {x: 12.880654, y: 18.220829, z: 266.98364}
+  - {x: -0, y: 14.586448, z: 305.73053}
+  - {x: -0, y: 11.992852, z: 350.56638}
+  - {x: -0, y: 15.740597, z: 440}
+  - {x: -0, y: 20, z: 500}
+  resolution: 100
+  baseElevation: 20
+--- !u!33 &2788333887041787042
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533943594706705068}
+  m_Mesh: {fileID: 0}
+--- !u!23 &1659402551091043585
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533943594706705068}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 6e0c90106271f2a4bb445e6be927e928, type: 2}
+  - {fileID: 2100000, guid: bde5d65fe4ffdff4f9a990b387e132ec, type: 2}
+  - {fileID: 2100000, guid: 80d217481349c2a41be6d78dd0900d67, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4222713232519773946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533943594706705068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a607083465e5764ca888eb9f4c52d9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.Road.RoadGenerator
+  spline: {fileID: 7235861993325476862}
+  activeProfile: {fileID: 11400000, guid: bd29a20eb75883747be166ee2e8e18e0, type: 2}
+  biomeProfiles: []
+  roadElevation: 0.45
+  roadThickness: 0.8
+  crossSectionPreset: 1
+  hasCurbs: 1
+  hasSidewalks: 1
+  hasGuardrails: 1
+  generateOnStart: 1
+  syncExitSocket: 1
+--- !u!64 &5227388866876548863
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533943594706705068}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
+--- !u!1 &2119661402015982231
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2887690845444647183}
+  - component: {fileID: 9089723303284521510}
+  m_Layer: 0
+  m_Name: StoryEventSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2887690845444647183
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2119661402015982231}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9089723303284521510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2119661402015982231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6cfaac2245189544850cb7071fdcd47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.StoryEventSpawner
+  availableEvents:
+  - {fileID: 11400000, guid: 290ec609099f08b47a303b8060dc28e5, type: 2}
+  - {fileID: 11400000, guid: 9ae2cc4f6b815d04b8239b0de05fc266, type: 2}
+  roadSpline: {fileID: 7235861993325476862}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!1 &2152358122131472858
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3227995836502276201}
+  - component: {fileID: 4264021010242982442}
+  m_Layer: 0
+  m_Name: RightBoundary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3227995836502276201
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2152358122131472858}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 250, y: 30, z: 250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4264021010242982442
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2152358122131472858}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 40, z: 500}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &3144634000483981305
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6887151771872429049}
+  m_Layer: 0
+  m_Name: EntrySocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6887151771872429049
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3144634000483981305}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 20, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3451893269036245660
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4950126686988792640}
+  - component: {fileID: 2334053220824714459}
+  - component: {fileID: 5490241073412931007}
+  - component: {fileID: 9045655230358705798}
+  - component: {fileID: 779755460940606319}
+  - component: {fileID: 8740810787342245833}
+  - component: {fileID: 8215153913419155415}
+  m_Layer: 0
+  m_Name: Chunk_Coast
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4950126686988792640
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8140737606059033768}
+  - {fileID: 6887151771872429049}
+  - {fileID: 6932552562729729895}
+  - {fileID: 3565612613129197832}
+  - {fileID: 8985098258247683817}
+  - {fileID: 3227995836502276201}
+  - {fileID: 6823570277302434941}
+  - {fileID: 8383247343888686180}
+  - {fileID: 5656994906135724449}
+  - {fileID: 8352898697157530913}
+  - {fileID: 2887690845444647183}
+  - {fileID: 3945118313427089366}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2334053220824714459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d51ba36df11a1c44a892fce921e8f739, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.Chunk
+  typeName: "K\u0131y\u0131"
+  generationMode: 0
+  flatSeamEdges: 0
+  biomeType: 5
+  roadType: 2
+  crossSectionType: 1
+  difficultyTier: 1
+  seaSide: 1
+  coastContinuesAtStart: 1
+  coastContinuesAtEnd: 1
+  mountainVariant: 0
+  mountainLayout: 0
+  uphillOnRight: 1
+  foothillLowland: 0
+  roadEntryX: 0
+  roadExitX: 0
+  roadEntryY: 20
+  roadExitY: 20
+  elevationConfig:
+    elevationChance: 0.75
+    maxHillHeight: 16
+    minHillHeight: 8
+    maxDipDepth: 15
+    minDipDepth: 7
+    hillWeight: 25
+    valleyWeight: 25
+    rollingHillsWeight: 20
+    mountainPassWeight: 20
+    elevatedChicaneWeight: 15
+    flatWeight: 15
+  curveSettings:
+    curveChance: 0.7
+    minBends: 2
+    maxBends: 5
+    minShift: 15
+    maxShift: 50
+    maxLateral: 70
+    maxSlope: 0.55
+    minTurnRadius: 35
+    lengthVariance: 2.5
+  roadStyle:
+    curveChanceMultiplier: 1
+    sharpCurveChance: 0.15
+    alwaysCurvy: 0
+    forceCrossSection: 0
+    forcedCrossSection: 4
+  mountainSettings:
+    snowyChance: 0.6
+    ledgeChance: 0.7
+    ledgeRoadMinOffset: 80
+    ledgeRoadMaxOffset: 100
+    roadMinHeight: 100
+    roadMaxHeight: 140
+    roadClimbPerChunk: 40
+    hillsideChance: 0.4
+    foothills: 0
+    lowlandForestWeight: 30
+    lowlandFieldWeight: 30
+    lowlandLandThenCoastWeight: 20
+    lowlandCoastWeight: 20
+    lowlandSlopeMin: 8
+    lowlandSlopeMax: 16
+    lowlandSlopeStart: 2.5
+    landStripMin: 50
+    landStripMax: 100
+    coastStripMin: 10
+    coastStripMax: 30
+  legacyOverrideElevationSettings: 0
+  currentElevationType: 3
+  currentElevationParam: 0
+  chunkLength: 500
+  baseElevation: 20
+  entrySocket: {fileID: 6887151771872429049}
+  exitSocket: {fileID: 6932552562729729895}
+  spawnNextTrigger: {fileID: 3427140421358666262}
+  editorPreviewSeed: 
+  backBlockade: {fileID: 819233697436109653}
+  propSpawnPoints: []
+  onRoadSpawnPoints: []
+--- !u!114 &5490241073412931007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3481c778c0bc76747953cd455d32185b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.RoadsideLootSpawner
+  spline: {fileID: 7235861993325476862}
+  pickupTable: {fileID: 11400000, guid: b0f19731c8626664b8569c83e684a585, type: 2}
+  minPickups: 6
+  maxPickups: 14
+  chestPrefab: {fileID: 5884785962308858464, guid: 637311ee4583a3443981714862789aec, type: 3}
+  minChests: 1
+  maxChests: 3
+  minLateralDistance: 15
+  maxLateralDistance: 230
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &9045655230358705798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06f482855c1890e42aa416fea2f95236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkVegetationSpawner
+  renderMode: 1
+  targetBiome: 0
+  treePrefabs:
+  - {fileID: 2596508646063765008, guid: 00dcd4b87dd20644f8cdecd8b30c4f6e, type: 3}
+  - {fileID: 7621012676357030397, guid: 27480bb6407859b40a203591f679886a, type: 3}
+  - {fileID: 576101986914855806, guid: 493e50de4ca840f4d975839b2a6303db, type: 3}
+  detailPrefabs:
+  - {fileID: 4640590705309563535, guid: 2f4ffdad896cabc4fbf9d6662764ffce, type: 3}
+  - {fileID: 6826860981786178180, guid: 4c63a542046b2ce449bc646140aefc29, type: 3}
+  minTrees: 200
+  maxTrees: 735
+  minDetails: 60
+  maxDetails: 300
+  densityMultiplier: 3
+  minRoadDistance: 15
+  maxRoadDistance: 238
+  minTreeSpacing: 3.6
+  campClearingRadius: 32
+  caveClearingRadius: 38
+  minScale: 1.8
+  maxScale: 3.2
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  snowyMountainDensity: 0.3
+  snowyTreeLine: 22
+  alpineMountainDensity: 0.7
+  alpineTreeLine: 40
+  coastDensityMultiplier: 0.55
+  beachClearHeight: 3.5
+  seasideVegetationKeepChance: 0.1
+--- !u!114 &779755460940606319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caa9595b521d40468cbdec018f11a25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkBoundaryGenerator
+  boundaryEnabled: 1
+  settings:
+    biome: 5
+    cliffWeight: 40
+    rocksWeight: 25
+    cliffAndRocksWeight: 35
+    minCliffHeight: 35
+    maxCliffHeight: 65
+    minRampWidth: 18
+    maxRampWidth: 38
+    minInnerEdge: 140
+    maxInnerEdge: 190
+    minRockSize: 14
+    maxRockSize: 30
+    rockSpacing: 22
+    rockColor: {r: 0.36, g: 0.36, b: 0.34, a: 1}
+    mossColor: {r: 0.26, g: 0.33, b: 0.21, a: 1}
+  legacyBiomeSettings: []
+  settingsMigrated: 1
+  legacySeamInnerEdge: 175
+  legacySeamRampWidth: 28
+  legacySeamCliffChance: 0.6
+  legacySeamMinHeight: 30
+  legacySeamMaxHeight: 55
+  roadClearance: 70
+  poiClearance: 55
+  rockFillHeight: 18
+  rockMaterialOverride: {fileID: 0}
+  mossMaterialOverride: {fileID: 0}
+  coastTransitionLength: 200
+  shoreRoadGap: 18
+  seasideRoadChance: 0.5
+  shoreNearMin: 22
+  shoreNearMax: 40
+  shoreFarMin: 120
+  shoreFarMax: 210
+  minShoreSlope: 10
+  maxShoreSlope: 70
+  seabedDropDistance: 55
+  rockyShoreSlope: 28
+  sandColor: {r: 0.8, g: 0.72, b: 0.52, a: 1}
+  seaCliffFullGap: 55
+  seaCliffNoneGap: 90
+  seaCliffShoulder: 1
+  seaCliffDrop: 6
+  mountainTransitionLength: 220
+  mountainSeamMinHeight: 35
+  mountainSeamMaxHeight: 55
+  mountainWallMinHeight: 45
+  mountainWallMaxHeight: 72
+  mountainWallMinFoot: 14
+  mountainWallMaxFoot: 35
+  mountainWallMinRamp: 55
+  mountainWallMaxRamp: 110
+  hillsideMinDrop: 10
+  hillsideMaxDrop: 14
+  hillsideFarStartMin: 140
+  hillsideFarStartMax: 190
+  hillsideFarRise: 30
+  ledgeWallMinFoot: 12
+  ledgeWallMaxFoot: 20
+  ledgeCliffShoulder: 1.2
+  ledgeCliffDrop: 6
+  canyonDepth: 60
+  ledgeFarWallMinX: 110
+  ledgeFarWallMaxX: 160
+  ledgeFarWallMinHeight: 40
+  ledgeFarWallMaxHeight: 65
+  canyonRiverChance: 0.5
+  canyonRiverHalfWidth: 8
+  canyonRiverDepth: 2
+  mountainRockSlope: 0.7
+  alpineSnowLine: 45
+  snowGroundColor: {r: 0.92, g: 0.94, b: 0.97, a: 1}
+  mountainRockColor: {r: 0.42, g: 0.42, b: 0.44, a: 1}
+  canyonRiverColor: {r: 0.16, g: 0.32, b: 0.38, a: 1}
+  lowlandEdgeWallDistance: 248
+--- !u!114 &8740810787342245833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cc2a9e908983fb4b914f84da4fbbc6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkBackdropGenerator
+  backdropEnabled: 1
+  settings:
+    biome: 5
+    riseDistance: 140
+    minAboveEdge: 12
+    baseHeight: 70
+    peakAmplitude: 260
+    detailAmplitude: 35
+    ridgeFrequency: 0.0028
+    rockLine: 120
+    snowLine: 210
+    rockSlope: 0.72
+    forestColor: {r: 0.15, g: 0.25, b: 0.13, a: 1}
+    rockColor: {r: 0.37, g: 0.35, b: 0.32, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}
+  alpineMountainSettings:
+    biome: 4
+    riseDistance: 55
+    minAboveEdge: 20
+    baseHeight: 120
+    peakAmplitude: 340
+    detailAmplitude: 40
+    ridgeFrequency: 0.0032
+    rockLine: 110
+    snowLine: 240
+    rockSlope: 0.62
+    forestColor: {r: 0.2, g: 0.33, b: 0.17, a: 1}
+    rockColor: {r: 0.4, g: 0.39, b: 0.37, a: 1}
+    snowColor: {r: 0.94, g: 0.95, b: 0.97, a: 1}
+  foothillLowlandSettings:
+    biome: 6
+    riseDistance: 1500
+    minAboveEdge: 0
+    baseHeight: 12
+    peakAmplitude: 75
+    detailAmplitude: 6
+    ridgeFrequency: 0.0011
+    rockLine: 400
+    snowLine: 2000
+    rockSlope: 0.35
+    forestColor: {r: 0.24, g: 0.4, b: 0.2, a: 1}
+    rockColor: {r: 0.3, g: 0.4, b: 0.24, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}
+  legacyBiomeSettings: []
+  settingsMigrated: 1
+  legacyStripDepth: 2600
+  legacyBlendDistance: 250
+  legacyRowsAlongRoad: 40
+  legacyColumnsOutward: 24
+  requiredCameraFarClip: 1600
+  addCollider: 1
+--- !u!114 &8215153913419155415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 249b9bab864ca05468e2ff917122f946, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.AbandonedVehicleSpawner
+  wrecksEnabled: 1
+  minVehicles: 2
+  maxVehicles: 6
+  pileupChance: 0.3
+  minPileupVehicles: 3
+  maxPileupVehicles: 5
+  forestMultiplier: 1
+  fieldMultiplier: 1.2
+  coastMultiplier: 0.8
+  mountainMultiplier: 0.6
+  shoulderWeight: 30
+  stalledWeight: 14
+  crosswaysWeight: 8
+  onSideWeight: 10
+  flippedWeight: 10
+  ditchWeight: 20
+  offRoadWeight: 8
+  sedanWeight: 35
+  hatchbackWeight: 20
+  pickupWeight: 20
+  vanWeight: 15
+  boxTruckWeight: 10
+  burnedChance: 0.2
+  rustedChance: 0.15
+  rustPatchChance: 0.6
+  missingWheelChance: 0.12
+  openDoorChance: 0.25
+  openHoodChance: 0.15
+  brokenGlassChance: 0.3
+  minSpacing: 14
+  offRoadMinDistance: 16
+  offRoadMaxDistance: 40
+  poiClearance: 30
+  startClearLength: 90
+  maxGroundSlope: 32
+  paintColors:
+  - {r: 0.5, g: 0.17, b: 0.14, a: 1}
+  - {r: 0.22, g: 0.31, b: 0.43, a: 1}
+  - {r: 0.34, g: 0.37, b: 0.24, a: 1}
+  - {r: 0.74, g: 0.7, b: 0.59, a: 1}
+  - {r: 0.58, g: 0.59, b: 0.58, a: 1}
+  - {r: 0.68, g: 0.54, b: 0.21, a: 1}
+  - {r: 0.13, g: 0.14, b: 0.15, a: 1}
+  rustColor: {r: 0.42, g: 0.23, b: 0.11, a: 1}
+  burntColor: {r: 0.09, g: 0.08, b: 0.075, a: 1}
+  glassColor: {r: 0.1, g: 0.13, b: 0.16, a: 1}
+  tireColor: {r: 0.06, g: 0.06, b: 0.06, a: 1}
+  trimColor: {r: 0.3, g: 0.3, b: 0.31, a: 1}
+  headlightColor: {r: 0.85, g: 0.82, b: 0.65, a: 1}
+  taillightColor: {r: 0.5, g: 0.07, b: 0.06, a: 1}
+--- !u!1 &3964466244784687643
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8352898697157530913}
+  - component: {fileID: 1953152611892664153}
+  m_Layer: 0
+  m_Name: NoteSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8352898697157530913
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3964466244784687643}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8, y: 0, z: 250}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1953152611892664153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3964466244784687643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dce7994a16172fd4aa66e1a6a709ff86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.POI.NoteSpawner
+  notePrefab: {fileID: 5093807966709572064, guid: 73ced3a79a8c14745aef9e6f8573129b, type: 3}
+  possibleNotes:
+  - {fileID: 11400000, guid: 9cfbbd98407878b4aa7680b003a09628, type: 2}
+  spawnChance: 0.5
+--- !u!1 &5215357285307397243
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6932552562729729895}
+  m_Layer: 0
+  m_Name: ExitSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6932552562729729895
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5215357285307397243}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 20, z: 500}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5734175676435983632
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3945118313427089366}
+  - component: {fileID: 7234465383611978782}
+  m_Layer: 0
+  m_Name: EnemyCampSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3945118313427089366
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5734175676435983632}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7234465383611978782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5734175676435983632}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24065c2fa0685d041b74f1f6c0982f57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.POI.EnemyCampSpawner
+  campPrefabs:
+  - {fileID: 1361431820584681069, guid: b18df8fb7b73c764a913f8dd85193481, type: 3}
+  - {fileID: 244440100053379852, guid: bc2af7e233ef2994a9f4e93b4891a6ca, type: 3}
+  spawnChance: 1
+--- !u!1 &7923863605287872250
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8140737606059033768}
+  - component: {fileID: 8560453980050529311}
+  - component: {fileID: 1843301888859245459}
+  m_Layer: 0
+  m_Name: Terrain_500x500
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &8140737606059033768
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7923863605287872250}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -250, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4950126686988792640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!218 &8560453980050529311
+Terrain:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7923863605287872250}
+  m_Enabled: 1
+  serializedVersion: 6
+  m_TerrainData: {fileID: 15600000, guid: 05238f302def93f4b94d5593e5daa3cd, type: 2}
+  m_TreeDistance: 2000
+  m_TreeBillboardDistance: 2000
+  m_TreeCrossFadeLength: 0
+  m_TreeMaximumFullLODCount: 2000
+  m_DetailObjectDistance: 80
+  m_DetailObjectDensity: 1
+  m_HeightmapPixelError: 1
+  m_SplatMapDistance: 1000
+  m_HeightmapMinimumLODSimplification: 0
+  m_HeightmapMaximumLOD: 0
+  m_ShadowCastingMode: 2
+  m_DrawHeightmap: 1
+  m_DrawInstanced: 0
+  m_DrawTreesAndFoliage: 1
+  m_StaticShadowCaster: 0
+  m_IgnoreQualitySettings: 0
+  m_ReflectionProbeUsage: 1
+  m_MaterialTemplate: {fileID: 2100000, guid: 4393b215fde1b474494f8504d24ccfb4, type: 2}
+  m_BakeLightProbesForTrees: 1
+  m_PreserveTreePrototypeLayers: 0
+  m_DeringLightProbesForTrees: 1
+  m_ReceiveGI: 1
+  m_ScaleInLightmap: 0.0512
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
+  m_GroupingID: 0
+  m_RenderingLayerMask: 1
+  m_AllowAutoConnect: 1
+  m_EnableHeightmapRayTracing: 1
+  m_EnableTreesAndDetailsRayTracing: 0
+  m_EnableHeightmapLODFrustumCulling: 1
+  m_TreeMotionVectorModeOverride: 3
+--- !u!154 &1843301888859245459
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7923863605287872250}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_TerrainData: {fileID: 15600000, guid: 05238f302def93f4b94d5593e5daa3cd, type: 2}
+  m_EnableTreeColliders: 0

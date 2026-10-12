@@ -27,6 +27,7 @@ namespace EndlessSurvival.World.Editor
             var oldMountainLayout = chunk.mountainLayout;
             var oldVariant = chunk.mountainVariant;
             bool oldUphill = chunk.uphillOnRight;
+            var oldLowland = chunk.foothillLowland;
             float oldEntryX = chunk.roadEntryX;
             float oldExitX = chunk.roadExitX;
             float oldEntryY = chunk.roadEntryY;
@@ -34,11 +35,20 @@ namespace EndlessSurvival.World.Editor
 
             DrawDefaultInspector();
 
+            // Mountain previews: in play mode ChunkManager moves the road to the ledge side and up the mountain; a lone
+            // chunk keeps a centered road at 20m, where a ledge (or foothill slope) cannot show. Do the same here.
+            if (chunk.IsMountain && (chunk.mountainLayout != oldMountainLayout || chunk.uphillOnRight != oldUphill
+                                     || chunk.IsFoothill && chunk.foothillLowland != oldLowland))
+            {
+                Undo.RecordObject(chunk, "Mountain Preview Road");
+                PrepareMountainPreviewRoad(chunk);
+            }
+
             // Biome / coast / mountain change: rebuild the whole preview (terrain, sea, rocks, mountains, trees) without re-rolling the road
             if (chunk.biomeType != oldBiome || chunk.seaSide != oldSeaSide
                 || chunk.coastContinuesAtStart != oldCoastStart || chunk.coastContinuesAtEnd != oldCoastEnd
                 || chunk.mountainLayout != oldMountainLayout || chunk.mountainVariant != oldVariant
-                || chunk.uphillOnRight != oldUphill)
+                || chunk.uphillOnRight != oldUphill || chunk.foothillLowland != oldLowland)
             {
                 chunk.GenerateEditorPreview(chunk.GetEditorPreviewSeed());
             }
@@ -107,6 +117,33 @@ namespace EndlessSurvival.World.Editor
             GUI.backgroundColor = Color.white;
         }
 
+        /// <summary>
+        /// Ledge: road along the uphill side at 90m from the center and 100m up, so the precipice and canyon show.
+        /// Foothill: road up on the slope (60m). Valley/Hillside: centered road. Only touches roads still at the
+        /// defaults (centered / baseline height) or set by this method before, so hand-tuned values stay.
+        /// </summary>
+        private static void PrepareMountainPreviewRoad(Chunk chunk)
+        {
+            const float ledgeOffset = 90f, ledgeHeight = 100f, foothillHeight = 60f;
+            float uphill = chunk.uphillOnRight ? 1f : -1f;
+            float baseY = chunk.baseElevation;
+            bool atBase = Mathf.Approximately(chunk.roadEntryY, baseY) && Mathf.Approximately(chunk.roadExitY, baseY);
+            bool presetHeight = atBase
+                || (Mathf.Approximately(chunk.roadEntryY, ledgeHeight) && Mathf.Approximately(chunk.roadExitY, ledgeHeight))
+                || (Mathf.Approximately(chunk.roadEntryY, foothillHeight) && Mathf.Approximately(chunk.roadExitY, foothillHeight));
+            bool presetX = (Mathf.Approximately(chunk.roadEntryX, 0f) || Mathf.Approximately(Mathf.Abs(chunk.roadEntryX), ledgeOffset))
+                           && (Mathf.Approximately(chunk.roadExitX, 0f) || Mathf.Approximately(Mathf.Abs(chunk.roadExitX), ledgeOffset));
+
+            float x, y;
+            if (chunk.IsFoothill) { x = 0f; y = foothillHeight; }
+            else if (chunk.mountainLayout == MountainLayout.Ledge) { x = uphill * ledgeOffset; y = ledgeHeight; }
+            else { x = 0f; y = presetHeight ? baseY : chunk.roadEntryY; }
+
+            if (presetX) chunk.roadEntryX = chunk.roadExitX = x;
+            if (presetHeight) chunk.roadEntryY = chunk.roadExitY = y;
+            EditorUtility.SetDirty(chunk);
+        }
+
         /// <summary>Rolls a new random road matching the chunk's road type and rebuilds mesh + terrain.</summary>
         public static void Regenerate(Chunk chunk)
         {
@@ -114,8 +151,7 @@ namespace EndlessSurvival.World.Editor
             var spline = chunk.GetComponentInChildren<RoadSpline>();
             if (gen == null || spline == null) return;
 
-            var manager = Object.FindAnyObjectByType<ChunkManager>();
-            RoadCurveSettings settings = manager != null ? manager.curveSettings : new RoadCurveSettings();
+            RoadCurveSettings settings = chunk.curveSettings ?? new RoadCurveSettings();
 
             bool curvy = chunk.roadType == ChunkRoadType.CurvedLeft
                 || chunk.roadType == ChunkRoadType.CurvedRight

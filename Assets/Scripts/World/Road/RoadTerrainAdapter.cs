@@ -91,7 +91,7 @@ namespace EndlessSurvival.World.Road
 
                 // Seamless chunk border edge fade: ensure boundaries at Z=0 and Z=500 cleanly lock to baseline
                 float boundaryFade = Mathf.Clamp01(Mathf.Sin(normalizedZ * Mathf.PI));
-                float ambientAmplitude = boundaryFade * 8.0f * (useField ? field.ambientScale : 1f);
+                float ambientAmplitude = boundaryFade * 8.0f * (useField && field.IsFullField ? field.ambientScale : 1f);
 
                 for (int x = 0; x < hRes; x++)
                 {
@@ -125,6 +125,13 @@ namespace EndlessSurvival.World.Road
                     else
                     {
                         finalHeightMeters = naturalLandscapeY;
+                    }
+
+                    // Foothill lowland side: the boundary's cliff starts at the road shoulder; keep it sheer
+                    if (useBoundary && distToRoad > platformHalfWidth)
+                    {
+                        float keep = boundary.RoadBlendSuppression(localX, z);
+                        if (keep > 0f) finalHeightMeters = Mathf.Lerp(finalHeightMeters, naturalLandscapeY, keep);
                     }
 
                     // Seaside road: the sea side drops as a cliff right from the road shoulder
@@ -251,7 +258,8 @@ namespace EndlessSurvival.World.Road
         {
             // Soil on fields / sand on coast beaches (or restore plain grass)
             float terrainXOffset = terrain.transform.localPosition.x;
-            if (field != null) field.PaintTerrainLayers(terrain.terrainData, terrainXOffset);
+            // Foothills with a field lowland are painted by the mountain engine (boundary)
+            if (field != null && field.IsFullField) field.PaintTerrainLayers(terrain.terrainData, terrainXOffset);
             else if (boundary != null) boundary.PaintTerrainLayers(terrain.terrainData, heights, terrainXOffset);
         }
 

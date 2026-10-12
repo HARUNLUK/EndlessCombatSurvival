@@ -10,7 +10,8 @@ namespace EndlessSurvival.World
         FenceTrees,     // Tel çit + arkasında ağaç sırası
         FenceFarmland,  // Tel çit + arkasında sürülmüş tarla (saman balyalı)
         FenceCorn,      // Tel çit + arkasında uzun mısır şeridi
-        Stream          // Kenar boyunca akan dere
+        Stream,         // Kenar boyunca akan dere
+        None            // Kenar yok (Dağ Eteği'nin dağ tarafı)
     }
 
     /// <summary>
@@ -154,6 +155,11 @@ namespace EndlessSurvival.World
         private int _rows;
         private float _length;
         private bool _active;
+        // Foothills with a field lowland: edges only on the lowland side; the mountain engine shapes the terrain
+        private bool _foothill;
+
+        /// <summary>A whole field chunk (not a foothill lowland): flattens the land, paints soil, builds the edge walls.</summary>
+        public bool IsFullField => _active && !_foothill;
 
         // River crossing the road (z of its center line as a function of chunk-local x)
         private bool _hasRiver;
@@ -182,7 +188,8 @@ namespace EndlessSurvival.World
             _active = false;
             _sides = null;
             Chunk chunk = GetChunk();
-            if (!fieldEdgesEnabled || chunk == null || !chunk.IsField || rows < 2) return false;
+            if (!fieldEdgesEnabled || chunk == null || !chunk.UsesFieldEdges || rows < 2) return false;
+            _foothill = chunk.IsFoothill;
 
             _rows = rows;
             _length = length;
@@ -194,16 +201,18 @@ namespace EndlessSurvival.World
             _sides = new SidePlan[2];
             for (int s = 0; s < 2; s++)
             {
-                var side = new SidePlan { style = StyleFor(worldSeed, index, s) };
+                float sideSign = s == 0 ? -1f : 1f;
+                bool mountainSide = _foothill && !Mathf.Approximately(sideSign, chunk.LowlandSign);
+                var side = new SidePlan { style = mountainSide ? FieldEdgeStyle.None : StyleFor(worldSeed, index, s) };
                 _sides[s] = side;
                 if (side.style != FieldEdgeStyle.Stream) continue;
 
-                // Stream continues into a neighbor only if that neighbor is a Field with a stream on the same side.
+                // Stream continues into a neighbor only if that neighbor is the same field type with a stream on the same side.
                 // A lone chunk previewed in the editor is treated as continuous.
                 bool prevStream = !chunk.hasNeighborInfo
-                    || (index > 0 && chunk.PrevBiome == ChunkBiomeType.Field && StyleFor(worldSeed, index - 1, s) == FieldEdgeStyle.Stream);
+                    || (index > 0 && chunk.PrevSameType && StyleFor(worldSeed, index - 1, s) == FieldEdgeStyle.Stream);
                 bool nextStream = !chunk.hasNeighborInfo
-                    || (chunk.NextBiome == ChunkBiomeType.Field && StyleFor(worldSeed, index + 1, s) == FieldEdgeStyle.Stream);
+                    || (chunk.NextSameType && StyleFor(worldSeed, index + 1, s) == FieldEdgeStyle.Stream);
 
                 float sign = s == 0 ? -1f : 1f;
                 float noise = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(chunk.ChunkSeed != 0 ? chunk.ChunkSeed : worldSeed, "stream"), s)).Range(0f, 1000f);
@@ -233,7 +242,9 @@ namespace EndlessSurvival.World
                 }
             }
 
-            PlanRiver(chunk, spline);
+            // No river crossing under a bridge on a foothill: the road runs up on the slope
+            _hasRiver = false;
+            if (!_foothill) PlanRiver(chunk, spline);
 
             _active = true;
             return true;
@@ -395,7 +406,7 @@ namespace EndlessSurvival.World
             if (!_active) return naturalY;
 
             float delta = roadY - _baseline;
-            if (Mathf.Abs(delta) > 0.01f)
+            if (!_foothill && Mathf.Abs(delta) > 0.01f)
             {
                 float fromRoad = Mathf.Abs(localX - roadX);
                 float follow = 1f - Mathf.SmoothStep(0f, 1f, (fromRoad - hillPlateauHalfWidth) / Mathf.Max(1f, hillFalloff));
@@ -424,7 +435,8 @@ namespace EndlessSurvival.World
         /// </summary>
         public void PaintTerrainLayers(TerrainData td, float terrainXOffset)
         {
-            if (td == null || !_active) return;
+            // Foothills are painted by the mountain engine (grass/rock/snow)
+            if (td == null || !IsFullField) return;
             TerrainLayer[] layers = td.terrainLayers;
             if (layers == null || layers.Length == 0 || layers[0] == null) return;
 
@@ -517,7 +529,7 @@ namespace EndlessSurvival.World
             if (parent == null) yield break;
 
             Chunk chunk = GetChunk();
-            if (chunk == null || !chunk.IsField || !fieldEdgesEnabled) yield break;
+            if (chunk == null || !chunk.UsesFieldEdges || !fieldEdgesEnabled) yield break;
 
             if (!_active)
             {
@@ -588,7 +600,8 @@ namespace EndlessSurvival.World
                 yield return null;
             }
 
-            BuildEdgeWalls(container.transform, chunk);
+            // Foothills: the lowland wall comes from ChunkBoundaryGenerator, the mountain side is closed by the mountain
+            if (!_foothill) BuildEdgeWalls(container.transform, chunk);
         }
 
         private void BuildRiverAndBridge(Transform container, Chunk chunk, Terrain terrain)

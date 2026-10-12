@@ -11,8 +11,21 @@ namespace EndlessSurvival.World.Editor
         {
             DrawDefaultInspector();
 
+            var manager = (ChunkManager)target;
+            if (manager.chunkTypes == null || !manager.chunkTypes.Exists(e => e != null && e.prefab != null))
+            {
+                EditorGUILayout.HelpBox("Chunk Types listesi boş. Eski tek prefab yapısından (Chunk_Forest_Curve) tip prefab'larını " +
+                                        "oluşturmak için aşağıdaki butonu kullan.", MessageType.Warning);
+            }
+
             EditorGUILayout.Space(12);
             EditorGUILayout.LabelField("Chunk & World Actions", EditorStyles.boldLabel);
+
+            GUI.backgroundColor = new Color(1.0f, 0.8f, 0.2f);
+            if (GUILayout.Button("Chunk Tiplerini Oluştur (Orman, Kıyı, Düzlük, Dağ)", GUILayout.Height(30)))
+            {
+                ChunkTypeSetupUtility.CreateChunkTypes();
+            }
 
             GUI.backgroundColor = new Color(0.2f, 0.7f, 1.0f);
             if (GUILayout.Button("Generate Base Chunk Prefab", GUILayout.Height(32)))

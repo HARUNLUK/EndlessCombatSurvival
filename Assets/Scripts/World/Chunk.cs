@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using EndlessSurvival.World.Road;
 using EndlessSurvival.World.POI;
@@ -27,7 +28,17 @@ namespace EndlessSurvival.World
     {
         Valley,     // Yol ortada: iki dağ arasındaki geçit
         Hillside,   // Dağ yamacı: bir yanda yükselen dağ, diğer yanda aşağıdaki yumuşak vadi
-        Ledge       // Yol kenarda: bir dağın yamacını takip eder, diğer yanı dik uçurum + kanyon (bazen nehir) + karşı dağ
+        Ledge,      // Yol kenarda: bir dağın yamacını takip eder, diğer yanı dik uçurum + kanyon (bazen nehir) + karşı dağ
+        Foothill    // Dağ Eteği: yol yamaçta, bir yanda dağ, diğer yanda aşağıya inen yamaç ve geniş alçak arazi
+    }
+
+    /// <summary>Dağ Eteği tipinde dağın karşısındaki alçak arazi (bir bölüm boyunca aynı).</summary>
+    public enum FoothillLowland
+    {
+        Forest,         // Uzayıp giden orman
+        Field,          // Uzayıp giden düzlük (çit, tarla, mısır, dere)
+        LandThenCoast,  // Biraz orman/düzlük, sonra kumsal ve deniz
+        Coast           // Yamacın dibinde doğrudan kumsal ve deniz
     }
 
     public enum MountainVariant
@@ -55,6 +66,90 @@ namespace EndlessSurvival.World
         ElevatedChicane
     }
 
+    public enum ChunkGenerationMode
+    {
+        Procedural,  // Yol, arazi, kenarlar çalışma anında seed'e göre üretilir
+        Handcrafted  // Yol ve arazi prefab'da elle tasarlanmıştır; sadece prefab'da bulunan üretici bileşenler çalışır
+    }
+
+    /// <summary>
+    /// Bu chunk tipinin yol karakteri (viraj sıklığı, keskin şikanlar, zorunlu kesit).
+    /// </summary>
+    [System.Serializable]
+    public class ChunkRoadStyle
+    {
+        [Tooltip("RoadCurveSettings.curveChance ile çarpılır (düzlükte 0.6: daha seyrek viraj)")]
+        [Range(0f, 2f)] public float curveChanceMultiplier = 1f;
+        [Tooltip("Virajlı bir chunk'ın keskin şikan (HazardZone) olma ihtimali. 0 = hiç şikan yok.")]
+        [Range(0f, 1f)] public float sharpCurveChance = 0.15f;
+        [Tooltip("Yol her zaman virajlı (dağlarda dağ eteği yolla birlikte kıvrılır)")]
+        public bool alwaysCurvy = false;
+        [Tooltip("Açıksa yol kesiti eğime göre seçilmez, her zaman aşağıdaki kesit kullanılır")]
+        public bool forceCrossSection = false;
+        public RoadCrossSectionPreset forcedCrossSection = RoadCrossSectionPreset.OpenRoad;
+    }
+
+    /// <summary>
+    /// Dağ motorlu (biomeType = Mountain) chunk tiplerinin alt tip ve yol ayarları.
+    /// Bir dağ bölümü boyunca aynı tip kullanıldığı için seam değerleri tutarlıdır.
+    /// </summary>
+    [System.Serializable]
+    public class MountainTypeSettings
+    {
+        [Tooltip("Bir dağ bölümünün karlı olma ihtimali (kalanı alpin: çim + kaya, kar sadece zirvelerde)")]
+        [Range(0f, 1f)] public float snowyChance = 0.6f;
+        [Tooltip("İki dağ chunk'ının birleştiği noktada yolun kenarda (bir dağın yamacında) olma ihtimali. " +
+                 "Kenarda giden yolun diğer yanı uçurum + kanyon + karşı dağ olur.")]
+        [Range(0f, 1f)] public float ledgeChance = 0.7f;
+        [Tooltip("Kenardan giden yolun chunk merkezine uzaklığı")]
+        public float ledgeRoadMinOffset = 80f;
+        public float ledgeRoadMaxOffset = 100f;
+        [Tooltip("Dağ bölümünün ortasında yolun ulaştığı yükseklik (ormanda yol 20m'de)")]
+        public float roadMinHeight = 100f;
+        public float roadMaxHeight = 140f;
+        [Tooltip("Yolun bir chunk (500m) boyunca en fazla tırmanıp inebileceği yükseklik")]
+        public float roadClimbPerChunk = 40f;
+        [Tooltip("Yol ortadan giden dağ chunk'ında dağ yamacından (aşağısı yumuşak vadi) gitme ihtimali. Kalanında geçitten gider.")]
+        [Range(0f, 1f)] public float hillsideChance = 0.4f;
+
+        [Header("Dağ Eteği (tek taraf dağ)")]
+        [Tooltip("Açıksa bu tip Dağ Eteği'dir: yol yamaçta, bir yanda dağ, diğer yanda aşağıya inen yamaç ve alçak arazi (orman / düzlük / sahil)")]
+        public bool foothills = false;
+        [Tooltip("Alçak tarafın türü her bölüm için bu ağırlıklarla seçilir")]
+        [Range(0, 100)] public int lowlandForestWeight = 30;
+        [Range(0, 100)] public int lowlandFieldWeight = 30;
+        [Range(0, 100)] public int lowlandLandThenCoastWeight = 20;
+        [Range(0, 100)] public int lowlandCoastWeight = 20;
+        [Tooltip("Yol kenarından alçak araziye inişin yatay genişliği. Küçük = dimdik uçurum (kenar yolu gibi), büyük (70+) = yumuşak yamaç")]
+        public float lowlandSlopeMin = 8f;
+        public float lowlandSlopeMax = 16f;
+        [Tooltip("Uçurum ağzının yol kenarından uzaklığı (dar omuz)")]
+        public float lowlandSlopeStart = 2.5f;
+        [Tooltip("LandThenCoast: kıyı çizgisinin yamaç dibinden uzaklığı (arada orman/düzlük şeridi)")]
+        public float landStripMin = 50f;
+        public float landStripMax = 100f;
+        [Tooltip("Coast: kıyı çizgisinin yamaç dibinden uzaklığı (dar kumsal)")]
+        public float coastStripMin = 10f;
+        public float coastStripMax = 30f;
+
+        public FoothillLowland RollLowland(SeededRandom rng)
+        {
+            int w0 = Mathf.Max(0, lowlandForestWeight);
+            int w1 = w0 + Mathf.Max(0, lowlandFieldWeight);
+            int w2 = w1 + Mathf.Max(0, lowlandLandThenCoastWeight);
+            int total = w2 + Mathf.Max(0, lowlandCoastWeight);
+            if (total <= 0) return FoothillLowland.Forest;
+            int roll = rng.Range(0, total);
+            if (roll < w0) return FoothillLowland.Forest;
+            if (roll < w1) return FoothillLowland.Field;
+            if (roll < w2) return FoothillLowland.LandThenCoast;
+            return FoothillLowland.Coast;
+        }
+
+        /// <summary>Distance from the road center to the foot of the lowland slope (where the lowland begins).</summary>
+        public float LowlandFootDistance(float roadHalfWidth) => roadHalfWidth + lowlandSlopeStart + lowlandSlopeMax;
+    }
+
     /// <summary>
     /// Configuration for procedural elevation, slopes, and height limits on chunks.
     /// </summary>
@@ -72,7 +167,7 @@ namespace EndlessSurvival.World
         public float maxHillHeight = 16f;
 
         [Tooltip("Minimum height for a generated hill crest in meters")]
-        [Range(4f, 14f)]
+        [Range(1f, 14f)]
         public float minHillHeight = 8f;
 
         [Tooltip("Maximum depth a valley or pit can dip down into the ground in meters (baseline is 20m, sea level is 0m)")]
@@ -80,7 +175,7 @@ namespace EndlessSurvival.World
         public float maxDipDepth = 15f;
 
         [Tooltip("Minimum depth for a generated valley dip in meters")]
-        [Range(4f, 12f)]
+        [Range(1f, 12f)]
         public float minDipDepth = 7f;
 
         [Header("Type Distribution Weights (Eğim Tipleri Dağılım Ağırlıkları)")]
@@ -110,14 +205,26 @@ namespace EndlessSurvival.World
     }
 
     /// <summary>
-    /// Represents an individual 500x500 pre-authored parcel/chunk in the infinite road world.
-    /// Classified by biome, road topology, and spawn weight parameters.
+    /// One 500x500 parcel of the endless road. Each chunk TYPE is its own prefab (Chunk_Forest, Chunk_Mountain, ...)
+    /// that carries all of its type-specific settings (road style, elevation, sub-types, generator components).
+    /// ChunkManager only holds world-wide settings and the weighted list of type prefabs it picks from.
     /// </summary>
     [ExecuteAlways]
     public class Chunk : MonoBehaviour
     {
+        [Header("Chunk Tipi")]
+        [Tooltip("Bu tipin görünen adı (log ve chunk isimlerinde). Boşsa prefab adı kullanılır.")]
+        public string typeName = "";
+
+        [Tooltip("Procedural: yol/arazi seed'e göre üretilir. Handcrafted: yol ve arazi prefab'da elle tasarlanmıştır " +
+                 "(giriş ve çıkış yol merkezinde X=0, baseElevation yüksekliğinde olmalı, arazinin Z=0 ve Z=500 kenarları baseElevation'da kalmalı).")]
+        public ChunkGenerationMode generationMode = ChunkGenerationMode.Procedural;
+
+        [Tooltip("Kenarları düz (uçurumsuz) bir tip mi? Komşu chunk'ların uçurumları bu tipe değen seam'de sıfıra iner. Düzlük ve elle tasarlanmış tipler için açık olmalı.")]
+        public bool flatSeamEdges = false;
+
         [Header("Classification & Parameters")]
-        [Tooltip("Biome classification for this chunk")]
+        [Tooltip("Arazi motoru: kenar/kıyı/dağ/düzlük üreticilerinin bu chunk'ta hangi davranışı kullanacağı")]
         public ChunkBiomeType biomeType = ChunkBiomeType.Forest;
 
         [Tooltip("Road layout type for this chunk (Straight, Curved, Chicane, etc.)")]
@@ -125,10 +232,6 @@ namespace EndlessSurvival.World
 
         [Tooltip("Road cross-section style (Kaldırımlı, Bariyerli, Otoyol, Açık Kırsal, vb.)")]
         public RoadCrossSectionPreset crossSectionType = RoadCrossSectionPreset.FullHighway;
-
-        [Tooltip("Relative probability weight when randomly selecting chunks (higher = more frequent)")]
-        [Range(1, 100)]
-        public int spawnWeight = 10;
 
         [Tooltip("Difficulty tier of this chunk (for enemy/loot scaling in later phases)")]
         [Range(1, 5)]
@@ -151,6 +254,8 @@ namespace EndlessSurvival.World
         public MountainLayout mountainLayout = MountainLayout.Valley;
         [Tooltip("Yamaç / kenar yerleşiminde dağın yükseldiği taraf (diğer taraf vadi veya uçurum)")]
         public bool uphillOnRight = true;
+        [Tooltip("Dağ Eteği tipinde dağın karşısındaki alçak arazi. Oyunda ChunkManager bölüm başına seçer.")]
+        public FoothillLowland foothillLowland = FoothillLowland.Forest;
 
         [Header("Yolun Yanal Konumu (chunk merkezine göre)")]
         [Tooltip("Yolun chunk'a girdiği X (0 = orta). Sadece dağ-dağ birleşimlerinde 0 olmaz; komşu chunk'ın çıkışıyla aynıdır.")]
@@ -168,8 +273,37 @@ namespace EndlessSurvival.World
         public bool IsField => biomeType == ChunkBiomeType.Field;
         public bool IsMountain => biomeType == ChunkBiomeType.Mountain;
 
-        // Neighbor biomes, set by ChunkManager from the biome plan. Without that info (a lone chunk
-        // previewed in the editor) both neighbors are assumed to be the same biome, i.e. seamless.
+        /// <summary>Dağ Eteği: mountain on one side only, lowland (forest/field/coast) on the other.</summary>
+        public bool IsFoothill => IsMountain && mountainSettings != null && mountainSettings.foothills;
+        /// <summary>Chunk-local X side (-1 / +1) of the lowland on a foothill chunk (0 otherwise).</summary>
+        public float LowlandSign => IsFoothill ? (uphillOnRight ? -1f : 1f) : 0f;
+        public bool HasFoothillSea => IsFoothill && (foothillLowland == FoothillLowland.LandThenCoast || foothillLowland == FoothillLowland.Coast);
+        /// <summary>The chunk has a sea on its <see cref="seaSide"/>: coast chunks and foothills with a coast lowland.</summary>
+        public bool HasSea => IsCoast || HasFoothillSea;
+        /// <summary>Field edge decorations (fences, corn, streams): field chunks, and the lowland of field foothills.</summary>
+        public bool UsesFieldEdges => IsField || (IsFoothill && foothillLowland == FoothillLowland.Field);
+
+        // Type identity and neighbor types, set by ChunkManager from the type plan. Without that info (a lone chunk
+        // previewed in the editor) both neighbors are assumed to be the same type, i.e. seamless.
+        /// <summary>The type prefab this chunk was spawned from (null for a chunk placed in the scene by hand).</summary>
+        [System.NonSerialized] public Chunk sourceType;
+        [System.NonSerialized] public Chunk prevType;
+        [System.NonSerialized] public Chunk nextType;
+        // Mountain side of the neighbors' runs (foothill neighbors show their lowland horizon on the other side)
+        [System.NonSerialized] public bool prevUphillOnRight;
+        [System.NonSerialized] public bool nextUphillOnRight;
+
+        public string TypeName => !string.IsNullOrEmpty(typeName) ? typeName
+            : sourceType != null ? sourceType.name : name;
+
+        /// <summary>The previous chunk is the same type (a type's own seam rules apply: coast, mountain road, streams...).</summary>
+        public bool PrevSameType => !hasNeighborInfo || (prevType != null && prevType == sourceType);
+        public bool NextSameType => !hasNeighborInfo || (nextType != null && nextType == sourceType);
+
+        /// <summary>The neighbor has flat (cliff-less) edges, so boundary cliffs must come down to 0 at that seam.</summary>
+        public bool PrevFlatSeam => hasNeighborInfo && prevType != null ? prevType.flatSeamEdges : flatSeamEdges;
+        public bool NextFlatSeam => hasNeighborInfo && nextType != null ? nextType.flatSeamEdges : flatSeamEdges;
+
         [System.NonSerialized] public bool hasNeighborInfo;
         [System.NonSerialized] public ChunkBiomeType prevBiome;
         [System.NonSerialized] public ChunkBiomeType nextBiome;
@@ -179,8 +313,8 @@ namespace EndlessSurvival.World
         [System.NonSerialized] public MountainVariant nextMountainVariant;
         public MountainVariant PrevMountainVariant => hasNeighborInfo ? prevMountainVariant : mountainVariant;
         public MountainVariant NextMountainVariant => hasNeighborInfo ? nextMountainVariant : mountainVariant;
-        /// <summary>-1 = sea on the left (-X), +1 = sea on the right (+X).</summary>
-        public float SeaSign => seaSide == CoastSide.Left ? -1f : 1f;
+        /// <summary>-1 = sea on the left (-X), +1 = sea on the right (+X). Foothills: always the lowland side.</summary>
+        public float SeaSign => IsFoothill ? LowlandSign : seaSide == CoastSide.Left ? -1f : 1f;
 
         /// <summary>
         /// Land-only objects (camps, caves, lighthouses) must never be placed on the sea side of a coast chunk.
@@ -188,18 +322,31 @@ namespace EndlessSurvival.World
         /// </summary>
         public float GetLandSide(float rolledSide)
         {
+            // Foothills: down in the lowland (forest/field), or up on the mountain side when the lowland is a coast
+            if (IsFoothill) return HasSea ? -SeaSign : LowlandSign;
             if (IsCoast) return -SeaSign;
             // Cliff road: the other side of the road is a precipice, so land objects go on the mountain side
             if (IsMountain && mountainLayout == MountainLayout.Ledge) return uphillOnRight ? 1f : -1f;
             return rolledSide;
         }
 
-        [Header("Elevation & Slope Settings (Eğim Ayarları)")]
-        [Tooltip("Whether this chunk overrides the global elevation parameters set on ChunkManager")]
-        public bool overrideElevationSettings = false;
-
-        [Tooltip("Chunk-specific elevation distribution and amplitude limits")]
+        [Header("Bu Tipin Yol Ayarları (Procedural)")]
+        [Tooltip("Bu tipin eğim (tepe/vadi) ihtimalleri ve yükseklik sınırları")]
         public ChunkElevationConfig elevationConfig = new ChunkElevationConfig();
+
+        [Tooltip("Bu tipin viraj üretimi (viraj sayısı, sapma, dönüş yarıçapı)")]
+        public RoadCurveSettings curveSettings = new RoadCurveSettings();
+
+        [Tooltip("Bu tipin yol karakteri (viraj sıklığı, şikan, zorunlu kesit)")]
+        public ChunkRoadStyle roadStyle = new ChunkRoadStyle();
+
+        [Tooltip("Sadece biomeType = Mountain iken: alt tip (karlı/alpin) ve dağ yolu ayarları")]
+        public MountainTypeSettings mountainSettings = new MountainTypeSettings();
+
+        // Old single-prefab setup: "use my own elevationConfig instead of ChunkManager's global one".
+        // Only read by the chunk type migration tool (ChunkTypeSetupUtility).
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("overrideElevationSettings")]
+        public bool legacyOverrideElevationSettings = false;
 
         [Header("Runtime Elevation State (Aktif Eğim Durumu)")]
         [Tooltip("Active elevation type applied to this spawned chunk")]
@@ -476,26 +623,86 @@ namespace EndlessSurvival.World
             }
         }
 
-        /// <summary>
-        /// Camps, caves and lighthouses are placed in Initialize, before the terrain is shaped. Once it is, move
-        /// each top-level POI (with its enemies/props, which are its children) vertically onto the ground.
-        /// </summary>
-        public void SnapPointsOfInterestToTerrain()
+        private class PoiGroundInfo
         {
-            Terrain terrain = ChunkTerrain;
-            if (terrain == null) return;
+            public PointOfInterest poi;
+            public readonly List<Transform> children = new List<Transform>();
+            public readonly List<float> offsets = new List<float>();
+            public readonly List<bool> onPlatform = new List<bool>();
+        }
 
-            var pois = GetComponentsInChildren<PointOfInterest>(true);
+        private readonly List<PoiGroundInfo> _poiGrounding = new List<PoiGroundInfo>();
+
+        /// <summary>
+        /// Camps and story structures get their position in Initialize, before the terrain is shaped. Call this
+        /// right before shaping it: remembers how high each POI's direct children (props, enemies) stand -
+        /// relative to the POI for those on its platform, relative to the ground for those further out.
+        /// </summary>
+        public void CapturePoiGrounding()
+        {
+            _poiGrounding.Clear();
+            Terrain terrain = ChunkTerrain;
+
+            var pois = GetComponentsInChildren<PointOfInterest>(false);
             for (int i = 0; i < pois.Length; i++)
             {
                 Transform t = pois[i].transform;
                 // Nested POIs move with their parent POI
                 if (t.parent != null && t.parent.GetComponentInParent<PointOfInterest>() != null) continue;
 
-                float ground = terrain.SampleHeight(t.position) + terrain.transform.position.y;
-                float delta = ground - t.position.y;
-                if (Mathf.Abs(delta) > 0.3f) t.position += Vector3.up * delta;
+                var info = new PoiGroundInfo { poi = pois[i] };
+                float platform = pois[i].GroundFlatRadius + 1f;
+                for (int c = 0; c < t.childCount; c++)
+                {
+                    Transform child = t.GetChild(c);
+                    Vector3 d = child.position - t.position;
+                    d.y = 0f;
+                    bool near = d.magnitude <= platform || terrain == null;
+                    info.children.Add(child);
+                    info.onPlatform.Add(near);
+                    info.offsets.Add(near ? child.position.y - t.position.y : child.position.y - GroundY(terrain, child.position));
+                }
+                _poiGrounding.Add(info);
             }
+        }
+
+        /// <summary>
+        /// After the terrain is shaped: every POI drops to the natural ground height at its own position (it never
+        /// pulls the terrain to the road's height), the ground under it is leveled at that height, and its children
+        /// follow (platform props keep their height above the POI, outer ones stand on the new ground).
+        /// </summary>
+        public void GroundPointsOfInterest()
+        {
+            Terrain terrain = ChunkTerrain;
+            if (terrain == null) { _poiGrounding.Clear(); return; }
+            if (_poiGrounding.Count == 0) CapturePoiGrounding();
+
+            for (int i = 0; i < _poiGrounding.Count; i++)
+            {
+                PoiGroundInfo info = _poiGrounding[i];
+                if (info.poi == null || !info.poi.gameObject.activeInHierarchy) continue;
+
+                Transform t = info.poi.transform;
+                Vector3 p = t.position;
+                float y = GroundY(terrain, p);
+                Road.RoadTerrainAdapter.FlattenTerrainArea(terrain, p, info.poi.GroundFlatRadius, info.poi.GroundBlendRadius, y);
+                t.position = new Vector3(p.x, y, p.z);
+
+                for (int c = 0; c < info.children.Count; c++)
+                {
+                    Transform child = info.children[c];
+                    if (child == null) continue;
+                    Vector3 cp = child.position;
+                    cp.y = info.onPlatform[c] ? y + info.offsets[c] : GroundY(terrain, cp) + info.offsets[c];
+                    child.position = cp;
+                }
+            }
+            _poiGrounding.Clear();
+        }
+
+        private static float GroundY(Terrain terrain, Vector3 world)
+        {
+            return terrain.SampleHeight(world) + terrain.transform.position.y;
         }
 
         public void NotifySpawnNextRequested()
@@ -570,31 +777,35 @@ namespace EndlessSurvival.World
                 pois[i].InitializeFromChunk(poiSubRng, previewContainer.transform);
             }
 
+            // Procedural types get the standard generators; handcrafted ones only run what their prefab has
+            bool procedural = generationMode == ChunkGenerationMode.Procedural;
+
             // Side boundaries: re-shape terrain (cliffs) and place rocks for this preview seed
             var boundary = GetComponent<ChunkBoundaryGenerator>();
-            if (boundary == null) boundary = gameObject.AddComponent<ChunkBoundaryGenerator>();
-            boundary.SetPreviewSeed(seed);
+            if (boundary == null && procedural) boundary = gameObject.AddComponent<ChunkBoundaryGenerator>();
+            if (boundary != null) boundary.SetPreviewSeed(seed);
 
             var fieldEdges = GetComponent<FieldEdgeGenerator>();
-            if (fieldEdges == null && IsField) fieldEdges = gameObject.AddComponent<FieldEdgeGenerator>();
+            if (fieldEdges == null && UsesFieldEdges && procedural) fieldEdges = gameObject.AddComponent<FieldEdgeGenerator>();
 
             Terrain previewTerrain = ChunkTerrain;
             var previewSpline = GetComponentInChildren<Road.RoadSpline>();
-            if (previewTerrain != null && previewSpline != null)
+            CapturePoiGrounding();
+            if (procedural && previewTerrain != null && previewSpline != null)
             {
                 Road.RoadTerrainAdapter.ConformTerrainToRoad(previewTerrain, previewSpline, GetComponentInChildren<Road.RoadGenerator>(), true);
-                SnapPointsOfInterestToTerrain();
             }
-            boundary.SpawnBoundaryRocks(previewContainer.transform, previewTerrain);
+            GroundPointsOfInterest();
+            if (boundary != null) boundary.SpawnBoundaryRocks(previewContainer.transform, previewTerrain);
 
             var backdrop = GetComponent<ChunkBackdropGenerator>();
-            if (backdrop == null) backdrop = gameObject.AddComponent<ChunkBackdropGenerator>();
-            backdrop.Generate(previewContainer.transform, previewTerrain);
+            if (backdrop == null && procedural) backdrop = gameObject.AddComponent<ChunkBackdropGenerator>();
+            if (backdrop != null) backdrop.Generate(previewContainer.transform, previewTerrain);
 
             if (fieldEdges != null) fieldEdges.Generate(previewContainer.transform, previewTerrain);
 
             // In play mode the endless OceanSurface provides the sea; the preview gets its own water quad
-            if (IsCoast) OceanSurface.CreatePreviewQuad(previewContainer.transform, this);
+            if (HasSea) OceanSurface.CreatePreviewQuad(previewContainer.transform, this);
 
             // Same order as play mode: loot and notes are placed after the terrain is shaped (never in the sea)
             var lootSpawner = GetComponentInChildren<RoadsideLootSpawner>();
@@ -604,8 +815,8 @@ namespace EndlessSurvival.World
             if (noteSpawner != null) noteSpawner.GenerateNote(notesRng, previewContainer.transform);
 
             var wrecks = GetComponent<AbandonedVehicleSpawner>();
-            if (wrecks == null) wrecks = gameObject.AddComponent<AbandonedVehicleSpawner>();
-            wrecks.Generate(previewContainer.transform, previewTerrain, chunkRng.SubStream("wrecks"));
+            if (wrecks == null && procedural) wrecks = gameObject.AddComponent<AbandonedVehicleSpawner>();
+            if (wrecks != null) wrecks.Generate(previewContainer.transform, previewTerrain, chunkRng.SubStream("wrecks"));
 
             var vegRng = chunkRng.SubStream("vegetation");
             var vegSpawner = GetComponentInChildren<ChunkVegetationSpawner>();

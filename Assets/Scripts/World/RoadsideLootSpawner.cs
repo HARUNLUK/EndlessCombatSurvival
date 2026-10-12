@@ -132,7 +132,7 @@ namespace EndlessSurvival.World
 
                 // Coast: loot that would land in the sea goes to the other side of the road
                 float seaY = chunk.transform.position.y + WorldConstants.SeaLevel + 1f;
-                if (chunk.IsCoast && point.y < seaY)
+                if (chunk.HasSea && point.y < seaY)
                 {
                     probe = center - right * side * lateral;
                     point = probe;
@@ -147,9 +147,10 @@ namespace EndlessSurvival.World
                 // nor inside a mountain mesh beside the road
                 if (chunk.IsMountain)
                 {
-                    if (point.y < center.y - 3f) return false;
+                    if (!chunk.IsFoothill && point.y < center.y - 3f) return false;
                     var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
-                    if (boundary != null && boundary.IsInsideMountain(chunk.transform.InverseTransformPoint(point))) return false;
+                    Vector3 local = chunk.transform.InverseTransformPoint(point);
+                    if (boundary != null && (boundary.IsInsideMountain(local) || boundary.IsOnFoothillCliff(local))) return false;
                 }
             }
             else

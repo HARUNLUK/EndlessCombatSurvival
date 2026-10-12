@@ -405,7 +405,6 @@ namespace EndlessSurvival.World.Editor
             chunk.biomeType = biome;
             chunk.roadType = roadType;
             chunk.crossSectionType = roadProfile != null ? roadProfile.defaultCrossSection : RoadCrossSectionPreset.FullHighway;
-            chunk.spawnWeight = weight;
             chunk.baseElevation = 20f;
 
             // 500x500 Unity Terrain

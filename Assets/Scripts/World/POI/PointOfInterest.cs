@@ -17,6 +17,15 @@ namespace EndlessSurvival.World.POI
         public float minRoadClearance = 45f;
 
         /// <summary>
+        /// After the chunk's terrain is shaped, the POI drops to the natural ground height at its position and the
+        /// terrain under it is leveled at that height: a flat platform of this radius...
+        /// </summary>
+        public virtual float GroundFlatRadius => 12f;
+
+        /// <summary>...blending back into the surrounding terrain over this distance.</summary>
+        public virtual float GroundBlendRadius => 10f;
+
+        /// <summary>
         /// Called by the parent Chunk after initialization to give the POI its
         /// deterministic random. This replaces the old Start()-based spawn roll
         /// so the result is independent of Unity's non-deterministic Start order.

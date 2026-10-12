@@ -54,18 +54,41 @@ namespace EndlessSurvival.World
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
+        private Camera _targetCamera;
+        private static Camera[] s_cameraBuffer = new Camera[8];
+
         private void LateUpdate()
         {
-            if (_target == null || !_target.gameObject.activeInHierarchy)
-            {
-                Camera cam = Camera.main;
-                _target = cam != null ? cam.transform : null;
-                if (_target == null) return;
-            }
+            // Follow whichever camera is rendering (player / vehicle cameras need not be tagged MainCamera).
+            // Without a target the plane stayed at the origin and there was no sea a few km down the road.
+            if (_targetCamera == null || !_targetCamera.isActiveAndEnabled) _targetCamera = FindRenderingCamera();
+            _target = _targetCamera != null ? _targetCamera.transform : null;
+            if (_target == null) return;
 
             Vector3 p = _target.position;
             float snap = Mathf.Max(1f, followSnap);
             transform.position = new Vector3(Mathf.Round(p.x / snap) * snap, transform.position.y, Mathf.Round(p.z / snap) * snap);
+        }
+
+        private static Camera FindRenderingCamera()
+        {
+            Camera main = Camera.main;
+            if (main != null && main.isActiveAndEnabled) return main;
+
+            int count = Camera.allCamerasCount;
+            if (count == 0) return null;
+            if (s_cameraBuffer.Length < count) s_cameraBuffer = new Camera[count];
+            Camera.GetAllCameras(s_cameraBuffer);
+
+            // Prefer a camera that renders to the screen (not to a texture, e.g. minimaps or mirrors)
+            Camera best = null;
+            for (int i = 0; i < count; i++)
+            {
+                Camera c = s_cameraBuffer[i];
+                if (c == null || !c.isActiveAndEnabled || c.targetTexture != null) continue;
+                if (best == null || c.depth > best.depth) best = c;
+            }
+            return best;
         }
 
         private void OnDestroy()

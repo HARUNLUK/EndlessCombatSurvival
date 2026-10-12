@@ -22,7 +22,6 @@ namespace EndlessSurvival.World.POI
         private float nextLineTime = 0f;
         private bool isDialogueActive = false;
         private bool hasDialogueStarted = false;
-        private Vector3 actualCampCenter;
         private List<EnemyDialogue> spawnedSpeakers = new List<EnemyDialogue>();
         private List<EnemyDialogue> shuffledSpeakers = new List<EnemyDialogue>();
         [Header("Enemy Spawning")]
@@ -41,11 +40,13 @@ namespace EndlessSurvival.World.POI
         [Tooltip("Eger aciksa, kamp sabit bir noktada degil arazide rastgele bir yerde cikar")]
         public bool randomizeCampLocation = true;
 
+        public override float GroundFlatRadius => campType == CampType.Outpost ? 19f : 12f;
+        public override float GroundBlendRadius => campType == CampType.Outpost ? 12f : 9f;
+
         private void Awake()
         {
             placementZone = POIPlacementZone.OffRoad;
             minRoadClearance = (campType == CampType.Outpost) ? 55f : 45f;
-            actualCampCenter = transform.position;
         }
 
         private void Update()
@@ -55,7 +56,7 @@ namespace EndlessSurvival.World.POI
                 if (!isDialogueActive && !hasDialogueStarted)
                 {
                     var player = GameObject.FindGameObjectWithTag("Player");
-                    if (player != null && Vector3.Distance(actualCampCenter, player.transform.position) < dialogueTriggerDistance)
+                    if (player != null && Vector3.Distance(transform.position, player.transform.position) < dialogueTriggerDistance)
                     {
                         isDialogueActive = true;
                         hasDialogueStarted = true;
@@ -66,7 +67,7 @@ namespace EndlessSurvival.World.POI
                 if (isDialogueActive && Time.time >= nextLineTime)
                 {
                     var player = GameObject.FindGameObjectWithTag("Player");
-                    if (player != null && Vector3.Distance(actualCampCenter, player.transform.position) <= dialogueTriggerDistance + 10f)
+                    if (player != null && Vector3.Distance(transform.position, player.transform.position) <= dialogueTriggerDistance + 10f)
                     {
                         PlayNextDialogueLine();
                     }
@@ -123,7 +124,7 @@ namespace EndlessSurvival.World.POI
                 // Chunk sınırları (-215 ile +215) içinde kalmasını sağla
                 if (campLocalX < -215f || campLocalX > 215f)
                 {
-                    if (!chunk.IsCoast) side = -side;
+                    side = chunk.GetLandSide(-side); // flips, unless the land side is fixed (coast, ledge, foothill)
                     campLocalX = roadLocalX + side * offset;
                     campLocalX = Mathf.Clamp(campLocalX, -215f, 215f);
                 }
@@ -161,12 +162,9 @@ namespace EndlessSurvival.World.POI
                 }
             }
 
-            if (tComponent != null)
-            {
-                EndlessSurvival.World.Road.RoadTerrainAdapter.FlattenTerrainArea(tComponent, campCenter, flatR, blendR, campCenter.y);
-            }
+            // The ground under the camp is leveled by Chunk.GroundPointsOfInterest once the terrain is shaped
+            // (at the natural height of the camp's spot, see GroundFlatRadius)
 
-            actualCampCenter = transform.position;
 
             // Find any authored seat or guard spots in children
             List<Transform> seatSpots = new List<Transform>();

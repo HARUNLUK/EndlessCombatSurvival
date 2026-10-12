@@ -63,6 +63,9 @@ namespace EndlessSurvival.World.POI
             }
         }
 
+        public override float GroundFlatRadius => 14f;
+        public override float GroundBlendRadius => 10f;
+
         protected override void OnSpawn(SeededRandom rng, Transform container)
         {
             // Seed sistemine göre fenerin başlangıç dönüş açısını belirle
@@ -71,12 +74,7 @@ namespace EndlessSurvival.World.POI
                 rotatingLanternHead.rotation = Quaternion.Euler(14f, rng.Range(0f, 360f), 0f);
             }
 
-            Chunk chunk = GetComponentInParent<Chunk>();
-            Terrain terrain = chunk != null ? chunk.ChunkTerrain : null;
-            if (terrain != null)
-            {
-                EndlessSurvival.World.Road.RoadTerrainAdapter.FlattenTerrainArea(terrain, transform.position, 14f, 10f, transform.position.y);
-            }
+            // The ground under the lighthouse is leveled by Chunk.GroundPointsOfInterest once the terrain is shaped
 
             Debug.Log("<color=cyan>[LighthousePOI] Yalnız Deniz Feneri dünyada belirdi!</color>");
         }

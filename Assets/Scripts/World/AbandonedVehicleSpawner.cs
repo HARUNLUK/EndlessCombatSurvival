@@ -326,11 +326,11 @@ namespace EndlessSurvival.World
             }
 
             // Yol üstü: önce bu tarafta, olmazsa karşı tarafta dene. Yol dışı: su/uçurum/dağ içi kontrolü.
-            if (!TryGetGround(t, side, lateral, offRoad, out Vector3 groundPos, out Quaternion groundRot, out float localZ))
+            if (!TryGetGround(t, side, lateral, offRoad, length, width, out Vector3 groundPos, out Quaternion groundRot, out float localZ))
             {
                 side = -side;
                 if (offRoad && _chunk.IsMountain && _chunk.mountainLayout == MountainLayout.Ledge) return false;
-                if (!TryGetGround(t, side, lateral, offRoad, out groundPos, out groundRot, out localZ)) return false;
+                if (!TryGetGround(t, side, lateral, offRoad, length, width, out groundPos, out groundRot, out localZ)) return false;
             }
 
             if (!IsValidRoadSpot(t, localZ, groundPos)) return false;
@@ -352,6 +352,9 @@ namespace EndlessSurvival.World
                 minY = Mathf.Min(minY, LowestCorner(poseRot * p.center, poseRot * p.rot, p.size));
             }
             float sink = offRoad ? 0.12f : 0.02f;
+            // Nose-down in a ditch: bury the nose instead of balancing the car on its bumper (rear wheels near the ground)
+            if (pose == WreckPose.Ditch)
+                sink += Mathf.Max(0f, -(poseRot * Vector3.forward).y) * length * 0.9f;
             Vector3 lift = Vector3.up * (-minY - sink);
 
             Quaternion containerInv = Quaternion.Inverse(container.rotation);
@@ -398,7 +401,7 @@ namespace EndlessSurvival.World
                     // Burun yoldan dışarı dönük ve aşağı gömülü
                     float yaw = side * rng.Range(10f, 45f);
                     if (facing > 90f) yaw = 180f - yaw;
-                    return Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(rng.Range(6f, 20f), 0f, rng.Range(-8f, 8f));
+                    return Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(rng.Range(4f, 12f), 0f, rng.Range(-6f, 6f));
                 default: // OffRoad
                     Quaternion yawRot = Quaternion.Euler(0f, rng.Range(0f, 360f), 0f);
                     float roll = rng.Value;
@@ -408,7 +411,13 @@ namespace EndlessSurvival.World
             }
         }
 
-        private bool TryGetGround(float t, float side, float lateral, bool offRoad,
+        private Vector3 SampleGround(Vector3 world)
+        {
+            world.y = _terrain.SampleHeight(world) + _terrain.transform.position.y;
+            return world;
+        }
+
+        private bool TryGetGround(float t, float side, float lateral, bool offRoad, float footprintLength, float footprintWidth,
             out Vector3 groundPos, out Quaternion groundRot, out float localZ)
         {
             Transform st = _spline.transform;
@@ -438,24 +447,32 @@ namespace EndlessSurvival.World
             groundPos.y = _terrain.SampleHeight(groundPos) + _terrain.transform.position.y;
 
             // Deniz, nehir yatağı, kanyon ve dağ mesh'inin içi
-            if (_chunk.IsCoast && groundPos.y < _chunk.transform.position.y + WorldConstants.SeaLevel + 1f) return false;
+            if (_chunk.HasSea && groundPos.y < _chunk.transform.position.y + WorldConstants.SeaLevel + 1f) return false;
             if (_chunk.IsField && groundPos.y < _chunk.transform.position.y + _chunk.baseElevation - 1.5f) return false;
-            if (_chunk.IsMountain && groundPos.y < center.y - 3f) return false;
+            if (_chunk.IsMountain && !_chunk.IsFoothill && groundPos.y < center.y - 3f) return false;
             if (_boundary != null)
             {
                 if (_boundary.IsBlockedForVegetation(chunkLocal)) return false;
                 if (_chunk.IsMountain && _boundary.IsInsideMountain(chunkLocal)) return false;
             }
 
-            // Zeminin eğimine yatır (çok dik yamaçlarda konmaz)
-            Vector3 tp = _terrain.transform.position;
-            Vector3 size = _terrain.terrainData.size;
-            Vector3 normal = _terrain.terrainData.GetInterpolatedNormal((groundPos.x - tp.x) / size.x, (groundPos.z - tp.z) / size.z);
-            if (Vector3.Angle(normal, Vector3.up) > maxGroundSlope) return false;
-
+            // Zeminin eğimine yatır: aracın önü/arkası/yanlarından örneklenen düzlem (tek nokta normali uzun araçta
+            // bir ucu havada bırakır). Çok dik yamaçlarda konmaz.
             Vector3 flatForward = Vector3.ProjectOnPlane(tangentWorld, Vector3.up);
             if (flatForward.sqrMagnitude < 0.001f) flatForward = _chunk.transform.forward;
-            groundRot = Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.LookRotation(flatForward.normalized, Vector3.up);
+            flatForward.Normalize();
+            Vector3 flatRight = Vector3.Cross(Vector3.up, flatForward);
+
+            float halfL = footprintLength * 0.5f, halfW = footprintWidth * 0.5f;
+            Vector3 front = SampleGround(groundPos + flatForward * halfL);
+            Vector3 back = SampleGround(groundPos - flatForward * halfL);
+            Vector3 rightP = SampleGround(groundPos + flatRight * halfW);
+            Vector3 leftP = SampleGround(groundPos - flatRight * halfW);
+            Vector3 normal = Vector3.Cross(front - back, rightP - leftP).normalized;
+            if (normal.y <= 0f || Vector3.Angle(normal, Vector3.up) > maxGroundSlope) return false;
+
+            groundPos.y = (front.y + back.y + rightP.y + leftP.y) * 0.25f;
+            groundRot = Quaternion.FromToRotation(Vector3.up, normal) * Quaternion.LookRotation(flatForward, Vector3.up);
             return true;
         }
 

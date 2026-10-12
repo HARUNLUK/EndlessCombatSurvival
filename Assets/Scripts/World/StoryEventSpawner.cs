@@ -39,16 +39,12 @@ namespace EndlessSurvival.World
                 var list = new List<StoryEventDefinition>();
 #if UNITY_EDITOR
                 var lightEvt = UnityEditor.AssetDatabase.LoadAssetAtPath<StoryEventDefinition>("Assets/Data/Events/Event_Lighthouse.asset");
-                var caveEvt = UnityEditor.AssetDatabase.LoadAssetAtPath<StoryEventDefinition>("Assets/Data/Events/Event_Cave.asset");
                 if (lightEvt != null) list.Add(lightEvt);
-                if (caveEvt != null) list.Add(caveEvt);
 #endif
                 if (list.Count == 0)
                 {
                     var lightRes = Resources.Load<StoryEventDefinition>("Events/Event_Lighthouse");
-                    var caveRes = Resources.Load<StoryEventDefinition>("Events/Event_Cave");
                     if (lightRes != null) list.Add(lightRes);
-                    if (caveRes != null) list.Add(caveRes);
                 }
 
                 if (list.Count > 0)
@@ -209,7 +205,7 @@ namespace EndlessSurvival.World
                 Vector3 localInChunk = chunk.transform.InverseTransformPoint(probePos);
                 if (localInChunk.x < -215f || localInChunk.x > 215f)
                 {
-                    if (!chunk.IsCoast) side = -side;
+                    side = chunk.GetLandSide(-side); // flips, unless the land side is fixed (coast, ledge, foothill)
                     probePos = center + right * (side * minSafeDist);
                     localInChunk = chunk.transform.InverseTransformPoint(probePos);
                     localInChunk.x = Mathf.Clamp(localInChunk.x, -215f, 215f);

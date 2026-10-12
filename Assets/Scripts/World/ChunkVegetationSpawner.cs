@@ -88,7 +88,7 @@ namespace EndlessSurvival.World
         [Tooltip("Minimum clearing radius around enemy camps so trees do not overlap tents/fire")]
         public float campClearingRadius = 32f;
 
-        [Tooltip("Minimum clearing radius around caves and story structures")]
+        [Tooltip("Minimum clearing radius around story structures (lighthouse etc.)")]
         public float caveClearingRadius = 38f;
 
         [Header("Scale & Rotation Variation (Ağaç Boyutları)")]
@@ -101,9 +101,13 @@ namespace EndlessSurvival.World
         [Header("Ground Detection")]
         public LayerMask groundMask = ~0;
 
-        private const string CONTAINER_NAME = "Vegetation_Container";
+        public const string CONTAINER_NAME = "Vegetation_Container";
         private ChunkBoundaryGenerator _boundary;
         private float _densityScale = 1f;
+        private float _foothillLowSign;                 // foothills: lowland side (-1/+1), 0 otherwise
+        private FoothillLowland _foothillLowland;
+        private float _foothillUphillDensity = 1f;      // share of trees kept on the mountain side
+        private float _foothillTreeLine;                // mountain side: no trees this far above the road
         private float _seaFloorY = float.NegativeInfinity;
         private float _treeLineY = float.PositiveInfinity;
 
@@ -315,12 +319,25 @@ namespace EndlessSurvival.World
                 return;
             }
             _densityScale = coastForest ? coastDensityMultiplier : mountainForest ? mountainDensity : 1f;
-            _seaFloorY = chunk != null && chunk.IsCoast
+            _seaFloorY = chunk != null && chunk.HasSea
                 ? chunk.transform.position.y + WorldConstants.SeaLevel + beachClearHeight
                 : float.NegativeInfinity;
             _treeLineY = mountainForest
                 ? chunk.transform.position.y + chunk.baseElevation + (alpine ? alpineTreeLine : snowyTreeLine)
                 : float.PositiveInfinity;
+
+            // Foothills: full forest down in the lowland (none on a field lowland, whose tree rows come from the
+            // field edges), sparse pines on the mountain side up to the tree line above the road
+            _foothillLowSign = 0f;
+            if (chunk != null && chunk.IsFoothill && targetBiome == ChunkBiomeType.Forest)
+            {
+                _foothillLowSign = chunk.LowlandSign;
+                _foothillLowland = chunk.foothillLowland;
+                _foothillUphillDensity = mountainDensity;
+                _foothillTreeLine = alpine ? alpineTreeLine : snowyTreeLine;
+                _densityScale = 1f;
+                _treeLineY = float.PositiveInfinity;
+            }
 
             RoadSpline spline = GetComponentInChildren<RoadSpline>();
             if (spline == null && chunk != null)
@@ -565,10 +582,6 @@ namespace EndlessSurvival.World
                 {
                     r = camp.campType == EnemyCampPOI.CampType.Outpost ? campClearingRadius * 1.3f : campClearingRadius;
                 }
-                else if (poi is CavePOI)
-                {
-                    r = caveClearingRadius;
-                }
                 else if (poi is LighthousePOI)
                 {
                     r = caveClearingRadius;
@@ -578,7 +591,7 @@ namespace EndlessSurvival.World
             }
 
             // Also search explicitly for common POI child names if component lookup missed them
-            string[] poiNames = new string[] { "Enemy Camp", "CavePOI", "LighthousePOI", "Campfire", "Outpost" };
+            string[] poiNames = new string[] { "Enemy Camp", "LighthousePOI", "Campfire", "Outpost" };
             foreach (var name in poiNames)
             {
                 Transform found = root.Find(name);
@@ -729,6 +742,19 @@ namespace EndlessSurvival.World
             if (candidatePos.y < _seaFloorY || candidatePos.y > _treeLineY)
             {
                 return false;
+            }
+
+            if (_foothillLowSign != 0f)
+            {
+                // side is relative to the road's right, which points along chunk-local +X
+                if (Mathf.Approximately(side, _foothillLowSign))
+                {
+                    if (_foothillLowland == FoothillLowland.Field) return false;
+                }
+                else if (rng.Value > _foothillUphillDensity || candidatePos.y > roadCenter.y + _foothillTreeLine)
+                {
+                    return false;
+                }
             }
 
             // Verify minimum spacing from existing trees

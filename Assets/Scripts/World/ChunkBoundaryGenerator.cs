@@ -61,31 +61,20 @@ namespace EndlessSurvival.World
         [Tooltip("Kapalıysa uçurum ve kaya üretilmez")]
         public bool boundaryEnabled = true;
 
-        [Tooltip("Biyoma göre ayarlar. Chunk'ın biyomu listede yoksa ilk eleman kullanılır.")]
-        public List<BiomeBoundarySettings> biomeSettings = new List<BiomeBoundarySettings>
-        {
-            new BiomeBoundarySettings(),
-            // Coast: land side only (the sea side uses the coast profile). Lighter, weathered rocks.
-            new BiomeBoundarySettings
-            {
-                biome = ChunkBiomeType.Coast,
-                cliffWeight = 45,
-                rocksWeight = 30,
-                cliffAndRocksWeight = 25,
-                rockColor = new Color(0.45f, 0.44f, 0.41f),
-                mossColor = new Color(0.34f, 0.37f, 0.27f)
-            }
-        };
+        [Tooltip("Bu chunk tipinin kenar uçurumu / kaya ayarları (kıyıda kara tarafı)")]
+        public BiomeBoundarySettings settings = new BiomeBoundarySettings();
 
-        [Header("Chunk Birleşim Noktaları (Seam)")]
-        [Tooltip("Z=0 ve Z=500'de uçurumun başladığı sabit mesafe (komşu chunk'larla eşleşmesi için sabit)")]
-        public float seamInnerEdge = 175f;
-        public float seamRampWidth = 28f;
-        [Range(0f, 1f)]
-        [Tooltip("Bir birleşim noktasında uçurum olma ihtimali (0 ise orada kayalar boşluğu doldurur)")]
-        public float seamCliffChance = 0.6f;
-        public float seamMinHeight = 30f;
-        public float seamMaxHeight = 55f;
+        // Old single-prefab setup: one list for every biome. Used until the settings are migrated
+        // (ChunkTypeSetupUtility picks this type's entry into `settings`).
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("biomeSettings")]
+        public List<BiomeBoundarySettings> legacyBiomeSettings = new List<BiomeBoundarySettings>();
+        [HideInInspector] public bool settingsMigrated = false;
+        // Seam values moved to ChunkManager.seamSettings (both neighbors must agree); kept for the migration tool
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamInnerEdge")] public float legacySeamInnerEdge = 175f;
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamRampWidth")] public float legacySeamRampWidth = 28f;
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamCliffChance")] public float legacySeamCliffChance = 0.6f;
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamMinHeight")] public float legacySeamMinHeight = 30f;
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamMaxHeight")] public float legacySeamMaxHeight = 55f;
 
         [Header("Güvenlik Mesafeleri")]
         [Tooltip("Yol merkezinden uçurum başlangıcına minimum mesafe")]
@@ -140,6 +129,7 @@ namespace EndlessSurvival.World
             public float[] height;
             public float[] fade;
             public float noiseOffset;
+            public bool open;           // foothill lowland side: open land, no edge cliffs/rocks (except fading out at foreign seams)
 
             // Coast (only on the sea side of a Coast chunk)
             public bool isSea;
@@ -226,6 +216,7 @@ namespace EndlessSurvival.World
         private float[] _mtnWeight;        // 0..1 per row: 0 = normal boundary (non-mountain neighbor), 1 = full mountain
         private bool _hasLedgeCliff;
         private MountainVariant _mtnVariant;
+        private float _foothillLowSign;   // foothills: side (-1/+1) of the lowland (the terrain slopes down to it); 0 otherwise
         private float[] _roadY;          // road center height per heightmap row
         private float _baselineY = 20f;  // chunk.baseElevation, cached for per-sample use
         private List<Vector2> _poiKeepouts = new List<Vector2>(); // chunk-local (x, z) of POIs
@@ -275,11 +266,13 @@ namespace EndlessSurvival.World
             _seaIndex = -1;
             _mtnSides = null;
             _hasLedgeCliff = false;
+            _foothillLowSign = 0f;
             if (!boundaryEnabled || rows < 2) return false;
 
             Chunk chunk = GetChunk();
             BiomeBoundarySettings settings = GetSettings(chunk);
             if (settings == null) return false;
+            WorldSeamSettings seam = WorldSeamSettings.For(chunk);
 
             _rows = rows;
             _length = length;
@@ -323,15 +316,25 @@ namespace EndlessSurvival.World
                 float peak = rng.Range(settings.minCliffHeight, settings.maxCliffHeight);
                 float innerTarget = rng.Range(settings.minInnerEdge, settings.maxInnerEdge);
                 float rampTarget = rng.Range(settings.minRampWidth, settings.maxRampWidth);
-                // Any seam touching a Field chunk is flat, so cliffs fade out toward open plains.
-                // Both chunks at a seam see the same biomes, so they agree on the value.
+                // Any seam touching a flat-edged type (fields, handcrafted chunks) is flat, so cliffs fade out
+                // toward it. Both chunks at a seam see the same two types, so they agree on the value.
                 bool isField = chunk != null && chunk.IsField;
-                bool prevField = chunk != null && chunk.PrevBiome == ChunkBiomeType.Field;
-                bool nextField = chunk != null && chunk.NextBiome == ChunkBiomeType.Field;
-                float seamA = SeamHeight(worldSeed, startSeam, s);
-                float seamB = SeamHeight(worldSeed, startSeam + 1, s);
-                if (isField || prevField) seamA = 0f;
-                if (isField || nextField) seamB = 0f;
+                bool ownFlat = chunk != null && chunk.flatSeamEdges;
+                bool prevFlat = chunk != null && chunk.PrevFlatSeam;
+                bool nextFlat = chunk != null && chunk.NextFlatSeam;
+                float seamA = SeamHeight(seam, worldSeed, startSeam, s);
+                float seamB = SeamHeight(seam, worldSeed, startSeam + 1, s);
+                if (isField || ownFlat || prevFlat) seamA = 0f;
+                if (isField || ownFlat || nextFlat) seamB = 0f;
+
+                // Foothill lowland side: open land. Edge cliffs only where a different type's cliff meets the seam,
+                // fading out toward the middle; none at all inside the foothill run.
+                side.open = chunk != null && chunk.IsFoothill && Mathf.Approximately(sign, chunk.LowlandSign);
+                if (side.open)
+                {
+                    if (chunk.PrevSameType) seamA = 0f;
+                    if (chunk.NextSameType) seamB = 0f;
+                }
 
                 for (int r = 0; r < rows; r++)
                 {
@@ -343,7 +346,7 @@ namespace EndlessSurvival.World
 
                     float seamH = Mathf.Lerp(seamA, seamB, Mathf.SmoothStep(0f, 1f, t));
                     float h;
-                    switch (side.style)
+                    switch (side.open ? ChunkBoundaryStyle.Rocks : side.style)
                     {
                         case ChunkBoundaryStyle.Rocks:
                             h = seamH * (1f - wSoft);
@@ -358,9 +361,9 @@ namespace EndlessSurvival.World
                     h *= 1f + (Mathf.PerlinNoise(side.noiseOffset, z * 0.012f) - 0.5f) * 0.35f * w;
                     if (isField) h = 0f; // open plains: edges come from FieldEdgeGenerator, not cliffs
 
-                    float ramp = Mathf.Lerp(seamRampWidth, rampTarget, wSoft);
+                    float ramp = Mathf.Lerp(seam.seamRampWidth, rampTarget, wSoft);
                     float edgeNoise = (Mathf.PerlinNoise(side.noiseOffset + 50f, z * 0.015f) - 0.5f) * 2f * 12f * w;
-                    float baseInner = Mathf.Lerp(seamInnerEdge, innerTarget, wSoft) + edgeNoise;
+                    float baseInner = Mathf.Lerp(seam.seamInnerEdge, innerTarget, wSoft) + edgeNoise;
 
                     float inner = Mathf.Max(baseInner, roadX[r] * sign + roadClearance);
                     for (int k = 0; k < keepouts.Count; k++)
@@ -384,7 +387,8 @@ namespace EndlessSurvival.World
 
             // Coast: the sea side gets a shoreline profile on top of (and blending away from) the normal boundary.
             // Uses its own random stream so the land side stays identical to a forest chunk with the same seed.
-            if (chunk != null && chunk.IsCoast)
+            // Foothills with a coast lowland: the shore lies beyond the foot of the lowland slope.
+            if (chunk != null && chunk.HasSea)
             {
                 _seaSign = chunk.SeaSign;
                 _seaIndex = _seaSign < 0f ? 0 : 1;
@@ -413,8 +417,9 @@ namespace EndlessSurvival.World
         {
             var rng = new SeededRandom(SeededRandom.Combine(planSeed, "mountain"));
             _mtnVariant = chunk.mountainVariant;
-            bool prevMtn = chunk.PrevBiome == ChunkBiomeType.Mountain;
-            bool nextMtn = chunk.NextBiome == ChunkBiomeType.Mountain;
+            // Only a neighbor of the same mountain type continues the mountains; any other type gets the normal edge
+            bool prevMtn = chunk.PrevBiome == ChunkBiomeType.Mountain && chunk.PrevSameType;
+            bool nextMtn = chunk.NextBiome == ChunkBiomeType.Mountain && chunk.NextSameType;
 
             _mtnWeight = new float[_rows];
             for (int r = 0; r < _rows; r++)
@@ -426,9 +431,21 @@ namespace EndlessSurvival.World
                     nextMtn ? 1f : Mathf.SmoothStep(0f, 1f, (_length - z) / mountainTransitionLength));
             }
 
-            MountainLayout layout = chunk.mountainLayout;
+            MountainLayout layout = chunk.IsFoothill ? MountainLayout.Foothill : chunk.mountainLayout;
             int uphill = chunk.uphillOnRight ? 1 : 0;
             float entryX = chunk.roadEntryX, exitX = chunk.roadExitX;
+
+            // Foothills: the lowland side slopes from the road down to the lowland (baseline), over a width that
+            // varies per chunk but is shared at the seams of one run
+            _foothillLowSign = chunk.IsFoothill ? chunk.LowlandSign : 0f;
+            MountainTypeSettings ms = chunk.mountainSettings;
+            float slopeMid = 0f, slopeA = 0f, slopeB = 0f;
+            if (_foothillLowSign != 0f)
+            {
+                slopeMid = new SeededRandom(SeededRandom.Combine(planSeed, "foothill_slope")).Range(ms.lowlandSlopeMin, ms.lowlandSlopeMax);
+                slopeA = FoothillSeamSlope(worldSeed, startSeam, ms);
+                slopeB = FoothillSeamSlope(worldSeed, startSeam + 1, ms);
+            }
 
             _mtnSides = new MountainSide[2];
             for (int s = 0; s < 2; s++)
@@ -470,6 +487,20 @@ namespace EndlessSurvival.World
                     side.r2[r] = Mathf.Lerp(Mathf.Lerp(seamA.r2, seamB.r2, st), mid.r2, wSoft);
                     side.cliff[r] = Mathf.Lerp(Mathf.Lerp(seamA.cliff, seamB.cliff, st), mid.cliff, wSoft) * _mtnWeight[r];
                     side.river[r] = Mathf.Lerp(Mathf.Lerp(seamA.river, seamB.river, st), midRiver, wSoft) * _mtnWeight[r];
+
+                    if (_foothillLowSign != 0f && Mathf.Approximately(s == 0 ? -1f : 1f, _foothillLowSign))
+                    {
+                        // Lowland side: from road level down to the baseline (a1 <= 0, measured from the road), no
+                        // far mountain, no canyon. The lowland itself (forest/field/coast) is shaped by ApplyBoundary.
+                        side.a1[r] = Mathf.Min(0f, _baselineY - _roadY[r]);
+                        side.f1[r] = _roadHalfWidth + ms.lowlandSlopeStart;
+                        side.r1[r] = Mathf.Lerp(Mathf.Lerp(slopeA, slopeB, st), slopeMid, wSoft);
+                        side.a2[r] = 0f;
+                        side.f2[r] = 400f;
+                        side.cliff[r] = 0f;
+                        side.river[r] = 0f;
+                    }
+
                     if (side.cliff[r] > 0.01f) _hasLedgeCliff = true;
 
                     // Where the mountain mesh starts: the wall foot (rising side) or the far mountain across the
@@ -499,7 +530,14 @@ namespace EndlessSurvival.World
         private SideShape ChunkShape(SeededRandom rng, MountainLayout layout, bool isUphill, bool precipice)
         {
             var shape = new SideShape { f2 = 400f, r2 = 50f };
-            if (precipice)
+            if (layout == MountainLayout.Foothill && !isUphill)
+            {
+                // Lowland side: replaced per row by the slope down to the baseline (BuildMountainProfile)
+                shape.a1 = -1f;
+                shape.f1 = 10f;
+                shape.r1 = 80f;
+            }
+            else if (precipice)
             {
                 PrecipiceShape(ref shape, rng.Range(ledgeFarWallMinHeight, ledgeFarWallMaxHeight), rng.Range(30f, 55f));
             }
@@ -568,23 +606,17 @@ namespace EndlessSurvival.World
             return shape;
         }
 
+        /// <summary>Lowland slope width at seam i, shared by both foothill chunks of a run that meet there.</summary>
+        private static float FoothillSeamSlope(int worldSeed, int seamIndex, MountainTypeSettings ms)
+        {
+            var rng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "foothill_slope_seam"), seamIndex));
+            return rng.Range(ms.lowlandSlopeMin, ms.lowlandSlopeMax);
+        }
+
         private static float Step01(float x)
         {
             x = Mathf.Clamp01(x);
             return x * x * (3f - 2f * x);
-        }
-
-        /// <summary>0 near a POI (flat clearing so camps/caves are not buried or dropped into the canyon), 1 elsewhere.</summary>
-        private float PoiKeepFactor(float localX, float localZ)
-        {
-            float keep = 1f;
-            for (int k = 0; k < _poiKeepouts.Count; k++)
-            {
-                float dx = localX - _poiKeepouts[k].x;
-                float dz = localZ - _poiKeepouts[k].y;
-                keep *= Step01((Mathf.Sqrt(dx * dx + dz * dz) - 25f) / 40f);
-            }
-            return keep;
         }
 
         /// <summary>
@@ -593,19 +625,27 @@ namespace EndlessSurvival.World
         /// does what goes down: the hillside valley and (via MountainCliff) the ledge canyon. It stays near road
         /// level elsewhere so it never pokes through the mountain meshes.
         /// </summary>
-        private float MountainHeight(float localX, int row, float naturalY)
+        /// <param name="lowlandY">Foothills: the lowland ground at this point (natural landscape, edge, coast) that
+        /// the lowland side slopes down to.</param>
+        private float MountainHeight(float localX, int row, float naturalY, float lowlandY)
         {
             float fromRoad = localX - _roadX[row];
             MountainSide side = _mtnSides[fromRoad >= 0f ? 1 : 0];
             float d = Mathf.Abs(fromRoad);
-            float z = row / (_rows - 1f) * _length;
+
+            if (_foothillLowSign != 0f && (fromRoad >= 0f ? 1f : -1f) == _foothillLowSign)
+            {
+                // Road level beside the road, then down the slope onto the lowland
+                float roadLevel = _roadY[row] + (naturalY - _baselineY) * 0.35f;
+                float down = Step01((d - side.f1[row]) / Mathf.Max(1f, side.r1[row]));
+                return Mathf.Lerp(roadLevel, lowlandY, down);
+            }
 
             // Only the dropping part of the side shape (valley / canyon floor)
             float drop = 0f;
             if (side.a1[row] < 0f)
             {
                 drop = side.a1[row] * Step01((d - side.f1[row]) / Mathf.Max(1f, side.r1[row]));
-                drop *= PoiKeepFactor(localX, z);
             }
 
             // The ground is at road level across the chunk (mountain roads run at 100m+), so the meshes stand on
@@ -613,6 +653,33 @@ namespace EndlessSurvival.World
             // the mountain meshes' foot.
             float ambient = (naturalY - _baselineY) * 0.35f;
             return _roadY[row] + ambient + drop;
+        }
+
+        /// <summary>
+        /// 0..1: how much the terrain adapter must keep this boundary height instead of blending it into the road bed.
+        /// Foothill lowland side: the drop starts right at the road shoulder (a cliff like a ledge road), so the
+        /// adapter's wide road blend must not smooth it out.
+        /// </summary>
+        public float RoadBlendSuppression(float localX, int row)
+        {
+            if (_foothillLowSign == 0f || _mtnSides == null) return 0f;
+            row = Mathf.Clamp(row, 0, _rows - 1);
+            float fromRoad = localX - _roadX[row];
+            if ((fromRoad >= 0f ? 1f : -1f) != _foothillLowSign) return 0f;
+            return _mtnWeight[row];
+        }
+
+        /// <summary>True on the foothill cliff face (between the road shoulder and the lowland): no trees or loot there.</summary>
+        public bool IsOnFoothillCliff(Vector3 chunkLocal)
+        {
+            if (_foothillLowSign == 0f || _mtnSides == null) return false;
+            int row = Mathf.Clamp(Mathf.RoundToInt(chunkLocal.z / _length * (_rows - 1)), 0, _rows - 1);
+            float fromRoad = chunkLocal.x - _roadX[row];
+            if ((fromRoad >= 0f ? 1f : -1f) != _foothillLowSign || _mtnWeight[row] < 0.5f) return false;
+            MountainSide side = _mtnSides[fromRoad >= 0f ? 1 : 0];
+            if (side.a1[row] > -2f) return false; // road at lowland level here, no cliff
+            float d = Mathf.Abs(fromRoad);
+            return d > side.f1[row] - 2f && d < side.f1[row] + side.r1[row] + 3f;
         }
 
         /// <summary>Canyon floor height at a row: canyonDepth below the road, never below 3m.</summary>
@@ -692,7 +759,7 @@ namespace EndlessSurvival.World
 
             float cliffY = Mathf.Lerp(roadBedY, floorY, Mathf.Clamp01(d / Mathf.Max(0.5f, ledgeCliffDrop)));
             if (d > ledgeCliffDrop) cliffY = floorY;
-            return Mathf.Lerp(height, Mathf.Min(height, cliffY), w * PoiKeepFactor(localX, z));
+            return Mathf.Lerp(height, Mathf.Min(height, cliffY), w);
         }
 
         /// <summary>Distance of the canyon river's center line from the road (middle of the canyon floor).</summary>
@@ -792,6 +859,12 @@ namespace EndlessSurvival.World
             SeamShore(worldSeed, startSeam, sideIndex, out float shoreA, out float slopeA);
             SeamShore(worldSeed, startSeam + 1, sideIndex, out float shoreB, out float slopeB);
 
+            if (chunk.IsFoothill)
+            {
+                BuildFoothillCoast(chunk, side, sign, roadX, rng, worldSeed, startSeam, slopeMid, slopeA, slopeB, noiseOffset);
+                return;
+            }
+
             side.isSea = true;
             side.rockyShore = slopeMid < rockyShoreSlope;
             side.coast = new float[_rows];
@@ -823,6 +896,56 @@ namespace EndlessSurvival.World
 
                 side.shoreSlope[r] = Mathf.Lerp(Mathf.Lerp(slopeA, slopeB, t), slopeMid, wSoft);
             }
+        }
+
+        /// <summary>
+        /// Foothill coast: the shoreline follows the road at a distance of (foot of the lowland slope + land strip),
+        /// so there is always ground below the slope: a narrow beach (Coast) or a forest/field strip then the beach
+        /// (LandThenCoast). Strip widths at the seams come from the world seed, so chunks of one run agree.
+        /// </summary>
+        private void BuildFoothillCoast(Chunk chunk, SideProfile side, float sign, float[] roadX, SeededRandom rng,
+            int worldSeed, int startSeam, float slopeMid, float slopeA, float slopeB, float noiseOffset)
+        {
+            MountainTypeSettings ms = chunk.mountainSettings;
+            bool landStrip = chunk.foothillLowland == FoothillLowland.LandThenCoast;
+            float stripMin = landStrip ? ms.landStripMin : ms.coastStripMin;
+            float stripMax = landStrip ? ms.landStripMax : ms.coastStripMax;
+            float foot = ms.LowlandFootDistance(_roadHalfWidth);
+
+            float stripMid = rng.Range(stripMin, stripMax);
+            float stripA = FoothillSeamStrip(worldSeed, startSeam, stripMin, stripMax);
+            float stripB = FoothillSeamStrip(worldSeed, startSeam + 1, stripMin, stripMax);
+
+            side.isSea = true;
+            side.rockyShore = !landStrip && slopeMid < rockyShoreSlope;
+            side.coast = new float[_rows];
+            side.shore = new float[_rows];
+            side.shoreSlope = new float[_rows];
+            side.seaCliff = new float[_rows];
+
+            for (int r = 0; r < _rows; r++)
+            {
+                float z = r / (_rows - 1f) * _length;
+                float t = z / _length;
+                float w = Mathf.Clamp01(Mathf.Sin(t * Mathf.PI));
+                float wSoft = Mathf.Sqrt(w);
+
+                float cStart = chunk.coastContinuesAtStart ? 1f : Mathf.SmoothStep(0f, 1f, z / coastTransitionLength);
+                float cEnd = chunk.coastContinuesAtEnd ? 1f : Mathf.SmoothStep(0f, 1f, (_length - z) / coastTransitionLength);
+                side.coast[r] = Mathf.Min(cStart, cEnd);
+
+                float strip = Mathf.Lerp(Mathf.Lerp(stripA, stripB, Mathf.SmoothStep(0f, 1f, t)), stripMid, wSoft)
+                              + (Mathf.PerlinNoise(noiseOffset, z * 0.01f) - 0.5f) * 2f * 10f * w;
+                side.shore[r] = Mathf.Min(roadX[r] * sign + foot + Mathf.Max(0f, strip), _halfWidth - 30f);
+                side.seaCliff[r] = 0f; // the slope is between the road and the sea, never a sea cliff at the road
+                side.shoreSlope[r] = Mathf.Lerp(Mathf.Lerp(slopeA, slopeB, t), slopeMid, wSoft);
+            }
+        }
+
+        private static float FoothillSeamStrip(int worldSeed, int seamIndex, float min, float max)
+        {
+            var rng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "foothill_strip"), seamIndex));
+            return rng.Range(min, max);
         }
 
         /// <summary>
@@ -865,7 +988,7 @@ namespace EndlessSurvival.World
             // Mountain: walls beside the road (pass), a valley (hillside) or precipice + canyon + far mountain (ledge)
             if (_mtnSides != null && _mtnWeight[row] > 0f)
             {
-                y = Mathf.Lerp(y, MountainHeight(localX, row, naturalY), _mtnWeight[row]);
+                y = Mathf.Lerp(y, MountainHeight(localX, row, naturalY, y), _mtnWeight[row]);
             }
             return y;
         }
@@ -972,7 +1095,7 @@ namespace EndlessSurvival.World
         public bool IsBlockedForVegetation(Vector3 chunkLocal)
         {
             if (_sides == null) return false;
-            if (IsInCanyonRiver(chunkLocal) || IsInsideMountain(chunkLocal)) return true;
+            if (IsInCanyonRiver(chunkLocal) || IsInsideMountain(chunkLocal) || IsOnFoothillCliff(chunkLocal)) return true;
 
             SampleSide(_sides[chunkLocal.x < 0f ? 0 : 1], chunkLocal.z, out float inner, out float ramp, out float h);
             float d = Mathf.Abs(chunkLocal.x) - inner;
@@ -1044,6 +1167,12 @@ namespace EndlessSurvival.World
                     }
 
                     SampleSide(side, z, out float inner, out float ramp, out float h);
+                    // Foothill lowland: open land; rocks only where a neighbor's edge cliff fades out
+                    if (side.open && h < 2f)
+                    {
+                        z += settings.rockSpacing * 0.5f;
+                        continue;
+                    }
                     bool needRocks = side.style != ChunkBoundaryStyle.Cliff || h < rockFillHeight;
                     if (!needRocks)
                     {
@@ -1075,6 +1204,7 @@ namespace EndlessSurvival.World
 
             SpawnShoreRocks(mb, container, chunk, terrain);
             SpawnCanyonRivers(container);
+            SpawnLowlandEdgeWall(container, chunk);
 
             if (mb.VertexCount > 0)
             {
@@ -1082,6 +1212,23 @@ namespace EndlessSurvival.World
                 container.gameObject.AddComponent<MeshFilter>().sharedMesh = _rockMesh;
                 container.gameObject.AddComponent<MeshRenderer>().sharedMaterials = new[] { rockMat, mossMat };
             }
+        }
+
+        [Header("Dağ Eteği")]
+        [Tooltip("Alçak taraftaki görünmez duvarın chunk merkezine uzaklığı (oyuncu açık araziden ufka yürüyemesin)")]
+        public float lowlandEdgeWallDistance = 248f;
+
+        /// <summary>
+        /// Foothill lowland without a sea: open land with no cliff, so an invisible wall keeps the player inside.
+        /// </summary>
+        private void SpawnLowlandEdgeWall(Transform container, Chunk chunk)
+        {
+            if (_foothillLowSign == 0f || chunk == null || chunk.HasSea) return;
+            var wall = new GameObject("Lowland_EdgeWall");
+            wall.transform.SetParent(container, false);
+            var box = wall.AddComponent<BoxCollider>();
+            box.center = new Vector3(_foothillLowSign * lowlandEdgeWallDistance, _baselineY + 30f, _length * 0.5f);
+            box.size = new Vector3(2f, 120f, _length);
         }
 
         /// <summary>
@@ -1146,7 +1293,7 @@ namespace EndlessSurvival.World
 
             if (_mtnSides != null)
             {
-                PaintMountain(td, heights, layers[0]);
+                PaintMountain(td, heights, layers[0], terrainXOffset);
                 return;
             }
 
@@ -1203,16 +1350,20 @@ namespace EndlessSurvival.World
         /// only above <see cref="alpineSnowLine"/>. Toward a non-mountain neighbor everything fades back to grass.
         /// Layers: [grass, snow, rock].
         /// </summary>
-        private void PaintMountain(TerrainData td, float[,] heights, TerrainLayer grass)
+        private void PaintMountain(TerrainData td, float[,] heights, TerrainLayer grass, float terrainXOffset)
         {
             TerrainLayer snow = TerrainLayerLibrary.Get("Layer_Snow", snowGroundColor);
             TerrainLayer rock = TerrainLayerLibrary.Get("Layer_MountainRock", mountainRockColor);
             if (snow == null || rock == null) return;
 
+            // Foothills with a coast lowland: a 4th layer for the beach
+            TerrainLayer sand = _seaIndex >= 0 ? GetSandLayer() : null;
+            int layerCount = sand != null ? 4 : 3;
+
             TerrainLayer[] layers = td.terrainLayers;
-            if (layers.Length != 3 || layers[1] != snow || layers[2] != rock)
+            if (layers.Length != layerCount || layers[1] != snow || layers[2] != rock || (sand != null && layers[3] != sand))
             {
-                td.terrainLayers = new[] { grass, snow, rock };
+                td.terrainLayers = sand != null ? new[] { grass, snow, rock, sand } : new[] { grass, snow, rock };
             }
             RoadTerrainAdapter.LimitRuntimeAlphamapResolution(td);
             int res = td.alphamapResolution;
@@ -1235,27 +1386,43 @@ namespace EndlessSurvival.World
                 }
             }
 
-            bool snowy = _mtnVariant == MountainVariant.Snowy;
-            var alphas = new float[res, res, 3];
+            // Foothills: the lowland is never snowed over (snow only above the alpine snow line, i.e. up the mountain)
+            bool snowy = _mtnVariant == MountainVariant.Snowy && _foothillLowSign == 0f;
+            var alphas = new float[res, res, layerCount];
             for (int y = 0; y < res; y++)
             {
                 float nz = y / (res - 1f);
-                float mtnW = GetMountainWeight(nz * size.z);
+                float localZ = nz * size.z;
+                float mtnW = GetMountainWeight(localZ);
                 float rowRoadY = _roadY[Mathf.Clamp(Mathf.RoundToInt(nz * (_rows - 1)), 0, _rows - 1)];
                 for (int x = 0; x < res; x++)
                 {
                     float nx = x / (res - 1f);
                     float slope = SampleNormalizedHeight(slopes, hRes, nx, nz);
+                    float h = SampleNormalizedHeight(heights, hRes, nx, nz) * size.y;
 
                     float rockW = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(mountainRockSlope, mountainRockSlope + 0.45f, slope)) * mtnW;
                     float snowW = mtnW;
                     if (!snowy)
                     {
-                        float aboveRoad = SampleNormalizedHeight(heights, hRes, nx, nz) * size.y - rowRoadY;
+                        float aboveRoad = h - rowRoadY;
                         snowW *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(alpineSnowLine, alpineSnowLine + 10f, aboveRoad));
                     }
                     snowW = Mathf.Max(0f, snowW - rockW);
-                    alphas[y, x, 0] = 1f - snowW - rockW;
+
+                    float sandW = 0f;
+                    if (sand != null)
+                    {
+                        float localX = terrainXOffset + nx * size.x;
+                        sandW = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(WorldConstants.SeaLevel + 2.5f, WorldConstants.SeaLevel + 6f, h));
+                        sandW *= GetSeaWeight(localX, localZ);
+                        float rest = 1f - sandW;
+                        snowW *= rest;
+                        rockW *= rest;
+                        alphas[y, x, 3] = sandW;
+                    }
+
+                    alphas[y, x, 0] = Mathf.Max(0f, 1f - snowW - rockW - sandW);
                     alphas[y, x, 1] = snowW;
                     alphas[y, x, 2] = rockW;
                 }
@@ -1395,16 +1562,20 @@ namespace EndlessSurvival.World
 
         private BiomeBoundarySettings GetSettings(Chunk chunk)
         {
-            if (biomeSettings == null || biomeSettings.Count == 0) return null;
-            if (chunk != null)
+            if (settingsMigrated || legacyBiomeSettings == null || legacyBiomeSettings.Count == 0) return settings;
+            return LegacySettings(chunk != null ? chunk.biomeType : ChunkBiomeType.Forest);
+        }
+
+        /// <summary>Old one-list-for-all-biomes setup: the entry of that biome, else the first (also used by the migration tool).</summary>
+        public BiomeBoundarySettings LegacySettings(ChunkBiomeType biome)
+        {
+            if (legacyBiomeSettings == null || legacyBiomeSettings.Count == 0) return settings;
+            for (int i = 0; i < legacyBiomeSettings.Count; i++)
             {
-                for (int i = 0; i < biomeSettings.Count; i++)
-                {
-                    if (biomeSettings[i] != null && biomeSettings[i].biome == chunk.biomeType)
-                        return biomeSettings[i];
-                }
+                if (legacyBiomeSettings[i] != null && legacyBiomeSettings[i].biome == biome)
+                    return legacyBiomeSettings[i];
             }
-            return biomeSettings[0];
+            return legacyBiomeSettings[0];
         }
 
         private int GetPlanSeed(Chunk chunk)
@@ -1432,11 +1603,11 @@ namespace EndlessSurvival.World
         /// <summary>
         /// Seam i, chunk (i-1)'in sonu ile chunk i'nin başıdır. Her iki chunk aynı değeri hesaplar.
         /// </summary>
-        private float SeamHeight(int worldSeed, int seamIndex, int side)
+        private static float SeamHeight(WorldSeamSettings seam, int worldSeed, int seamIndex, int side)
         {
             int seed = SeededRandom.Combine(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "boundary_seam"), seamIndex), side);
             var rng = new SeededRandom(seed);
-            return rng.Chance(seamCliffChance) ? rng.Range(seamMinHeight, seamMaxHeight) : 0f;
+            return rng.Chance(seam.seamCliffChance) ? rng.Range(seam.seamMinHeight, seam.seamMaxHeight) : 0f;
         }
 
         private void SampleSide(SideProfile side, float z, out float inner, out float ramp, out float height)
