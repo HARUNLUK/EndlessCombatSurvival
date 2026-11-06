@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using EndlessSurvival.World.Road;
@@ -6,8 +7,10 @@ using EndlessSurvival.World.Road;
 namespace EndlessSurvival.World.Editor
 {
     /// <summary>
-    /// Regenerates the chunk's road with random curves whenever Road Type / Cross Section /
-    /// Elevation Type is changed in the Inspector, and offers a manual re-roll button.
+    /// Lone chunk inspector. The preview seed and the options are linked both ways (ChunkPreviewSeed):
+    /// typing a seed rolls every option (type, sea side, mountain layout, road...); changing an option by hand
+    /// pins it into the seed as "|key=value", so the same seed always gives the same chunk.
+    /// Chunks spawned by ChunkManager keep its plan (only the old road / cross-section refresh applies).
     /// </summary>
     [CustomEditor(typeof(Chunk))]
     public class ChunkEditor : UnityEditor.Editor
@@ -15,73 +18,51 @@ namespace EndlessSurvival.World.Editor
         public override void OnInspectorGUI()
         {
             Chunk chunk = (Chunk)target;
-            var oldRoad = chunk.roadType;
-            var oldCross = chunk.crossSectionType;
-            var oldElevation = chunk.currentElevationType;
-            float oldParam = chunk.currentElevationParam;
-            string oldSeed = chunk.editorPreviewSeed;
-            var oldBiome = chunk.biomeType;
-            var oldSeaSide = chunk.seaSide;
-            bool oldCoastStart = chunk.coastContinuesAtStart;
-            bool oldCoastEnd = chunk.coastContinuesAtEnd;
-            var oldMountainLayout = chunk.mountainLayout;
-            var oldVariant = chunk.mountainVariant;
-            bool oldUphill = chunk.uphillOnRight;
-            var oldLowland = chunk.foothillLowland;
-            float oldEntryX = chunk.roadEntryX;
-            float oldExitX = chunk.roadExitX;
-            float oldEntryY = chunk.roadEntryY;
-            float oldExitY = chunk.roadExitY;
+            bool seeded = ChunkPreviewSeed.Supports(chunk);
+            serializedObject.Update();
 
-            DrawDefaultInspector();
+            Dictionary<string, string> before = ChunkPreviewSeed.Capture(chunk);
+            string newSeed = null;
 
-            // Mountain previews: in play mode ChunkManager moves the road to the ledge side and up the mountain; a lone
-            // chunk keeps a centered road at 20m, where a ledge (or foothill slope) cannot show. Do the same here.
-            if (chunk.IsMountain && (chunk.mountainLayout != oldMountainLayout || chunk.uphillOnRight != oldUphill
-                                     || chunk.IsFoothill && chunk.foothillLowland != oldLowland))
+            if (seeded) newSeed = DrawSeedSection(chunk);
+
+            DrawPropertiesExcluding(serializedObject, "editorPreviewSeed");
+            serializedObject.ApplyModifiedProperties();
+
+            Dictionary<string, string> after = ChunkPreviewSeed.Capture(chunk);
+
+            if (seeded)
             {
-                Undo.RecordObject(chunk, "Mountain Preview Road");
-                PrepareMountainPreviewRoad(chunk);
+                if (newSeed != null)
+                {
+                    // Seed typed / rolled: every option follows it
+                    Undo.RecordObject(chunk, "Preview Seed");
+                    chunk.editorPreviewSeed = newSeed;
+                    ChunkPreviewSeed.Apply(chunk);
+                }
+                else if (Changed(before, after))
+                {
+                    // Option changed by hand: rewrite its letter in the seed, then rebuild from the seed
+                    Undo.RecordObject(chunk, "Preview Option");
+                    chunk.editorPreviewSeed = ChunkPreviewSeed.WriteChanges(chunk, chunk.editorPreviewSeed, before, after);
+                    ChunkPreviewSeed.Apply(chunk);
+                }
             }
-
-            // Biome / coast / mountain change: rebuild the whole preview (terrain, sea, rocks, mountains, trees) without re-rolling the road
-            if (chunk.biomeType != oldBiome || chunk.seaSide != oldSeaSide
-                || chunk.coastContinuesAtStart != oldCoastStart || chunk.coastContinuesAtEnd != oldCoastEnd
-                || chunk.mountainLayout != oldMountainLayout || chunk.mountainVariant != oldVariant
-                || chunk.uphillOnRight != oldUphill || chunk.foothillLowland != oldLowland)
+            else if (!Application.isPlaying)
             {
-                chunk.GenerateEditorPreview(chunk.GetEditorPreviewSeed());
-            }
-
-            // Moving the road's entry/exit sideways needs a new road shape too
-            bool roadChanged = chunk.roadType != oldRoad
-                || chunk.currentElevationType != oldElevation
-                || chunk.editorPreviewSeed != oldSeed
-                || !Mathf.Approximately(chunk.currentElevationParam, oldParam)
-                || !Mathf.Approximately(chunk.roadEntryX, oldEntryX)
-                || !Mathf.Approximately(chunk.roadExitX, oldExitX)
-                || !Mathf.Approximately(chunk.roadEntryY, oldEntryY)
-                || !Mathf.Approximately(chunk.roadExitY, oldExitY);
-            bool crossChanged = chunk.crossSectionType != oldCross;
-
-            if (roadChanged)
-            {
-                Regenerate(chunk);
-            }
-            else if (crossChanged)
-            {
-                var gen = chunk.GetComponentInChildren<RoadGenerator>();
-                if (gen != null) gen.ApplyCrossSectionPreset(chunk.crossSectionType);
+                // Spawned by ChunkManager (or a prefab asset): just reflect road edits
+                if (Differs(before, after, ChunkPreviewSeed.Slot.Road, ChunkPreviewSeed.Slot.Elevation, ChunkPreviewSeed.Slot.Param,
+                        ChunkPreviewSeed.Slot.EntryX, ChunkPreviewSeed.Slot.ExitX, ChunkPreviewSeed.Slot.EntryY, ChunkPreviewSeed.Slot.ExitY))
+                    Regenerate(chunk);
+                else if (Differs(before, after, ChunkPreviewSeed.Slot.Cross))
+                {
+                    var gen = chunk.GetComponentInChildren<RoadGenerator>();
+                    if (gen != null) gen.ApplyCrossSectionPreset(chunk.crossSectionType);
+                }
             }
 
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Editor Preview & Vegetation Controls", EditorStyles.boldLabel);
-
-            GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
-            if (GUILayout.Button("Randomize Road (Yeniden Rastgele)", GUILayout.Height(28)))
-            {
-                Regenerate(chunk);
-            }
 
             GUI.backgroundColor = new Color(0.2f, 0.7f, 1.0f);
             if (GUILayout.Button("Refresh All Preview (Ağaçlar + Kamp + Loot + Kenarlar)", GUILayout.Height(28)))
@@ -117,92 +98,135 @@ namespace EndlessSurvival.World.Editor
             GUI.backgroundColor = Color.white;
         }
 
-        /// <summary>
-        /// Ledge: road along the uphill side at 90m from the center and 100m up, so the precipice and canyon show.
-        /// Foothill: road up on the slope (60m). Valley/Hillside: centered road. Only touches roads still at the
-        /// defaults (centered / baseline height) or set by this method before, so hand-tuned values stay.
-        /// </summary>
-        private static void PrepareMountainPreviewRoad(Chunk chunk)
+        private const string SeedControl = "ChunkPreviewSeedField";
+        // Text being typed into the seed field (applied on Enter, the Uygula button or leaving the field)
+        private string _typedSeed;
+        private string _lastSeed;
+        private bool _seedFocused;
+
+        /// <summary>Seed field and roll buttons. Returns a new seed to apply, or null.</summary>
+        private string DrawSeedSection(Chunk chunk)
         {
-            const float ledgeOffset = 90f, ledgeHeight = 100f, foothillHeight = 60f;
-            float uphill = chunk.uphillOnRight ? 1f : -1f;
-            float baseY = chunk.baseElevation;
-            bool atBase = Mathf.Approximately(chunk.roadEntryY, baseY) && Mathf.Approximately(chunk.roadExitY, baseY);
-            bool presetHeight = atBase
-                || (Mathf.Approximately(chunk.roadEntryY, ledgeHeight) && Mathf.Approximately(chunk.roadExitY, ledgeHeight))
-                || (Mathf.Approximately(chunk.roadEntryY, foothillHeight) && Mathf.Approximately(chunk.roadExitY, foothillHeight));
-            bool presetX = (Mathf.Approximately(chunk.roadEntryX, 0f) || Mathf.Approximately(Mathf.Abs(chunk.roadEntryX), ledgeOffset))
-                           && (Mathf.Approximately(chunk.roadExitX, 0f) || Mathf.Approximately(Mathf.Abs(chunk.roadExitX), ledgeOffset));
+            string result = null;
+            EditorGUILayout.LabelField("Önizleme Seed'i (tüm seçenekleri belirler)", EditorStyles.boldLabel);
 
-            float x, y;
-            if (chunk.IsFoothill) { x = 0f; y = foothillHeight; }
-            else if (chunk.mountainLayout == MountainLayout.Ledge) { x = uphill * ledgeOffset; y = ledgeHeight; }
-            else { x = 0f; y = presetHeight ? baseY : chunk.roadEntryY; }
+            string current = chunk.editorPreviewSeed ?? "";
+            // Seed changed elsewhere (pins, buttons, undo): show it, unless the user is typing
+            if (_typedSeed == null || (_lastSeed != current && !_seedFocused)) _typedSeed = current;
+            _lastSeed = current;
 
-            if (presetX) chunk.roadEntryX = chunk.roadExitX = x;
-            if (presetHeight) chunk.roadEntryY = chunk.roadExitY = y;
-            EditorUtility.SetDirty(chunk);
+            Event e = Event.current;
+            bool enter = e.type == EventType.KeyDown && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+                         && GUI.GetNameOfFocusedControl() == SeedControl;
+
+            EditorGUILayout.BeginHorizontal();
+            GUI.SetNextControlName(SeedControl);
+            _typedSeed = EditorGUILayout.TextField(
+                new GUIContent("Preview Seed", "Herhangi bir metin yaz + Enter (veya Uygula): tip, deniz tarafı, dağ yerleşimi, yol vb. hepsi bu seed'den seçilir. " +
+                                               "Aşağıdan elle değiştirdiğin seçenekler seed'e |anahtar=değer olarak eklenir."),
+                _typedSeed);
+            bool pending = _typedSeed != current;
+            GUI.backgroundColor = pending ? new Color(1f, 0.85f, 0.3f) : Color.white;
+            using (new EditorGUI.DisabledScope(!pending))
+            {
+                if (GUILayout.Button("Uygula", GUILayout.Width(60))) result = _typedSeed;
+            }
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            bool focused = GUI.GetNameOfFocusedControl() == SeedControl;
+            if (e.type == EventType.Repaint || e.type == EventType.Layout)
+            {
+                // Left the field with unapplied text: apply it
+                if (_seedFocused && !focused && pending) result = _typedSeed;
+                _seedFocused = focused;
+            }
+            if (enter && pending)
+            {
+                result = _typedSeed;
+                e.Use();
+            }
+            if (pending && result == null)
+                EditorGUILayout.HelpBox("Enter'a bas veya Uygula'ya tıkla.", MessageType.None);
+
+            EditorGUILayout.BeginHorizontal();
+            GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
+            if (GUILayout.Button(new GUIContent("🎲 Yeni Seed", "Her şey yeni: seçenekler + yol kıvrımı / kamp / ağaçlar"), GUILayout.Height(24)))
+                result = ChunkPreviewSeed.NewSeed();
+            if (GUILayout.Button(new GUIContent("🎲 Seçenekler", "Sadece seçenek harfleri yeni ('-' öncesi); kıvrım / kamp / ağaçlar aynı"), GUILayout.Height(24)))
+                result = ChunkPreviewSeed.ShuffleOptions(chunk.editorPreviewSeed);
+            if (GUILayout.Button(new GUIContent("🎲 Şekil", "Seçenekler aynı; yol kıvrımı / kamp / ağaçlar yeni ('-' sonrası)"), GUILayout.Height(24)))
+                result = ChunkPreviewSeed.ShuffleShape(chunk.editorPreviewSeed);
+            GUI.backgroundColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+
+            if (string.IsNullOrEmpty(chunk.editorPreviewSeed))
+                EditorGUILayout.HelpBox("Seed boş: bir şey yaz ya da bir seçeneği değiştir, seed oluşur.", MessageType.None);
+
+            _showLegend = EditorGUILayout.Foldout(_showLegend, "Seed harfleri (her harf bir seçenek, '-' sonrası rastgelelik)", true);
+            if (_showLegend) DrawLegend(chunk);
+
+            EditorGUILayout.Space(4);
+            return result;
         }
 
-        /// <summary>Rolls a new random road matching the chunk's road type and rebuilds mesh + terrain.</summary>
+        private bool _showLegend;
+
+        /// <summary>Position, current letter and meaning of each option letter.</summary>
+        private static void DrawLegend(Chunk chunk)
+        {
+            int[] sym = ChunkPreviewSeed.Symbols(chunk.editorPreviewSeed);
+            var mini = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true, richText = true };
+            EditorGUI.indentLevel++;
+            foreach (ChunkPreviewSeed.Slot slot in System.Enum.GetValues(typeof(ChunkPreviewSeed.Slot)))
+            {
+                int i = (int)slot;
+                string letter = sym != null ? ChunkPreviewSeed.Alphabet[sym[i]].ToString() : "-";
+                EditorGUILayout.LabelField((i + 1) + ". <b>" + letter + "</b>  " + ChunkPreviewSeed.SlotLabel(slot) + ":  "
+                                           + ChunkPreviewSeed.SlotValues(chunk, slot), mini);
+            }
+            EditorGUILayout.LabelField("Harf sayısı seçenekten fazlaysa başa döner (Tip 5 taneyse f = a). Eksik harfler metinden türetilir.", mini);
+            EditorGUI.indentLevel--;
+        }
+
+        private static bool Changed(Dictionary<string, string> before, Dictionary<string, string> after)
+        {
+            foreach (var kv in after)
+                if (!before.TryGetValue(kv.Key, out string old) || old != kv.Value) return true;
+            return false;
+        }
+
+        private static bool Differs(Dictionary<string, string> before, Dictionary<string, string> after, params ChunkPreviewSeed.Slot[] slots)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                string key = slots[i].ToString();
+                if (before[key] != after[key]) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Rebuilds the road from the chunk's road type / elevation fields, then terrain, trees and preview.</summary>
         public static void Regenerate(Chunk chunk)
         {
             var gen = chunk.GetComponentInChildren<RoadGenerator>();
             var spline = chunk.GetComponentInChildren<RoadSpline>();
             if (gen == null || spline == null) return;
 
-            RoadCurveSettings settings = chunk.curveSettings ?? new RoadCurveSettings();
-
-            bool curvy = chunk.roadType == ChunkRoadType.CurvedLeft
-                || chunk.roadType == ChunkRoadType.CurvedRight
-                || chunk.roadType == ChunkRoadType.HazardZone;
-            bool sharp = chunk.roadType == ChunkRoadType.HazardZone;
-
-            float param = chunk.currentElevationParam;
-            if (chunk.currentElevationType != RoadElevationType.Flat && param <= 0f) param = 12f;
+            // Lone chunks: same options, new bends (the part after '-')
+            if (ChunkPreviewSeed.Supports(chunk) && !string.IsNullOrEmpty(chunk.editorPreviewSeed))
+            {
+                Undo.RecordObject(chunk, "Randomize Road");
+                chunk.editorPreviewSeed = ChunkPreviewSeed.ShuffleShape(chunk.editorPreviewSeed);
+                ChunkPreviewSeed.Apply(chunk);
+                return;
+            }
 
             Undo.RecordObject(spline, "Randomize Road");
-            
-            int seed = string.IsNullOrEmpty(chunk.editorPreviewSeed) 
-                ? new System.Random().Next() 
-                : SeededRandom.HashString(chunk.editorPreviewSeed);
-            var editorRng = new SeededRandom(seed);
-            
-            float peak = spline.SetProceduralPreset(settings, curvy, sharp, chunk.currentElevationType,
-                param, chunk.currentElevationType == RoadElevationType.RollingHills ? param * 0.7f : param, editorRng,
-                chunk.roadEntryX, chunk.roadExitX, chunk.roadEntryY, chunk.roadExitY);
-
-            // Honor requested side: CurvedRight = biggest bend to +X, CurvedLeft = -X
-            // (mirroring is only possible for a centered road; an off-center one must keep its entry/exit X)
-            bool centered = Mathf.Abs(chunk.roadEntryX) < 0.01f && Mathf.Abs(chunk.roadExitX) < 0.01f;
-            bool wantRight = chunk.roadType == ChunkRoadType.CurvedRight;
-            bool wantLeft = chunk.roadType == ChunkRoadType.CurvedLeft;
-            if (centered && ((wantRight && peak < 0f) || (wantLeft && peak > 0f)))
-            {
-                for (int i = 0; i < spline.waypoints.Count; i++)
-                {
-                    Vector3 p = spline.waypoints[i];
-                    p.x = -p.x;
-                    spline.waypoints[i] = p;
-                }
-            }
+            ChunkPreviewSeed.BuildManualRoad(chunk, spline, new SeededRandom(new System.Random().Next()));
             EditorUtility.SetDirty(spline);
-
             gen.ApplyCrossSectionPreset(chunk.crossSectionType);
-
-            Terrain terrain = chunk.GetComponentInChildren<Terrain>();
-            if (terrain != null)
-            {
-                RoadTerrainAdapter.ConformTerrainToRoad(terrain, spline, gen, true);
-            }
-
-            var vegSpawner = chunk.GetComponentInChildren<ChunkVegetationSpawner>();
-            if (vegSpawner != null)
-            {
-                vegSpawner.GenerateVegetation();
-            }
-
-            chunk.GenerateEditorPreview(seed);
+            ChunkPreviewSeed.RebuildPreview(chunk, spline, gen);
         }
     }
 }

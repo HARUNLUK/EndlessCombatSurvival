@@ -22,18 +22,23 @@ namespace EndlessSurvival.World.Editor
                 Undo.RegisterCreatedObjectUndo(go, "Create ChunkManager");
             }
 
-            // Every chunk type prefab in Assets/Prefabs/Chunks that is not in the list yet is added
-            // (the old single base prefab is skipped once real type prefabs exist)
-            List<Chunk> prefabs = FindChunkTypePrefabs();
+            if (mgr.chunkPrefab == null)
+            {
+                var shared = AssetDatabase.LoadAssetAtPath<GameObject>(ChunkProfileMigration.DefaultPrefabPath);
+                if (shared != null) mgr.chunkPrefab = shared.GetComponent<Chunk>();
+            }
+
+            // Every chunk type profile in the profile folder that is not in the list yet is added
+            List<ChunkTypeProfile> profiles = FindChunkTypeProfiles();
             if (mgr.chunkTypes == null) mgr.chunkTypes = new List<ChunkManager.ChunkTypeEntry>();
             int added = 0;
-            foreach (Chunk prefab in prefabs)
+            foreach (ChunkTypeProfile profile in profiles)
             {
-                if (mgr.chunkTypes.Exists(e => e != null && e.prefab == prefab)) continue;
-                bool mountain = prefab.biomeType == ChunkBiomeType.Mountain;
+                if (mgr.chunkTypes.Exists(e => e != null && e.profile == profile)) continue;
+                bool mountain = profile.biome == ChunkBiomeType.Mountain;
                 mgr.chunkTypes.Add(new ChunkManager.ChunkTypeEntry
                 {
-                    prefab = prefab,
+                    profile = profile,
                     weight = 30,
                     minLength = mountain ? 4 : 2,
                     maxLength = mountain ? 7 : 4
@@ -60,25 +65,16 @@ namespace EndlessSurvival.World.Editor
             Debug.Log($"[SetupSceneChunkManager] ChunkManager: {added} yeni chunk tipi eklendi (toplam {mgr.chunkTypes.Count}). Sahne kaydedildi.");
         }
 
-        /// <summary>All chunk prefabs in Assets/Prefabs/Chunks, without the legacy base prefab when type prefabs exist.</summary>
-        public static List<Chunk> FindChunkTypePrefabs()
+        /// <summary>All chunk type profiles in the project.</summary>
+        public static List<ChunkTypeProfile> FindChunkTypeProfiles()
         {
-            string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs/Chunks" });
-            var prefabs = new List<Chunk>();
-            Chunk legacy = null;
-
-            foreach (string guid in guids)
+            var profiles = new List<ChunkTypeProfile>();
+            foreach (string guid in AssetDatabase.FindAssets("t:ChunkTypeProfile"))
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                GameObject pgo = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                Chunk c = pgo != null ? pgo.GetComponent<Chunk>() : null;
-                if (c == null || prefabs.Contains(c)) continue;
-                if (path == ChunkTypeSetupUtility.LegacyPrefabPath) { legacy = c; continue; }
-                prefabs.Add(c);
+                var p = AssetDatabase.LoadAssetAtPath<ChunkTypeProfile>(AssetDatabase.GUIDToAssetPath(guid));
+                if (p != null && !profiles.Contains(p)) profiles.Add(p);
             }
-
-            if (prefabs.Count == 0 && legacy != null) prefabs.Add(legacy);
-            return prefabs;
+            return profiles;
         }
     }
 }

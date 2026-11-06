@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51c7dc95999318b45b55371307be6aee, type: 3}
+  m_Name: ChunkType_Mountain
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkTypeProfile
+  displayName: "Da\u011F"
+  biome: 4
+  flatSeamEdges: 0
+  allowSpecialChunks: 0
+  elevationConfig:
+    elevationChance: 0.75
+    maxHillHeight: 16
+    minHillHeight: 8
+    maxDipDepth: 15
+    minDipDepth: 7
+    hillWeight: 25
+    valleyWeight: 25
+    rollingHillsWeight: 20
+    mountainPassWeight: 20
+    elevatedChicaneWeight: 15
+    flatWeight: 15
+  curveSettings:
+    curveChance: 0.7
+    minBends: 2
+    maxBends: 5
+    minShift: 15
+    maxShift: 50
+    maxLateral: 70
+    maxSlope: 0.55
+    minTurnRadius: 35
+    lengthVariance: 2.5
+  roadStyle:
+    curveChanceMultiplier: 1
+    sharpCurveChance: 0.15
+    alwaysCurvy: 1
+    forceCrossSection: 0
+    forcedCrossSection: 4
+  mountainSettings:
+    snowyChance: 0.6
+    ledgeChance: 0.7
+    ledgeRoadMinOffset: 80
+    ledgeRoadMaxOffset: 100
+    roadMinHeight: 100
+    roadMaxHeight: 140
+    roadClimbPerChunk: 40
+    hillsideChance: 0.4
+    foothills: 0
+    lowlandForestWeight: 30
+    lowlandFieldWeight: 30
+    lowlandLandThenCoastWeight: 20
+    lowlandCoastWeight: 20
+    lowlandSlopeMin: 8
+    lowlandSlopeMax: 16
+    lowlandSlopeStart: 2.5
+    landStripMin: 50
+    landStripMax: 100
+    coastStripMin: 10
+    coastStripMax: 30
+  boundary:
+    biome: 4
+    cliffWeight: 40
+    rocksWeight: 25
+    cliffAndRocksWeight: 35
+    minCliffHeight: 35
+    maxCliffHeight: 65
+    minRampWidth: 18
+    maxRampWidth: 38
+    minInnerEdge: 140
+    maxInnerEdge: 190
+    minRockSize: 14
+    maxRockSize: 30
+    rockSpacing: 22
+    rockColor: {r: 0.36, g: 0.36, b: 0.34, a: 1}
+    mossColor: {r: 0.26, g: 0.33, b: 0.21, a: 1}
+  backdrop:
+    biome: 4
+    riseDistance: 55
+    minAboveEdge: 20
+    baseHeight: 130
+    peakAmplitude: 380
+    detailAmplitude: 45
+    ridgeFrequency: 0.0032
+    rockLine: 40
+    snowLine: 70
+    rockSlope: 0.62
+    forestColor: {r: 0.86, g: 0.89, b: 0.93, a: 1}
+    rockColor: {r: 0.4, g: 0.4, b: 0.43, a: 1}
+    snowColor: {r: 0.95, g: 0.96, b: 0.98, a: 1}
+  alpineBackdrop:
+    biome: 4
+    riseDistance: 55
+    minAboveEdge: 20
+    baseHeight: 120
+    peakAmplitude: 340
+    detailAmplitude: 40
+    ridgeFrequency: 0.0032
+    rockLine: 110
+    snowLine: 240
+    rockSlope: 0.62
+    forestColor: {r: 0.2, g: 0.33, b: 0.17, a: 1}
+    rockColor: {r: 0.4, g: 0.39, b: 0.37, a: 1}
+    snowColor: {r: 0.94, g: 0.95, b: 0.97, a: 1}
+  foothillLowlandBackdrop:
+    biome: 6
+    riseDistance: 1500
+    minAboveEdge: 0
+    baseHeight: 12
+    peakAmplitude: 75
+    detailAmplitude: 6
+    ridgeFrequency: 0.0011
+    rockLine: 400
+    snowLine: 2000
+    rockSlope: 0.35
+    forestColor: {r: 0.24, g: 0.4, b: 0.2, a: 1}
+    rockColor: {r: 0.3, g: 0.4, b: 0.24, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}

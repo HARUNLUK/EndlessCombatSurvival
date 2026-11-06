@@ -466,11 +466,11 @@ MonoBehaviour:
   waypoints:
   - {x: -0, y: 20, z: 0}
   - {x: -0, y: 26.084864, z: 60}
-  - {x: 21.740562, y: 31.999619, z: 124.36522}
-  - {x: -0.6196637, y: 28.152248, z: 190.56502}
-  - {x: 12.880654, y: 18.220829, z: 266.98364}
-  - {x: -0, y: 14.586448, z: 305.73053}
-  - {x: -0, y: 11.992852, z: 350.56638}
+  - {x: 12.117313, y: 31.58412, z: 103.98832}
+  - {x: 25.4154, y: 28.490284, z: 187.45308}
+  - {x: -0, y: 21.769407, z: 238.22331}
+  - {x: -0, y: 16.105988, z: 288.3582}
+  - {x: -0, y: 11.600354, z: 375.7301}
   - {x: -0, y: 15.740597, z: 440}
   - {x: -0, y: 20, z: 500}
   resolution: 100
@@ -729,8 +729,9 @@ GameObject:
   - component: {fileID: 779755460940606319}
   - component: {fileID: 8740810787342245833}
   - component: {fileID: 8215153913419155415}
+  - component: {fileID: 2050547467165034594}
   m_Layer: 0
-  m_Name: Chunk_Coast
+  m_Name: Chunk_Default
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -775,10 +776,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d51ba36df11a1c44a892fce921e8f739, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.Chunk
-  typeName: "K\u0131y\u0131"
+  previewProfile: {fileID: 0}
+  typeName: 
   generationMode: 0
   flatSeamEdges: 0
-  biomeType: 5
+  biomeType: 0
   roadType: 2
   crossSectionType: 1
   difficultyTier: 1
@@ -842,7 +844,6 @@ MonoBehaviour:
     landStripMax: 100
     coastStripMin: 10
     coastStripMax: 30
-  legacyOverrideElevationSettings: 0
   currentElevationType: 3
   currentElevationParam: 0
   chunkLength: 500
@@ -935,7 +936,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkBoundaryGenerator
   boundaryEnabled: 1
   settings:
-    biome: 5
+    biome: 0
     cliffWeight: 40
     rocksWeight: 25
     cliffAndRocksWeight: 35
@@ -950,13 +951,6 @@ MonoBehaviour:
     rockSpacing: 22
     rockColor: {r: 0.36, g: 0.36, b: 0.34, a: 1}
     mossColor: {r: 0.26, g: 0.33, b: 0.21, a: 1}
-  legacyBiomeSettings: []
-  settingsMigrated: 1
-  legacySeamInnerEdge: 175
-  legacySeamRampWidth: 28
-  legacySeamCliffChance: 0.6
-  legacySeamMinHeight: 30
-  legacySeamMaxHeight: 55
   roadClearance: 70
   poiClearance: 55
   rockFillHeight: 18
@@ -1024,7 +1018,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkBackdropGenerator
   backdropEnabled: 1
   settings:
-    biome: 5
+    biome: 0
     riseDistance: 140
     minAboveEdge: 12
     baseHeight: 70
@@ -1065,12 +1059,6 @@ MonoBehaviour:
     forestColor: {r: 0.24, g: 0.4, b: 0.2, a: 1}
     rockColor: {r: 0.3, g: 0.4, b: 0.24, a: 1}
     snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}
-  legacyBiomeSettings: []
-  settingsMigrated: 1
-  legacyStripDepth: 2600
-  legacyBlendDistance: 250
-  legacyRowsAlongRoad: 40
-  legacyColumnsOutward: 24
   requiredCameraFarClip: 1600
   addCollider: 1
 --- !u!114 &8215153913419155415
@@ -1137,6 +1125,86 @@ MonoBehaviour:
   trimColor: {r: 0.3, g: 0.3, b: 0.31, a: 1}
   headlightColor: {r: 0.85, g: 0.82, b: 0.65, a: 1}
   taillightColor: {r: 0.5, g: 0.07, b: 0.06, a: 1}
+--- !u!114 &2050547467165034594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3451893269036245660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54f4b152142bfd04d888b42255b4a910, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.FieldEdgeGenerator
+  fieldEdgesEnabled: 1
+  fenceTreesWeight: 30
+  fenceFarmlandWeight: 25
+  fenceCornWeight: 25
+  streamWeight: 20
+  ambientScale: 0.12
+  edgeWallDistance: 248
+  fenceLine: 150
+  postSpacing: 2.8
+  fenceHeight: 1.4
+  fenceGapChance: 0.06
+  leaningPostChance: 0.1
+  postColor: {r: 0.33, g: 0.25, b: 0.17, a: 1}
+  wireColor: {r: 0.2, g: 0.2, b: 0.21, a: 1}
+  treeRowOffset: 9
+  minTreeSpacing: 6.5
+  maxTreeSpacing: 9.5
+  treeGapChance: 0.12
+  minTreeBeltDepth: 50
+  maxTreeBeltDepth: 80
+  beltRowSpacing: 6
+  beltGapChance: 0.2
+  beltBroadChance: 0.4
+  minTreeHeight: 11
+  maxTreeHeight: 16
+  crownColor: {r: 0.17, g: 0.31, b: 0.14, a: 1}
+  trunkColor: {r: 0.3, g: 0.22, b: 0.15, a: 1}
+  furrowSpacing: 3
+  minHayBales: 4
+  maxHayBales: 12
+  hayColor: {r: 0.78, g: 0.66, b: 0.32, a: 1}
+  soilColor: {r: 0.38, g: 0.3, b: 0.22, a: 1}
+  minCornDepth: 22
+  maxCornDepth: 45
+  cornRowSpacing: 2
+  cornPlantSpacing: 1.4
+  minCornHeight: 2.3
+  maxCornHeight: 2.9
+  cornColor: {r: 0.42, g: 0.55, b: 0.18, a: 1}
+  tasselColor: {r: 0.8, g: 0.7, b: 0.35, a: 1}
+  streamCenter: 175
+  streamMeander: 18
+  streamBedHalfWidth: 3
+  streamBankWidth: 6
+  streamDepth: 2.2
+  streamTaper: 70
+  waterColor: {r: 0.12, g: 0.3, b: 0.36, a: 1}
+  bridgeChance: 0.3
+  minBridgeZ: 180
+  maxBridgeZ: 320
+  maxRiverAngle: 18
+  riverMeander: 12
+  riverHalfWidth: 9
+  riverBankWidth: 6
+  gorgeBankRatio: 1.2
+  riverWaterDepth: 2.5
+  highBridgeChance: 0.35
+  minLowClearance: 3
+  maxLowClearance: 6
+  minHighClearance: 10
+  maxHighClearance: 18
+  pierMinSpan: 18
+  pierSpacing: 16
+  hillPlateauHalfWidth: 30
+  hillFalloff: 140
+  concreteColor: {r: 0.56, g: 0.56, b: 0.54, a: 1}
+  deckColor: {r: 0.4, g: 0.4, b: 0.39, a: 1}
+  poiClearance: 35
 --- !u!1 &3964466244784687643
 GameObject:
   m_ObjectHideFlags: 0
@@ -1306,7 +1374,7 @@ Terrain:
   m_GameObject: {fileID: 7923863605287872250}
   m_Enabled: 1
   serializedVersion: 6
-  m_TerrainData: {fileID: 15600000, guid: 05238f302def93f4b94d5593e5daa3cd, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 230c7e8b2373bec4380fce9a829b3dde, type: 2}
   m_TreeDistance: 2000
   m_TreeBillboardDistance: 2000
   m_TreeCrossFadeLength: 0
@@ -1356,5 +1424,5 @@ TerrainCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_TerrainData: {fileID: 15600000, guid: 05238f302def93f4b94d5593e5daa3cd, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 230c7e8b2373bec4380fce9a829b3dde, type: 2}
   m_EnableTreeColliders: 0

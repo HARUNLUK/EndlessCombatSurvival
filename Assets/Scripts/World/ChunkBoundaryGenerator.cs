@@ -61,20 +61,9 @@ namespace EndlessSurvival.World
         [Tooltip("Kapalıysa uçurum ve kaya üretilmez")]
         public bool boundaryEnabled = true;
 
-        [Tooltip("Bu chunk tipinin kenar uçurumu / kaya ayarları (kıyıda kara tarafı)")]
+        [Tooltip("Kenar uçurumu / kaya ayarları (kıyıda kara tarafı). Prosedürel chunk'larda tip profilinden gelir (Chunk.ApplyProfile); " +
+                 "burada sadece özel (el yapımı) chunk prefab'larında ayarlanır.")]
         public BiomeBoundarySettings settings = new BiomeBoundarySettings();
-
-        // Old single-prefab setup: one list for every biome. Used until the settings are migrated
-        // (ChunkTypeSetupUtility picks this type's entry into `settings`).
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("biomeSettings")]
-        public List<BiomeBoundarySettings> legacyBiomeSettings = new List<BiomeBoundarySettings>();
-        [HideInInspector] public bool settingsMigrated = false;
-        // Seam values moved to ChunkManager.seamSettings (both neighbors must agree); kept for the migration tool
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamInnerEdge")] public float legacySeamInnerEdge = 175f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamRampWidth")] public float legacySeamRampWidth = 28f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamCliffChance")] public float legacySeamCliffChance = 0.6f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamMinHeight")] public float legacySeamMinHeight = 30f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("seamMaxHeight")] public float legacySeamMaxHeight = 55f;
 
         [Header("Güvenlik Mesafeleri")]
         [Tooltip("Yol merkezinden uçurum başlangıcına minimum mesafe")]
@@ -1562,20 +1551,7 @@ namespace EndlessSurvival.World
 
         private BiomeBoundarySettings GetSettings(Chunk chunk)
         {
-            if (settingsMigrated || legacyBiomeSettings == null || legacyBiomeSettings.Count == 0) return settings;
-            return LegacySettings(chunk != null ? chunk.biomeType : ChunkBiomeType.Forest);
-        }
-
-        /// <summary>Old one-list-for-all-biomes setup: the entry of that biome, else the first (also used by the migration tool).</summary>
-        public BiomeBoundarySettings LegacySettings(ChunkBiomeType biome)
-        {
-            if (legacyBiomeSettings == null || legacyBiomeSettings.Count == 0) return settings;
-            for (int i = 0; i < legacyBiomeSettings.Count; i++)
-            {
-                if (legacyBiomeSettings[i] != null && legacyBiomeSettings[i].biome == biome)
-                    return legacyBiomeSettings[i];
-            }
-            return legacyBiomeSettings[0];
+            return settings ?? (settings = new BiomeBoundarySettings());
         }
 
         private int GetPlanSeed(Chunk chunk)
@@ -1584,7 +1560,8 @@ namespace EndlessSurvival.World
             if (chunk.ChunkSeed != 0) return chunk.ChunkSeed;
             // Edit mode (chunk not initialized by ChunkManager): follow the editor preview seed
             if (_hasPreviewSeed) return _previewSeed;
-            return string.IsNullOrEmpty(chunk.editorPreviewSeed) ? 12345 : SeededRandom.HashString(chunk.editorPreviewSeed);
+            string seedBase = Chunk.PreviewSeedBase(chunk.editorPreviewSeed);
+            return string.IsNullOrEmpty(seedBase) ? 12345 : SeededRandom.HashString(seedBase);
         }
 
         private static ChunkBoundaryStyle PickStyle(SeededRandom rng, BiomeBoundarySettings settings)

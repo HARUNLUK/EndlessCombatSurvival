@@ -127,25 +127,16 @@ namespace EndlessSurvival.World
 
         public bool backdropEnabled = true;
 
-        [Tooltip("Bu chunk tipinin arka plan dağları (dağ tipinde karlı alt tip)")]
+        // The three looks below are overwritten per instance from the chunk's type profile (Chunk.ApplyProfile);
+        // they are authored here only on special (handcrafted) chunk prefabs.
+        [Tooltip("Arka plan dağları (dağ tipinde karlı alt tip). Prosedürel chunk'larda tip profilinden gelir.")]
         public BiomeBackdropSettings settings = new BiomeBackdropSettings();
 
-        [Tooltip("Sadece dağ tiplerinde: alpin (karsız) alt tipin arka plan ayarları")]
+        [Tooltip("Sadece dağ tiplerinde: alpin (karsız) alt tipin arka plan ayarları. Prosedürel chunk'larda tip profilinden gelir.")]
         public BiomeBackdropSettings alpineMountainSettings = BiomeBackdropSettings.AlpineMountain();
 
-        [Tooltip("Sadece Dağ Eteği tiplerinde: dağın karşısındaki alçak tarafın ufku (uzakta alçak tepeler; kıyıda deniz)")]
+        [Tooltip("Sadece Dağ Eteği tiplerinde: dağın karşısındaki alçak tarafın ufku. Prosedürel chunk'larda tip profilinden gelir.")]
         public BiomeBackdropSettings foothillLowlandSettings = BiomeBackdropSettings.Lowland();
-
-        // Old single-prefab setup: one list for every biome. Used until the settings are migrated
-        // (ChunkTypeSetupUtility picks this type's entry into `settings`).
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("biomeSettings")]
-        public List<BiomeBackdropSettings> legacyBiomeSettings = new List<BiomeBackdropSettings>();
-        [HideInInspector] public bool settingsMigrated = false;
-        // Strip mesh layout moved to ChunkManager.seamSettings (must match across types); kept for the migration tool
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("stripDepth")] public float legacyStripDepth = 2600f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("biomeBlendDistance")] public float legacyBlendDistance = 250f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("rowsAlongRoad")] public int legacyRowsAlongRoad = 40;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("columnsOutward")] public int legacyColumnsOutward = 32;
 
         [Header("Performans / Görünürlük")]
         [Tooltip("Oyun sırasında oyun kameralarının far clip değeri bundan küçükse yükseltilir (dağların kesilmemesi için). Sonradan açılan kameralar (araç kamerası vb.) da dahil.")]
@@ -191,8 +182,9 @@ namespace EndlessSurvival.World
                 Material[] materials = MaterialsFor(sideSt);
 
                 // Different type next door: both chunks use a 50/50 mix at the shared seam (the neighbor type's look on this side)
-                BiomeBackdropSettings prevSt = chunk.PrevSameType ? null : SettingsOf(chunk.prevType, chunk.PrevMountainVariant, sign, chunk.prevUphillOnRight);
-                BiomeBackdropSettings nextSt = chunk.NextSameType ? null : SettingsOf(chunk.nextType, chunk.NextMountainVariant, sign, chunk.nextUphillOnRight);
+                // (procedural neighbors share this chunk prefab's backdrop component, so its enabled flag stands for theirs)
+                BiomeBackdropSettings prevSt = chunk.PrevSameType ? null : SettingsOf(chunk.prevType, chunk.PrevMountainVariant, sign, chunk.prevUphillOnRight, SharedBackdrop(chunk));
+                BiomeBackdropSettings nextSt = chunk.NextSameType ? null : SettingsOf(chunk.nextType, chunk.NextMountainVariant, sign, chunk.nextUphillOnRight, SharedBackdrop(chunk));
 
                 var ctx = new SideContext
                 {
@@ -571,43 +563,24 @@ namespace EndlessSurvival.World
         {
             if (biome == ChunkBiomeType.Mountain && variant == MountainVariant.Alpine && alpineMountainSettings != null)
                 return alpineMountainSettings;
+            return settings;
+        }
 
-            if (settingsMigrated || legacyBiomeSettings == null || legacyBiomeSettings.Count == 0) return settings;
-            return LegacySettings(biome);
+        /// <summary>The backdrop component of the shared procedural chunk prefab (this one when there is no manager).</summary>
+        private ChunkBackdropGenerator SharedBackdrop(Chunk chunk)
+        {
+            Chunk prefab = chunk.Manager != null ? chunk.Manager.chunkPrefab : null;
+            var shared = prefab != null ? prefab.GetComponent<ChunkBackdropGenerator>() : null;
+            return shared != null ? shared : this;
         }
 
         /// <summary>
-        /// Backdrop settings of another chunk type (a neighbor) on one side, null if it has no backdrop. A foothill
-        /// neighbor shows mountains only on its mountain side (<paramref name="uphillOnRight"/>) and its lowland
-        /// horizon on the other.
+        /// Backdrop settings of a planned neighbor type on one side, null if it has no backdrop. A foothill neighbor
+        /// shows mountains only on its mountain side (<paramref name="uphillOnRight"/>) and its lowland horizon on the other.
         /// </summary>
-        public static BiomeBackdropSettings SettingsOf(Chunk type, MountainVariant variant, float sideSign, bool uphillOnRight)
+        public static BiomeBackdropSettings SettingsOf(ChunkTypeRef type, MountainVariant variant, float sideSign, bool uphillOnRight, ChunkBackdropGenerator sharedBackdrop)
         {
-            if (type == null) return null;
-            var backdrop = type.GetComponent<ChunkBackdropGenerator>();
-            if (backdrop == null || !backdrop.backdropEnabled) return null;
-            bool foothill = type.biomeType == ChunkBiomeType.Mountain && type.mountainSettings != null && type.mountainSettings.foothills;
-            if (foothill && backdrop.foothillLowlandSettings != null && Mathf.Approximately(sideSign, uphillOnRight ? -1f : 1f))
-                return backdrop.foothillLowlandSettings;
-            return backdrop.ResolveSettings(type.biomeType, variant);
-        }
-
-        /// <summary>Old one-list-for-all-biomes setup: the entry of that biome (also used by the migration tool).</summary>
-        public BiomeBackdropSettings LegacySettings(ChunkBiomeType biome)
-        {
-            if (legacyBiomeSettings != null)
-            {
-                for (int i = 0; i < legacyBiomeSettings.Count; i++)
-                {
-                    if (legacyBiomeSettings[i] != null && legacyBiomeSettings[i].biome == biome)
-                        return legacyBiomeSettings[i];
-                }
-            }
-
-            // Not in the (possibly older, serialized) list: built-in default for that biome, else the first entry
-            BiomeBackdropSettings builtIn = BiomeBackdropSettings.DefaultFor(biome);
-            if (builtIn != null) return builtIn;
-            return legacyBiomeSettings != null && legacyBiomeSettings.Count > 0 ? legacyBiomeSettings[0] : settings;
+            return type.IsValid ? type.BackdropSide(variant, sideSign, uphillOnRight, sharedBackdrop) : null;
         }
 
         private static float s_requiredFarClip;

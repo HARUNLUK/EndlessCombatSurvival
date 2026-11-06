@@ -205,14 +205,23 @@ namespace EndlessSurvival.World
     }
 
     /// <summary>
-    /// One 500x500 parcel of the endless road. Each chunk TYPE is its own prefab (Chunk_Forest, Chunk_Mountain, ...)
-    /// that carries all of its type-specific settings (road style, elevation, sub-types, generator components).
-    /// ChunkManager only holds world-wide settings and the weighted list of type prefabs it picks from.
+    /// One 500x500 parcel of the endless road. All procedural types share one prefab (ChunkManager.chunkPrefab); the
+    /// planned type's <see cref="ChunkTypeProfile"/> is applied to each instance at spawn (<see cref="ApplyProfile"/>),
+    /// so the type fields below are only the prefab's defaults. Special (handcrafted) chunks are their own prefabs and
+    /// keep the settings authored on them.
     /// </summary>
     [ExecuteAlways]
     public class Chunk : MonoBehaviour
     {
-        [Header("Chunk Tipi")]
+        [Header("Editör Önizleme Tipi")]
+        [Tooltip("Sahneye tek başına konmuş (ChunkManager'ın üretmediği) chunk'ın editör önizlemesinde kullanılacak tip profili. " +
+                 "Oyunda ChunkManager kendi planındaki tipi uygular.")]
+        public ChunkTypeProfile previewProfile;
+
+        /// <summary>The type profile applied to this instance (null for special chunks and chunks placed by hand).</summary>
+        [System.NonSerialized] public ChunkTypeProfile profile;
+
+        [Header("Chunk Tipi (profil uygulanınca ezilir; özel chunk'larda burada ayarlanır)")]
         [Tooltip("Bu tipin görünen adı (log ve chunk isimlerinde). Boşsa prefab adı kullanılır.")]
         public string typeName = "";
 
@@ -285,24 +294,24 @@ namespace EndlessSurvival.World
 
         // Type identity and neighbor types, set by ChunkManager from the type plan. Without that info (a lone chunk
         // previewed in the editor) both neighbors are assumed to be the same type, i.e. seamless.
-        /// <summary>The type prefab this chunk was spawned from (null for a chunk placed in the scene by hand).</summary>
-        [System.NonSerialized] public Chunk sourceType;
-        [System.NonSerialized] public Chunk prevType;
-        [System.NonSerialized] public Chunk nextType;
+        /// <summary>The planned type this chunk was spawned as (invalid for a chunk placed in the scene by hand).</summary>
+        [System.NonSerialized] public ChunkTypeRef sourceType;
+        [System.NonSerialized] public ChunkTypeRef prevType;
+        [System.NonSerialized] public ChunkTypeRef nextType;
         // Mountain side of the neighbors' runs (foothill neighbors show their lowland horizon on the other side)
         [System.NonSerialized] public bool prevUphillOnRight;
         [System.NonSerialized] public bool nextUphillOnRight;
 
         public string TypeName => !string.IsNullOrEmpty(typeName) ? typeName
-            : sourceType != null ? sourceType.name : name;
+            : sourceType.IsValid ? sourceType.Name : name;
 
         /// <summary>The previous chunk is the same type (a type's own seam rules apply: coast, mountain road, streams...).</summary>
-        public bool PrevSameType => !hasNeighborInfo || (prevType != null && prevType == sourceType);
-        public bool NextSameType => !hasNeighborInfo || (nextType != null && nextType == sourceType);
+        public bool PrevSameType => !hasNeighborInfo || (prevType.IsValid && prevType == sourceType);
+        public bool NextSameType => !hasNeighborInfo || (nextType.IsValid && nextType == sourceType);
 
         /// <summary>The neighbor has flat (cliff-less) edges, so boundary cliffs must come down to 0 at that seam.</summary>
-        public bool PrevFlatSeam => hasNeighborInfo && prevType != null ? prevType.flatSeamEdges : flatSeamEdges;
-        public bool NextFlatSeam => hasNeighborInfo && nextType != null ? nextType.flatSeamEdges : flatSeamEdges;
+        public bool PrevFlatSeam => hasNeighborInfo && prevType.IsValid ? prevType.FlatSeamEdges : flatSeamEdges;
+        public bool NextFlatSeam => hasNeighborInfo && nextType.IsValid ? nextType.FlatSeamEdges : flatSeamEdges;
 
         [System.NonSerialized] public bool hasNeighborInfo;
         [System.NonSerialized] public ChunkBiomeType prevBiome;
@@ -343,10 +352,56 @@ namespace EndlessSurvival.World
         [Tooltip("Sadece biomeType = Mountain iken: alt tip (karlı/alpin) ve dağ yolu ayarları")]
         public MountainTypeSettings mountainSettings = new MountainTypeSettings();
 
-        // Old single-prefab setup: "use my own elevationConfig instead of ChunkManager's global one".
-        // Only read by the chunk type migration tool (ChunkTypeSetupUtility).
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("overrideElevationSettings")]
-        public bool legacyOverrideElevationSettings = false;
+        /// <summary>
+        /// Makes this instance the given procedural type: identity, road settings and the boundary/backdrop look are
+        /// copied from the profile (copies, so the asset is never changed through the instance). Call right after
+        /// instantiating, before the chunk is initialized or built.
+        /// </summary>
+        public void ApplyProfile(ChunkTypeProfile type)
+        {
+            if (type == null) return;
+            profile = type;
+            typeName = type.DisplayName;
+            biomeType = type.biome;
+            flatSeamEdges = type.flatSeamEdges;
+            elevationConfig = CloneSettings(type.elevationConfig) ?? new ChunkElevationConfig();
+            curveSettings = CloneSettings(type.curveSettings) ?? new RoadCurveSettings();
+            roadStyle = CloneSettings(type.roadStyle) ?? new ChunkRoadStyle();
+            mountainSettings = CloneSettings(type.mountainSettings) ?? new MountainTypeSettings();
+            ApplyLook(type);
+        }
+
+        /// <summary>
+        /// Only the boundary and backdrop look of a type (for special chunks that blend into the run they stand in).
+        /// Components the chunk does not have are skipped.
+        /// </summary>
+        public void ApplyLook(ChunkTypeProfile type)
+        {
+            if (type == null) return;
+            var boundary = GetComponent<ChunkBoundaryGenerator>();
+            if (boundary != null && type.boundary != null)
+            {
+                boundary.settings = CloneSettings(type.boundary);
+                boundary.settings.biome = type.biome;
+            }
+
+            var backdrop = GetComponent<ChunkBackdropGenerator>();
+            if (backdrop != null)
+            {
+                if (type.backdrop != null)
+                {
+                    backdrop.settings = CloneSettings(type.backdrop);
+                    backdrop.settings.biome = type.biome;
+                }
+                if (type.alpineBackdrop != null) backdrop.alpineMountainSettings = CloneSettings(type.alpineBackdrop);
+                if (type.foothillLowlandBackdrop != null) backdrop.foothillLowlandSettings = CloneSettings(type.foothillLowlandBackdrop);
+            }
+        }
+
+        private static T CloneSettings<T>(T source) where T : class
+        {
+            return source == null ? null : JsonUtility.FromJson<T>(JsonUtility.ToJson(source));
+        }
 
         [Header("Runtime Elevation State (Aktif Eğim Durumu)")]
         [Tooltip("Active elevation type applied to this spawned chunk")]
@@ -373,8 +428,24 @@ namespace EndlessSurvival.World
         public ChunkTrigger spawnNextTrigger;
 
         [Header("Editor Preview")]
-        [Tooltip("Type a seed here to preview deterministic generation in the editor. Leave empty for random.")]
+        [Tooltip("Tek başına chunk önizleme seed'i: her harf bir seçenek (1. harf tip, 2. harf deniz tarafı...), '-' sonrası " +
+                 "yol kıvrımı / kamp / ağaç rastgeleliği. Seçenek değişince ilgili harf değişir. Boş = rastgele.")]
         public string editorPreviewSeed = "";
+
+        /// <summary>
+        /// The random part of an editor preview seed: "aabab...-ku9w7a" -> "ku9w7a" (the letters before '-' are the
+        /// inspector options, see ChunkPreviewSeed). Without a '-' the whole text. Changing an option only changes a
+        /// letter, so camps / POIs / trees stay where they are.
+        /// </summary>
+        public static string PreviewSeedBase(string previewSeed)
+        {
+            if (string.IsNullOrEmpty(previewSeed)) return "";
+            string s = previewSeed.Trim();
+            int bar = s.IndexOf('|'); // older "base|key=value" seeds
+            if (bar >= 0) s = s.Substring(0, bar);
+            int dash = s.IndexOf('-');
+            return dash < 0 ? s : s.Substring(dash + 1);
+        }
 
         [Tooltip("Trigger or barrier that blocks backward passage after moving forward")]
         public GameObject backBlockade;
@@ -548,13 +619,14 @@ namespace EndlessSurvival.World
             }
         }
 
-        /// <summary>Seed used by editor previews: ChunkManager seed if spawned by it, else editorPreviewSeed.</summary>
+        /// <summary>Seed used by editor previews: ChunkManager seed if spawned by it, else editorPreviewSeed's base.</summary>
         public int GetEditorPreviewSeed()
         {
             if (_seed != 0) return _seed;
-            return string.IsNullOrEmpty(editorPreviewSeed)
+            string seedBase = PreviewSeedBase(editorPreviewSeed);
+            return string.IsNullOrEmpty(seedBase)
                 ? GetHashCode()
-                : SeededRandom.HashString(editorPreviewSeed);
+                : SeededRandom.HashString(seedBase);
         }
 #endif
 
@@ -570,6 +642,17 @@ namespace EndlessSurvival.World
         /// </summary>
         public IEnumerator InitializeSteps(ChunkManager manager, int index, int seed)
         {
+            SetupRandom(manager, index, seed);
+            IEnumerator steps = SpawnContentSteps();
+            while (steps.MoveNext()) yield return steps.Current;
+        }
+
+        /// <summary>
+        /// Manager, index, seed and the per-system seed streams. ChunkManager calls this before shaping the road (the
+        /// road uses <see cref="RoadRandom"/>) and spawns the content afterwards with <see cref="SpawnContentSteps"/>.
+        /// </summary>
+        public void SetupRandom(ChunkManager manager, int index, int seed)
+        {
             _manager = manager;
             _chunkIndex = index;
             _seed = seed;
@@ -583,7 +666,11 @@ namespace EndlessSurvival.World
             _eventsRandom = chunkRng.SubStream("events");
             _notesRandom = chunkRng.SubStream("notes");
             _wrecksRandom = chunkRng.SubStream("wrecks");
+        }
 
+        /// <summary>Camp (with its enemies), POIs and story event, one per step. Needs <see cref="SetupRandom"/> first.</summary>
+        public IEnumerator SpawnContentSteps()
+        {
             // Initialize or spawn enemy camps (Campfire, Outpost vb.)
             var campSpawner = GetComponentInChildren<EndlessSurvival.World.POI.EnemyCampSpawner>();
             if (campSpawner == null)
@@ -746,6 +833,9 @@ namespace EndlessSurvival.World
 #if UNITY_EDITOR
         public void GenerateEditorPreview(int seed)
         {
+            // A lone chunk (not spawned by ChunkManager) previews as its preview type
+            if (_manager == null && previewProfile != null) ApplyProfile(previewProfile);
+
             Transform oldPreview = transform.Find("EditorPreview");
             if (oldPreview != null) DestroyImmediate(oldPreview.gameObject);
 

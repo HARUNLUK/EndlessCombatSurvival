@@ -195,7 +195,7 @@ namespace EndlessSurvival.World.Editor
                 Debug.Log($"<color=green><b>[MissingScriptFixer] BAŞARILI:</b> '{chunk.gameObject.name}' üzerindeki tüm yol, spline ve terrain değişiklikleri ana Prefab'a kaydedildi!</color>");
 
                 // Re-generate preview so scene view remains visually complete
-                int seed = string.IsNullOrEmpty(chunk.editorPreviewSeed) ? chunk.GetHashCode() : SeededRandom.HashString(chunk.editorPreviewSeed);
+                int seed = chunk.GetEditorPreviewSeed();
                 chunk.GenerateEditorPreview(seed);
 
                 EditorUtility.DisplayDialog("Prefab Başarıyla Kaydedildi", 

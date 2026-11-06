@@ -43,9 +43,10 @@ namespace EndlessSurvival.World
     }
 
     /// <summary>
-    /// Endless chunk streaming. Holds only world-wide settings (seed, streaming, build budget, seams) and the weighted
-    /// list of chunk TYPE prefabs. Picks types in runs from the seed, aligns each chunk's entry socket to the previous
-    /// chunk's exit and builds it; every type-specific setting lives on the type prefab itself.
+    /// Endless chunk streaming. Holds only world-wide settings (seed, streaming, build budget, seams), the one shared
+    /// procedural chunk prefab, the weighted list of chunk TYPE profiles and the special (handcrafted) chunk rules.
+    /// Picks types in runs from the seed, places special chunks inside runs from their own seed stream, aligns each
+    /// chunk's entry socket to the previous chunk's exit and builds it. Type-specific settings live in the profiles.
     /// </summary>
     public class ChunkManager : MonoBehaviour
     {
@@ -61,66 +62,75 @@ namespace EndlessSurvival.World
         /// <summary>Ordered list of chunk seeds generated so far (index = chunk index).</summary>
         private readonly List<int> _chunkSeeds = new List<int>();
 
-        /// <summary>One chunk type in the world: its prefab and how often / how long it appears.</summary>
+        /// <summary>One chunk type in the world: its profile and how often / how long it appears.</summary>
         [System.Serializable]
         public class ChunkTypeEntry
         {
-            [Tooltip("Chunk tipi prefab'ı (Chunk_Forest, Chunk_Mountain, kendi tasarladığın tip...)")]
-            public Chunk prefab;
+            [Tooltip("Chunk tipi profili (Orman, Dağ, kendi oluşturduğun tip...). Sağ tık > Create > Endless Survival > Chunk Tipi Profili")]
+            public ChunkTypeProfile profile;
             [Tooltip("Bu tipin bir sonraki bölüm olarak seçilme ağırlığı (0 = hiç gelmez)")]
             [Range(0, 100)] public int weight = 50;
             [Tooltip("Bölümün kaç chunk süreceği (min-max). Dağ tiplerinde yol tırmanıp inebilsin diye en az 4 önerilir.")]
             [Range(1, 20)] public int minLength = 2;
             [Range(1, 20)] public int maxLength = 4;
+
+            // Before profiles every type was its own prefab; read once by ChunkProfileMigration
+            [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("prefab")] public Chunk legacyPrefab;
         }
+
+        /// <summary>
+        /// A handcrafted chunk (gas station, town...) that replaces one chunk inside a run of a procedural type,
+        /// placed from its own seed stream so adding or removing one never changes the type sequence.
+        /// </summary>
+        [System.Serializable]
+        public class SpecialChunkEntry
+        {
+            [Tooltip("El yapımı chunk prefab'ı. Yol girişi ve çıkışı X=0, baseElevation (20m) yüksekliğinde olmalı; Generation Mode = Handcrafted önerilir.")]
+            public Chunk prefab;
+            [Tooltip("Hangi tiplerin bölümleri içinde gelebilir. Boşsa 'Allow Special Chunks' açık olan bütün tipler.")]
+            public List<ChunkTypeProfile> allowedTypes = new List<ChunkTypeProfile>();
+            [Tooltip("Uygun her chunk yerinde gelme ihtimali")]
+            [Range(0f, 1f)] public float chance = 0.1f;
+            [Tooltip("En erken kaçıncı chunk'ta gelebilir (0 = ilk chunk). Başlangıç bölümüne hiçbir zaman gelmez.")]
+            [Min(0)] public int minChunkIndex = 4;
+            [Tooltip("Bu özel chunk tekrar gelmeden önce en az kaç chunk geçmeli")]
+            [Min(0)] public int cooldown = 10;
+            [Tooltip("Bir oyunda en fazla kaç kez gelir (0 = sınırsız)")]
+            [Min(0)] public int maxCount = 0;
+            [Tooltip("Açıksa arka plan dağları ve kenar görünümü içinde bulunduğu bölümün tipinden alınır (prefab'da bu bileşenler varsa). " +
+                     "Kapalıysa prefab'daki kendi ayarları kullanılır.")]
+            public bool inheritRunLook = true;
+        }
+
+        [Header("Chunk Prefab'ı")]
+        [Tooltip("Bütün prosedürel tiplerin ortak chunk prefab'ı (yol, terrain, socket'ler, trigger'lar, üreticiler). Tipi profil belirler.")]
+        public Chunk chunkPrefab;
 
         [Header("Chunk Tipleri")]
         [Tooltip("Dünyada kullanılacak chunk tipleri. Tip seçilir, o tipten min-max uzunlukta bir bölüm gelir; aynı tip art arda iki bölüm olmaz. " +
-                 "Yeni bir tip eklemek için prefab'ını bu listeye eklemen yeterli.")]
+                 "Yeni bir tip eklemek için profilini bu listeye eklemen yeterli.")]
         public List<ChunkTypeEntry> chunkTypes = new List<ChunkTypeEntry>();
 
         [Tooltip("Oyunun başladığı tip (boşsa listedeki ilk tip)")]
-        public Chunk startChunkType;
+        public ChunkTypeProfile startType;
 
         [Tooltip("Başlangıçta garanti başlangıç tipi chunk sayısı (en az o tipin listedeki Min Length'i kadar olur)")]
         [Range(1, 10), UnityEngine.Serialization.FormerlySerializedAs("initialForestChunks")]
         public int startChunkCount = 2;
 
+        [Header("Özel Chunk'lar (el yapımı)")]
+        [Tooltip("Bölümlerin içine kurallarla yerleşen el yapımı chunk'lar")]
+        public List<SpecialChunkEntry> specialChunks = new List<SpecialChunkEntry>();
+
+        [Tooltip("Herhangi iki özel chunk arasında en az kaç chunk olmalı")]
+        [Min(0)] public int specialMinGap = 3;
+
         [Header("Dünya Geneli Seam Ayarları")]
         [Tooltip("Farklı tiplerin birleştiği yerlerde iki tarafın da aynı değeri kullanması gereken ayarlar")]
         public WorldSeamSettings seamSettings = new WorldSeamSettings();
 
-        // ---------------------------------------------------------------
-        // Legacy single-prefab setup (Chunk_Forest_Curve + biome enum). Hidden and unused at runtime;
-        // only read once by "Endless Survival/Chunk Tiplerini Oluştur" (ChunkTypeSetupUtility) to migrate.
-        // ---------------------------------------------------------------
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chunkPrefab")] public Chunk legacyChunkPrefab;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chunkPrefabs")] public List<Chunk> legacyChunkPrefabs = new List<Chunk>();
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("biomeRuns")] public List<BiomeRunSettings> legacyBiomeRuns = new List<BiomeRunSettings>();
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("globalElevationConfig")] public ChunkElevationConfig legacyElevationConfig = new ChunkElevationConfig();
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("curveSettings")] public RoadCurveSettings legacyCurveSettings = new RoadCurveSettings();
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("snowyMountainChance")] public float legacySnowyMountainChance = 0.6f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("mountainLedgeChance")] public float legacyMountainLedgeChance = 0.7f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("ledgeRoadMinOffset")] public float legacyLedgeRoadMinOffset = 80f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("ledgeRoadMaxOffset")] public float legacyLedgeRoadMaxOffset = 100f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("mountainRoadMinHeight")] public float legacyMountainRoadMinHeight = 100f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("mountainRoadMaxHeight")] public float legacyMountainRoadMaxHeight = 140f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("mountainRoadClimbPerChunk")] public float legacyMountainRoadClimbPerChunk = 40f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("mountainHillsideChance")] public float legacyMountainHillsideChance = 0.4f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("fieldElevationChance")] public float legacyFieldElevationChance = 0.2f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("fieldMinHillHeight")] public float legacyFieldMinHillHeight = 4f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("fieldMaxHillHeight")] public float legacyFieldMaxHillHeight = 9f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("fieldMinDipDepth")] public float legacyFieldMinDipDepth = 3f;
-        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("fieldMaxDipDepth")] public float legacyFieldMaxDipDepth = 7f;
-
-        [System.Serializable]
-        public class BiomeRunSettings
-        {
-            public ChunkBiomeType biome = ChunkBiomeType.Forest;
-            [Range(0, 100)] public int weight = 50;
-            [Range(1, 20)] public int minLength = 2;
-            [Range(1, 20)] public int maxLength = 4;
-        }
+        // Before profiles the start type was a prefab; read once by ChunkProfileMigration
+        [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("startChunkType")] public Chunk legacyStartChunkType;
 
         // Scenes saved with older defaults are upgraded once (see EnsureSettingsDefaults)
         [SerializeField, HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("_biomeRunsVersion")]
@@ -149,21 +159,35 @@ namespace EndlessSurvival.World
         [Tooltip("Sonsuz deniz yüzeyi materyali (boşsa otomatik üretilir)")]
         public Material oceanMaterial;
 
-        /// <summary>Planned type of one chunk index, plus the per-run rolls (sea side / mountain side, mountain sub-type).</summary>
+        /// <summary>
+        /// Planned type of one chunk index (the run's profile, or a special chunk inside that run), plus the per-run
+        /// rolls (sea side / mountain side, mountain sub-type, foothill lowland).
+        /// </summary>
         private struct TypePlanEntry
         {
-            public Chunk type;
+            public ChunkTypeProfile profile;    // the run's type (also for a special chunk standing in the run)
+            public SpecialChunkEntry special;   // null = procedural chunk of `profile`
             public CoastSide seaSide;           // coast: sea side; mountain: side of the mountain a ledge road follows
             public MountainVariant variant;     // mountain sub-type, same for the whole run
             public FoothillLowland lowland;     // foothills: the land opposite the mountain, same for the whole run
-            public ChunkBiomeType Biome => type != null ? type.biomeType : ChunkBiomeType.Forest;
-            public bool IsFoothill => type != null && type.biomeType == ChunkBiomeType.Mountain && type.mountainSettings != null && type.mountainSettings.foothills;
+
+            public ChunkTypeRef Type => new ChunkTypeRef(profile, special != null ? special.prefab : null, special != null && special.inheritRunLook);
+            public bool IsSpecial => special != null && special.prefab != null;
+            public bool IsValid => profile != null || IsSpecial;
+            public ChunkBiomeType Biome => Type.Biome;
+            public bool IsFoothill => Type.IsFoothill;
             public bool FoothillSea => IsFoothill && (lowland == FoothillLowland.LandThenCoast || lowland == FoothillLowland.Coast);
+            /// <summary>The prefab to instantiate for this index.</summary>
+            public Chunk Prefab(Chunk shared) => IsSpecial ? special.prefab : shared;
         }
 
         private readonly List<TypePlanEntry> _typePlan = new List<TypePlanEntry>();
         private SeededRandom _typeRng;
-        private Chunk _lastRunType;
+        private ChunkTypeProfile _lastRunType;
+        // Special chunk placement state (rebuilt with the plan)
+        private readonly Dictionary<SpecialChunkEntry, int> _specialLastIndex = new Dictionary<SpecialChunkEntry, int>();
+        private readonly Dictionary<SpecialChunkEntry, int> _specialCount = new Dictionary<SpecialChunkEntry, int>();
+        private int _lastSpecialIndex = int.MinValue / 2;
         private OceanSurface _ocean;
 
         [Header("Streaming Settings")]
@@ -276,8 +300,8 @@ namespace EndlessSurvival.World
             }
             else
             {
-                Debug.LogError("[ChunkManager] Chunk Types listesi boş. Menüden 'Endless Survival/Chunk Tiplerini Oluştur' çalıştır " +
-                               "veya chunk tipi prefab'larını listeye ekle.");
+                Debug.LogError("[ChunkManager] Chunk Prefab veya Chunk Types listesi boş. Eski tip prefab'larından geçiş için menüden " +
+                               "'Endless Survival/Chunk Profillerine Geçir' çalıştır, ya da Chunk Prefab'ı ve tip profillerini elle ata.");
             }
         }
 
@@ -369,14 +393,14 @@ namespace EndlessSurvival.World
         }
 
         /// <summary>
-        /// Builds a chunk in steps (one heavy job per frame). Order matters: POIs before terrain (keepouts),
-        /// terrain before rocks/edges/vegetation (they sample its height). Loot and notes wait for <see cref="Chunk.Built"/>.
+        /// Builds a chunk in steps (one heavy job per frame). Order matters: road before POIs (camps and story
+        /// structures are placed beside the road's actual course), POIs before terrain (keepouts), terrain before
+        /// rocks/edges/vegetation (they sample its height). Loot and notes wait for <see cref="Chunk.Built"/>.
         /// </summary>
         private IEnumerator BuildChunkSteps(Chunk chunk, int index, int seed)
         {
-            // 1) Camp (with its enemies), POIs, story event: one per frame
-            IEnumerator init = chunk.InitializeSteps(this, index, seed);
-            while (init.MoveNext()) yield return init.Current;
+            // Seed streams first: the road step uses the road stream
+            chunk.SetupRandom(this, index, seed);
 
             var roadGen = chunk.GetComponentInChildren<RoadGenerator>();
             var spline = chunk.GetComponentInChildren<RoadSpline>();
@@ -385,26 +409,32 @@ namespace EndlessSurvival.World
             // Procedural types get the standard generators (added if the prefab lacks them) and a seeded road + terrain.
             // Handcrafted types keep their authored road and terrain; only the generators on their prefab run.
             bool procedural = chunk.generationMode == ChunkGenerationMode.Procedural;
+            bool shaped = !procedural || (roadGen != null && spline != null);
 
-            if (!procedural || (roadGen != null && spline != null))
+            // Keep the half-built terrain hidden; the backdrop proxy stands in for it meanwhile
+            if (shaped && terrain != null && Application.isPlaying)
             {
-                // Keep the half-built terrain hidden; the backdrop proxy stands in for it meanwhile
-                if (terrain != null && Application.isPlaying)
-                {
-                    terrain.drawHeightmap = false;
-                    terrain.drawTreesAndFoliage = false;
-                }
+                terrain.drawHeightmap = false;
+                terrain.drawTreesAndFoliage = false;
+            }
 
-                // 2) Road shape and cross section
-                if (procedural)
-                {
-                    if (elevationMode == ElevationSelectionMode.DynamicWeightedRandom)
-                        ApplyProceduralElevation(chunk, roadGen, spline);
-                    else
-                        ApplySequentialElevationPreset(chunk, roadGen, spline);
-                    AlignRoadObjects(chunk, spline);
-                    yield return "road";
-                }
+            // 1) Road shape and cross section (before the POIs: until now the spline still holds the prefab's old road)
+            if (procedural && roadGen != null && spline != null)
+            {
+                if (elevationMode == ElevationSelectionMode.DynamicWeightedRandom)
+                    ApplyProceduralElevation(chunk, roadGen, spline);
+                else
+                    ApplySequentialElevationPreset(chunk, roadGen, spline);
+                AlignRoadObjects(chunk, spline);
+                yield return "road";
+            }
+
+            // 2) Camp (with its enemies), POIs, story event: one per frame
+            IEnumerator init = chunk.SpawnContentSteps();
+            while (init.MoveNext()) yield return init.Current;
+
+            if (shaped)
+            {
 
                 // Side boundaries (cliffs / giant rocks) so the world edge is never visible
                 var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
@@ -519,17 +549,25 @@ namespace EndlessSurvival.World
                 TypePlanEntry entry = GetTypePlan(i);
                 TypePlanEntry prevEntry = GetTypePlan(i - 1);
                 TypePlanEntry nextEntry = GetTypePlan(i + 1);
-                if (entry.type == null) continue;
+                if (!entry.IsValid) continue;
+                Chunk prefab = entry.Prefab(chunkPrefab);
+                if (prefab == null) continue;
 
-                var typeBackdrop = entry.type.GetComponent<ChunkBackdropGenerator>();
+                var typeBackdrop = prefab.GetComponent<ChunkBackdropGenerator>();
                 if (typeBackdrop == null || !typeBackdrop.backdropEnabled) continue;
 
                 // Different type next door: blend toward its look at the seam (same as the real chunk will)
-                var ownSettings = typeBackdrop.ResolveSettings(entry.Biome, entry.variant);
-                var prevSettings = prevEntry.type != entry.type ? NeighborBackdrop(prevEntry) : null;
-                var nextSettings = nextEntry.type != entry.type ? NeighborBackdrop(nextEntry) : null;
-                var typeBoundary = entry.type.GetComponent<ChunkBoundaryGenerator>();
+                bool uphillRight = entry.seaSide == CoastSide.Right;
+                // (the mountain side's look; a foothill's lowland side is passed separately below)
+                var ownSettings = entry.Type.BackdropSide(entry.variant, uphillRight ? 1f : -1f, uphillRight, SharedBackdrop);
+                if (ownSettings == null) continue;
+                var prevSettings = prevEntry.Type != entry.Type ? NeighborBackdrop(prevEntry) : null;
+                var nextSettings = nextEntry.Type != entry.Type ? NeighborBackdrop(nextEntry) : null;
+                var typeBoundary = prefab.GetComponent<ChunkBoundaryGenerator>();
                 float coastTransition = typeBoundary != null ? typeBoundary.coastTransitionLength : 200f;
+                float baseElevation = prefab.baseElevation;
+                // Foothill lowland side look: from the profile (procedural) or the prefab's own component (special)
+                BiomeBackdropSettings lowlandLook = entry.IsFoothill ? entry.Type.BackdropSide(entry.variant, uphillRight ? -1f : 1f, uphillRight, SharedBackdrop) : null;
 
                 Vector3 position = last.transform.position + last.transform.forward * (last.chunkLength * (i - lastIndex));
 
@@ -543,12 +581,36 @@ namespace EndlessSurvival.World
                     entry.Biome, entry.variant, ownSettings, prevSettings, nextSettings,
                     IsSameMountainRun(prevEntry, entry), IsSameMountainRun(entry, nextEntry), hasSea, seaSign,
                     IsSameCoast(prevEntry, entry), IsSameCoast(nextEntry, entry),
-                    worldSeed, seamSettings, last.chunkLength, entry.type.baseElevation, 250f, coastTransition,
+                    worldSeed, seamSettings, last.chunkLength, baseElevation, 250f, coastTransition,
                     SeamRoadOffset(i), SeamRoadOffset(i + 1),
-                    SeamRoadHeight(i, entry.type.baseElevation), SeamRoadHeight(i + 1, entry.type.baseElevation),
-                    lowlandSign, typeBackdrop.foothillLowlandSettings);
+                    SeamRoadHeight(i, baseElevation), SeamRoadHeight(i + 1, baseElevation),
+                    lowlandSign, lowlandLook);
             }
         }
+
+        private Transform _staging;
+
+        /// <summary>Inactive, unsaved holder new chunks are instantiated under (see SpawnNextChunk).</summary>
+        private Transform GetStaging()
+        {
+            if (_staging == null)
+            {
+                var go = new GameObject("ChunkStaging") { hideFlags = HideFlags.HideAndDontSave };
+                go.SetActive(false);
+                _staging = go.transform;
+            }
+            return _staging;
+        }
+
+        private void OnDestroy()
+        {
+            if (_staging == null) return;
+            if (Application.isPlaying) Destroy(_staging.gameObject);
+            else DestroyImmediate(_staging.gameObject);
+        }
+
+        /// <summary>Backdrop component of the shared procedural prefab (its enabled flag applies to every procedural type).</summary>
+        private ChunkBackdropGenerator SharedBackdrop => chunkPrefab != null ? chunkPrefab.GetComponent<ChunkBackdropGenerator>() : null;
 
         private static void UseEditorTerrainCopy(Chunk chunk)
         {
@@ -562,13 +624,13 @@ namespace EndlessSurvival.World
         }
 
         /// <summary>A planned neighbor's backdrop look per side [left, right] (foothills differ between their two sides).</summary>
-        private static BiomeBackdropSettings[] NeighborBackdrop(TypePlanEntry neighbor)
+        private BiomeBackdropSettings[] NeighborBackdrop(TypePlanEntry neighbor)
         {
             bool uphillRight = neighbor.seaSide == CoastSide.Right;
             return new[]
             {
-                ChunkBackdropGenerator.SettingsOf(neighbor.type, neighbor.variant, -1f, uphillRight),
-                ChunkBackdropGenerator.SettingsOf(neighbor.type, neighbor.variant, 1f, uphillRight)
+                ChunkBackdropGenerator.SettingsOf(neighbor.Type, neighbor.variant, -1f, uphillRight, SharedBackdrop),
+                ChunkBackdropGenerator.SettingsOf(neighbor.Type, neighbor.variant, 1f, uphillRight, SharedBackdrop)
             };
         }
 
@@ -589,12 +651,13 @@ namespace EndlessSurvival.World
             int chunkSeed = SeededRandom.Combine(ResolvedSeed, _totalSpawnedCount);
             _chunkSeeds.Add(chunkSeed);
 
-            // The type comes from the seeded type plan (runs of the same type)
-            Chunk prefab = GetTypePlan(_totalSpawnedCount).type;
+            // The type comes from the seeded type plan (runs of the same type, special chunks inside runs)
+            TypePlanEntry plan = GetTypePlan(_totalSpawnedCount);
+            Chunk prefab = plan.IsValid ? plan.Prefab(chunkPrefab) : null;
             if (prefab == null)
             {
                 _chunkSeeds.RemoveAt(_chunkSeeds.Count - 1);
-                Debug.LogError("[ChunkManager] Cannot spawn: Chunk Types listesinde geçerli bir prefab yok.");
+                Debug.LogError("[ChunkManager] Cannot spawn: Chunk Prefab atanmamış veya Chunk Types listesinde geçerli bir profil yok.");
                 return null;
             }
 
@@ -609,7 +672,12 @@ namespace EndlessSurvival.World
 
             int index = _totalSpawnedCount;
             long spawnStart = System.Diagnostics.Stopwatch.GetTimestamp();
-            Chunk newChunk = Instantiate(prefab, spawnPos, spawnRot, transform);
+            // Instantiated under an inactive parent so the type profile is applied before any Awake/OnEnable runs
+            // (they then see the planned type, not the shared prefab's defaults); activated by moving it under us
+            Transform staging = GetStaging();
+            Chunk newChunk = Instantiate(prefab, spawnPos, spawnRot, staging);
+            if (!plan.IsSpecial) newChunk.ApplyProfile(plan.profile);
+            else if (plan.special.inheritRunLook) newChunk.ApplyLook(plan.profile);            newChunk.transform.SetParent(transform, true);
             double spawnMs = (System.Diagnostics.Stopwatch.GetTimestamp() - spawnStart) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
             // Edit-mode preview chunks of the same type would all reshape their prefab's TerrainData asset (each one
             // overwriting the ground under the previous one's trees/POIs): give each its own unsaved copy
@@ -722,14 +790,23 @@ namespace EndlessSurvival.World
         /// </summary>
         private void ApplyProceduralElevation(Chunk chunk, RoadGenerator roadGen, RoadSpline spline)
         {
-            SeededRandom rng = chunk.RoadRandom;
+            // First N chunks are kept flat (no hills/dips) as runway, but may still have gentle curves
+            bool isRunway = chunk.ChunkIndex < initialFlatChunks;
+            RollProceduralRoad(chunk, roadGen, spline, chunk.RoadRandom, isRunway, enableElevationVariation);
+        }
+
+        /// <summary>
+        /// Rolls a chunk's road (elevation type, hill/dip size, bends, cross section) from its own type settings and
+        /// builds the spline. Shared by the game and the editor's lone-chunk preview seed.
+        /// </summary>
+        public static void RollProceduralRoad(Chunk chunk, RoadGenerator roadGen, RoadSpline spline, SeededRandom rng,
+            bool isRunway, bool elevationEnabled)
+        {
             ChunkElevationConfig config = chunk.elevationConfig ?? new ChunkElevationConfig();
             RoadCurveSettings curves = chunk.curveSettings ?? new RoadCurveSettings();
             ChunkRoadStyle style = chunk.roadStyle ?? new ChunkRoadStyle();
 
-            // First N chunks are kept flat (no hills/dips) as runway, but may still have gentle curves
-            bool isRunway = chunk.ChunkIndex < initialFlatChunks;
-            bool forceFlat = isRunway || !enableElevationVariation;
+            bool forceFlat = isRunway || !elevationEnabled;
             bool rollSuccess = !forceFlat && (rng.Value <= config.elevationChance);
 
             RoadElevationType elevationType = RoadElevationType.Flat;
@@ -900,9 +977,9 @@ namespace EndlessSurvival.World
             TypePlanEntry prev = index > 0 ? GetTypePlan(index - 1) : entry;
             TypePlanEntry next = GetTypePlan(index + 1);
 
-            chunk.sourceType = entry.type;
-            chunk.prevType = prev.type;
-            chunk.nextType = next.type;
+            chunk.sourceType = entry.Type;
+            chunk.prevType = prev.Type;
+            chunk.nextType = next.Type;
             chunk.prevUphillOnRight = prev.seaSide == CoastSide.Right;
             chunk.nextUphillOnRight = next.seaSide == CoastSide.Right;
             chunk.hasNeighborInfo = true;
@@ -995,14 +1072,14 @@ namespace EndlessSurvival.World
             TypePlanEntry a = GetTypePlan(seam - 1), b = GetTypePlan(seam);
             if (!IsSameMountainRun(a, b)) return baseline;
 
-            Chunk type = b.type;
-            MountainTypeSettings ms = type.mountainSettings;
+            ChunkTypeRef type = b.Type;
+            MountainTypeSettings ms = b.profile.mountainSettings;
 
-            // Position of this seam inside its mountain run: chunks before it / after it
+            // Position of this seam inside its mountain run: chunks before it / after it (a special chunk ends the run)
             int before = 0;
-            for (int i = seam - 1; i >= 0 && before < 32 && GetTypePlan(i).type == type; i--) before++;
+            for (int i = seam - 1; i >= 0 && before < 32 && GetTypePlan(i).Type == type; i--) before++;
             int after = 0;
-            for (int i = seam; after < 32 && GetTypePlan(i).type == type; i++) after++;
+            for (int i = seam; after < 32 && GetTypePlan(i).Type == type; i++) after++;
 
             int worldSeed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
             var rng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "mtn_road_height"), seam));
@@ -1024,7 +1101,7 @@ namespace EndlessSurvival.World
             TypePlanEntry before = GetTypePlan(seam - 1), after = GetTypePlan(seam);
             if (!IsSameMountainRun(before, after)) return 0f;
 
-            MountainTypeSettings ms = after.type.mountainSettings;
+            MountainTypeSettings ms = after.profile.mountainSettings;
             int worldSeed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
             var rng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(worldSeed, "mtn_road_offset"), seam));
             if (!rng.Chance(ms.ledgeChance)) return 0f;
@@ -1033,18 +1110,20 @@ namespace EndlessSurvival.World
             return side * rng.Range(ms.ledgeRoadMinOffset, ms.ledgeRoadMaxOffset);
         }
 
-        /// <summary>Both chunks belong to one run of the same procedural mountain type (its seam rules apply).</summary>
+        /// <summary>
+        /// Both chunks belong to one run of the same procedural mountain type (its seam rules apply). A special chunk
+        /// is never part of a mountain run: the road comes down to the baseline to meet it.
+        /// </summary>
         private static bool IsSameMountainRun(TypePlanEntry a, TypePlanEntry b)
         {
-            return a.type != null && a.type == b.type
-                && a.type.biomeType == ChunkBiomeType.Mountain
-                && a.type.generationMode == ChunkGenerationMode.Procedural;
+            return a.profile != null && !a.IsSpecial && !b.IsSpecial && a.profile == b.profile
+                && a.profile.biome == ChunkBiomeType.Mountain;
         }
 
         private static bool IsSameCoast(TypePlanEntry a, TypePlanEntry b)
         {
-            if (a.type == null || a.type != b.type || a.seaSide != b.seaSide) return false;
-            if (a.type.biomeType == ChunkBiomeType.Coast) return true;
+            if (!a.IsValid || a.Type != b.Type || a.seaSide != b.seaSide) return false;
+            if (a.Biome == ChunkBiomeType.Coast) return true;
             // Foothills: same run (same lowland), and that lowland has a sea
             return a.FoothillSea && a.lowland == b.lowland;
         }
@@ -1053,20 +1132,20 @@ namespace EndlessSurvival.World
         {
             get
             {
-                if (chunkTypes == null) return false;
+                if (chunkPrefab == null || chunkTypes == null) return false;
                 for (int i = 0; i < chunkTypes.Count; i++)
-                    if (chunkTypes[i] != null && chunkTypes[i].prefab != null) return true;
+                    if (chunkTypes[i] != null && chunkTypes[i].profile != null) return true;
                 return false;
             }
         }
 
-        private Chunk StartType
+        private ChunkTypeProfile StartType
         {
             get
             {
-                if (startChunkType != null) return startChunkType;
+                if (startType != null) return startType;
                 for (int i = 0; i < chunkTypes.Count; i++)
-                    if (chunkTypes[i] != null && chunkTypes[i].prefab != null) return chunkTypes[i].prefab;
+                    if (chunkTypes[i] != null && chunkTypes[i].profile != null) return chunkTypes[i].profile;
                 return null;
             }
         }
@@ -1074,26 +1153,30 @@ namespace EndlessSurvival.World
         /// <summary>
         /// Type of any chunk index. Generated sequentially in runs from the master seed and cached, so neighbors can
         /// be queried before they are spawned and the same seed always gives the same sequence. A run picks a type
-        /// (weighted, never the same type as the previous run), its length (min-max) and its per-run rolls.
+        /// (weighted, never the same type as the previous run), its length (min-max) and its per-run rolls; then
+        /// special chunks may replace chunks inside it (<see cref="PlaceSpecialChunks"/>).
         /// </summary>
         private TypePlanEntry GetTypePlan(int index)
         {
             if (index < 0) index = 0;
             if (!HasChunkTypes) return default;
 
+            int seed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
             if (_typeRng == null)
             {
                 // Edit mode: Awake has not resolved the seed yet, fall back to the seed text
-                int seed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
                 _typeRng = new SeededRandom(SeededRandom.Combine(seed, "biome_runs"));
                 _typePlan.Clear();
+                _specialLastIndex.Clear();
+                _specialCount.Clear();
+                _lastSpecialIndex = int.MinValue / 2;
 
                 // Start run: its own stream so the main sequence does not depend on the start type
-                Chunk start = StartType;
+                ChunkTypeProfile start = StartType;
                 var startRng = new SeededRandom(SeededRandom.Combine(seed, "start_run"));
                 var startEntry = new TypePlanEntry
                 {
-                    type = start,
+                    profile = start,
                     seaSide = startRng.Chance(0.5f) ? CoastSide.Left : CoastSide.Right,
                     variant = RollVariant(startRng, start),
                     lowland = RollLowland(startRng, start)
@@ -1103,11 +1186,11 @@ namespace EndlessSurvival.World
                 int startLength = Mathf.Max(1, startChunkCount);
                 for (int i = 0; i < chunkTypes.Count; i++)
                 {
-                    if (chunkTypes[i] != null && chunkTypes[i].prefab == start) startLength = Mathf.Max(startLength, chunkTypes[i].minLength);
+                    if (chunkTypes[i] != null && chunkTypes[i].profile == start) startLength = Mathf.Max(startLength, chunkTypes[i].minLength);
                 }
+                // No special chunks in the start run: the player starts here
                 for (int i = 0; i < startLength; i++) _typePlan.Add(startEntry);
                 _lastRunType = start;
-
             }
 
             while (_typePlan.Count <= index)
@@ -1117,16 +1200,16 @@ namespace EndlessSurvival.World
                 for (int i = 0; i < chunkTypes.Count; i++)
                 {
                     var t = chunkTypes[i];
-                    if (t != null && t.prefab != null && t.weight > 0 && t.prefab != _lastRunType) candidates.Add(t);
+                    if (t != null && t.profile != null && t.weight > 0 && t.profile != _lastRunType) candidates.Add(t);
                 }
                 if (candidates.Count == 0)
                 {
                     for (int i = 0; i < chunkTypes.Count; i++)
-                        if (chunkTypes[i] != null && chunkTypes[i].prefab != null && chunkTypes[i].weight > 0) candidates.Add(chunkTypes[i]);
+                        if (chunkTypes[i] != null && chunkTypes[i].profile != null && chunkTypes[i].weight > 0) candidates.Add(chunkTypes[i]);
                 }
                 if (candidates.Count == 0)
                 {
-                    _typePlan.Add(new TypePlanEntry { type = StartType });
+                    _typePlan.Add(new TypePlanEntry { profile = StartType });
                     continue;
                 }
 
@@ -1134,31 +1217,94 @@ namespace EndlessSurvival.World
                 int length = _typeRng.Range(chosen.minLength, Mathf.Max(chosen.minLength, chosen.maxLength) + 1);
                 CoastSide side = _typeRng.Chance(0.5f) ? CoastSide.Left : CoastSide.Right;
                 // Mountain runs: one sub-type (snowy / alpine) for the whole run; `side` is the mountain the road follows
-                MountainVariant variant = RollVariant(_typeRng, chosen.prefab);
+                MountainVariant variant = RollVariant(_typeRng, chosen.profile);
                 // Foothills: own stream per run, so other types' sequences are not affected by this roll
-                int runSeed = SeededRandom.Combine(SeededRandom.Combine(_typeRng.Seed, "foothill_lowland"), _typePlan.Count);
-                FoothillLowland lowland = RollLowland(new SeededRandom(runSeed), chosen.prefab);
+                int runStart = _typePlan.Count;
+                int runSeed = SeededRandom.Combine(SeededRandom.Combine(_typeRng.Seed, "foothill_lowland"), runStart);
+                FoothillLowland lowland = RollLowland(new SeededRandom(runSeed), chosen.profile);
 
                 for (int i = 0; i < length; i++)
                 {
-                    _typePlan.Add(new TypePlanEntry { type = chosen.prefab, seaSide = side, variant = variant, lowland = lowland });
+                    _typePlan.Add(new TypePlanEntry { profile = chosen.profile, seaSide = side, variant = variant, lowland = lowland });
                 }
-                _lastRunType = chosen.prefab;
+                _lastRunType = chosen.profile;
+
+                PlaceSpecialChunks(seed, runStart, length, chosen.profile);
             }
 
             return _typePlan[index];
         }
 
-        private static FoothillLowland RollLowland(SeededRandom rng, Chunk type)
+        /// <summary>
+        /// Lets special chunks replace chunks of the run [runStart, runStart + length). Uses its own seed stream per
+        /// run, so special chunks never change the type sequence (and adding one to the list only changes where specials
+        /// go). For each chunk slot the eligible specials (type allowed, past minChunkIndex, cooldown, maxCount and the
+        /// global gap) are rolled with their chance; at most one per slot.
+        /// </summary>
+        private void PlaceSpecialChunks(int seed, int runStart, int length, ChunkTypeProfile runType)
         {
-            if (type == null || type.biomeType != ChunkBiomeType.Mountain || type.mountainSettings == null || !type.mountainSettings.foothills)
-                return FoothillLowland.Forest;
+            if (specialChunks == null || specialChunks.Count == 0 || runType == null) return;
+            var rng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(seed, "special_chunks"), runStart));
+            var eligible = new List<SpecialChunkEntry>();
+
+            for (int index = runStart; index < runStart + length; index++)
+            {
+                // One roll per slot whether or not anything is eligible, so slots stay independent of each other's rules
+                float roll = rng.Value;
+                if (index - _lastSpecialIndex <= specialMinGap) continue;
+
+                eligible.Clear();
+                float total = 0f;
+                for (int i = 0; i < specialChunks.Count; i++)
+                {
+                    SpecialChunkEntry e = specialChunks[i];
+                    if (!IsSpecialEligible(e, runType, index)) continue;
+                    eligible.Add(e);
+                    total += e.chance;
+                }
+                if (eligible.Count == 0) continue;
+
+                // Each special keeps its own chance; if they add up past 1 they share the slot proportionally
+                float scale = total > 1f ? 1f / total : 1f;
+                float acc = 0f;
+                for (int i = 0; i < eligible.Count; i++)
+                {
+                    acc += eligible[i].chance * scale;
+                    if (roll >= acc) continue;
+
+                    SpecialChunkEntry e = eligible[i];
+                    TypePlanEntry slot = _typePlan[index];
+                    slot.special = e;
+                    _typePlan[index] = slot;
+                    _specialLastIndex[e] = index;
+                    _specialCount[e] = (_specialCount.TryGetValue(e, out int n) ? n : 0) + 1;
+                    _lastSpecialIndex = index;
+                    break;
+                }
+            }
+        }
+
+        private bool IsSpecialEligible(SpecialChunkEntry e, ChunkTypeProfile runType, int index)
+        {
+            if (e == null || e.prefab == null || e.chance <= 0f || index < e.minChunkIndex) return false;
+            bool typeAllowed = e.allowedTypes != null && e.allowedTypes.Count > 0
+                ? e.allowedTypes.Contains(runType)
+                : runType.allowSpecialChunks;
+            if (!typeAllowed) return false;
+            if (_specialLastIndex.TryGetValue(e, out int last) && index - last <= e.cooldown) return false;
+            if (e.maxCount > 0 && _specialCount.TryGetValue(e, out int count) && count >= e.maxCount) return false;
+            return true;
+        }
+
+        public static FoothillLowland RollLowland(SeededRandom rng, ChunkTypeProfile type)
+        {
+            if (type == null || !type.IsFoothill) return FoothillLowland.Forest;
             return type.mountainSettings.RollLowland(rng);
         }
 
-        private static MountainVariant RollVariant(SeededRandom rng, Chunk type)
+        public static MountainVariant RollVariant(SeededRandom rng, ChunkTypeProfile type)
         {
-            return type != null && type.biomeType == ChunkBiomeType.Mountain && !rng.Chance(type.mountainSettings.snowyChance)
+            return type != null && type.biome == ChunkBiomeType.Mountain && !rng.Chance(type.mountainSettings.snowyChance)
                 ? MountainVariant.Alpine
                 : MountainVariant.Snowy;
         }
@@ -1169,10 +1315,16 @@ namespace EndlessSurvival.World
             return GetTypePlan(index).Biome;
         }
 
-        /// <summary>Planned type prefab of a chunk index (spawned or not).</summary>
-        public Chunk GetPlannedType(int index)
+        /// <summary>Planned type of a chunk index (spawned or not): the run's profile, or a special chunk inside it.</summary>
+        public ChunkTypeRef GetPlannedType(int index)
         {
-            return GetTypePlan(index).type;
+            return GetTypePlan(index).Type;
+        }
+
+        /// <summary>Re-plans types from the current seed and lists (editor: after the lists or the seed changed).</summary>
+        public void ResetTypePlan()
+        {
+            _typeRng = null;
         }
 
         /// <summary>
