@@ -1107,6 +1107,7 @@ namespace EndlessSurvival.World
                 }
                 for (int i = 0; i < startLength; i++) _typePlan.Add(startEntry);
                 _lastRunType = start;
+
             }
 
             while (_typePlan.Count <= index)

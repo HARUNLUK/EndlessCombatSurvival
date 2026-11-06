@@ -85,11 +85,11 @@ namespace EndlessSurvival.World.Editor
                 GameObject badge = new GameObject("TimeBadge");
                 badge.transform.SetParent(hudObj.transform, false);
                 var rect = badge.AddComponent<RectTransform>();
-                rect.anchorMin = new Vector2(1f, 1f);
-                rect.anchorMax = new Vector2(1f, 1f);
-                rect.pivot = new Vector2(1f, 1f);
-                rect.anchoredPosition = new Vector2(-25f, -25f);
-                rect.sizeDelta = new Vector2(210f, 42f);
+                rect.anchorMin = new Vector2(0.5f, 1f);
+                rect.anchorMax = new Vector2(0.5f, 1f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.anchoredPosition = new Vector2(0f, -15f);
+                rect.sizeDelta = new Vector2(260f, 40f);
 
                 var bgImg = badge.AddComponent<UnityEngine.UI.Image>();
                 bgImg.color = new Color(0.08f, 0.10f, 0.14f, 0.78f);

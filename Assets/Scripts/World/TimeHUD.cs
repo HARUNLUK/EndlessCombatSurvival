@@ -50,10 +50,7 @@ namespace EndlessSurvival.World
             GameObject badge = new GameObject("TimeBadge");
             badge.transform.SetParent(hudObj.transform, false);
             var rect = badge.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-25f, -25f);
+            ApplyTopCenterLayout(rect);
             rect.sizeDelta = new Vector2(200f, 40f);
 
             var bgImg = badge.AddComponent<Image>();
@@ -82,6 +79,21 @@ namespace EndlessSurvival.World
         private void Awake()
         {
             _instance = this;
+
+            // Scene-saved badges may carry an older corner layout; always center at the top.
+            if (timeText != null && timeText.transform.parent is RectTransform badge)
+            {
+                ApplyTopCenterLayout(badge);
+            }
+        }
+
+        private static void ApplyTopCenterLayout(RectTransform rect)
+        {
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -15f);
+            rect.sizeDelta = new Vector2(260f, 40f);
         }
 
         private void Update()

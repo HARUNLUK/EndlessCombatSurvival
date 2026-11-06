@@ -87,7 +87,7 @@ namespace EndlessSurvival.World.Road
                 // For depressions/valleys, widen flat platform so terrain heightmap quads (~3.9m) never slope through road shoulders
                 float platformHalfWidth = isDepression ? (roadHalfWidth + 5.0f) : (roadHalfWidth + 2.0f);
                 float blendDistance = isDepression ? 45.0f : 35.0f;
-                float roadBedElevation = isDepression ? (roadY - 0.25f) : (roadY - 0.20f);
+                float roadBedElevation = isDepression ? (roadY - 0.125f) : (roadY - 0.10f);
 
                 // Seamless chunk border edge fade: ensure boundaries at Z=0 and Z=500 cleanly lock to baseline
                 float boundaryFade = Mathf.Clamp01(Mathf.Sin(normalizedZ * Mathf.PI));

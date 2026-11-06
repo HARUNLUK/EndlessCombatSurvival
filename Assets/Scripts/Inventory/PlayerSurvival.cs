@@ -182,13 +182,22 @@ namespace EndlessSurvival.Inventory
             float hungerRatio = maxHunger > 0f ? _hunger / maxHunger : 0f;
             float thirstRatio = maxThirst > 0f ? _thirst / maxThirst : 0f;
 
-            string needTag = IsBladderFull ? "  <color=yellow>[İHTİYAÇ: Rahatla (P)]</color>" : "";
-            statusText.text = $"HUNGER: {Mathf.CeilToInt(_hunger)}    THIRST: {Mathf.CeilToInt(_thirst)}{needTag}";
+            float bladderRatio = maxBladder > 0f ? _bladder / maxBladder : 0f;
 
-            float lowest = Mathf.Min(hungerRatio, thirstRatio);
-            if (lowest <= 0f) statusText.color = new Color(1f, 0.2f, 0.2f);
-            else if (lowest <= lowThreshold) statusText.color = new Color(1f, 0.65f, 0.2f);
-            else statusText.color = Color.white;
+            // Every stat is always visible; each one gets its own color (inverted for bladder: full = bad).
+            string hungerStr = Colorize($"HUNGER: {Mathf.CeilToInt(_hunger)}", hungerRatio);
+            string thirstStr = Colorize($"THIRST: {Mathf.CeilToInt(_thirst)}", thirstRatio);
+            string bladderStr = Colorize($"BLADDER: {Mathf.CeilToInt(_bladder)}", 1f - bladderRatio);
+            string needTag = IsBladderFull ? "  <color=yellow>[Rahatla (P)]</color>" : "";
+
+            statusText.color = Color.white;
+            statusText.text = $"{hungerStr}    {thirstStr}    {bladderStr}{needTag}";
+        }
+
+        private string Colorize(string label, float goodRatio)
+        {
+            string hex = goodRatio <= 0f ? "#FF3333" : goodRatio <= lowThreshold ? "#FFA533" : "#FFFFFF";
+            return $"<color={hex}>{label}</color>";
         }
     }
 }

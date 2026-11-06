@@ -452,8 +452,8 @@ namespace EndlessSurvival.World.Editor
             {
                 roadGen.biomeProfiles = new List<RoadProfile>(allProfiles);
             }
-            roadGen.roadElevation = 0.45f;
-            roadGen.roadThickness = 0.80f;
+            roadGen.roadElevation = 0.225f;
+            roadGen.roadThickness = 0.40f;
             roadGen.syncExitSocket = true;
             roadGen.generateOnStart = true;
             Mesh generatedMesh = roadGen.BuildRoadMesh();

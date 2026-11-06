@@ -549,8 +549,8 @@ MonoBehaviour:
   spline: {fileID: 7235861993325476862}
   activeProfile: {fileID: 11400000, guid: bd29a20eb75883747be166ee2e8e18e0, type: 2}
   biomeProfiles: []
-  roadElevation: 0.45
-  roadThickness: 0.8
+  roadElevation: 0.225
+  roadThickness: 0.4
   crossSectionPreset: 1
   hasCurbs: 1
   hasSidewalks: 1
@@ -1114,6 +1114,8 @@ MonoBehaviour:
   openDoorChance: 0.25
   openHoodChance: 0.15
   brokenGlassChance: 0.3
+  lootTable: {fileID: 11400000, guid: 83c5dac189d6875468b76f671eef108f, type: 2}
+  burnedLootChance: 0.5
   minSpacing: 14
   offRoadMinDistance: 16
   offRoadMaxDistance: 40

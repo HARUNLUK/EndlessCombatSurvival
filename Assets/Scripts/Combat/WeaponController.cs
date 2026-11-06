@@ -120,7 +120,11 @@ namespace EndlessCombat.Combat
             return true;
         }
 
-        public bool TryFire(Vector3 aimTargetPoint, LayerMask hitMask, out RaycastHit hitInfo)
+        /// <param name="aimAtPoint">Shoot from the muzzle straight toward aimTargetPoint instead of along the muzzle's forward (used by AI).</param>
+        /// <param name="spreadDegrees">Random cone half-angle applied to the shot direction.</param>
+        /// <param name="ignoreRoot">Colliders under this transform are skipped by the bullet ray (the shooter itself).</param>
+        public bool TryFire(Vector3 aimTargetPoint, LayerMask hitMask, out RaycastHit hitInfo,
+            bool aimAtPoint = false, float spreadDegrees = 0f, Transform ignoreRoot = null)
         {
             hitInfo = default;
 
@@ -154,13 +158,38 @@ namespace EndlessCombat.Combat
             // Bullet trajectory travels directly out of the weapon barrel
             Vector3 shootDirection = MuzzlePoint.forward;
 
-            if (shootDirection.sqrMagnitude < 0.001f)
+            if (aimAtPoint || shootDirection.sqrMagnitude < 0.001f)
             {
                 shootDirection = (aimTargetPoint - startPos).normalized;
             }
 
+            if (spreadDegrees > 0f)
+            {
+                shootDirection = (shootDirection + UnityEngine.Random.insideUnitSphere * Mathf.Tan(spreadDegrees * Mathf.Deg2Rad)).normalized;
+            }
+
             // Raycast towards targeted point
-            bool hasHit = Physics.Raycast(startPos, shootDirection, out hitInfo, range, hitMask, QueryTriggerInteraction.Ignore);
+            bool hasHit;
+            if (ignoreRoot != null)
+            {
+                hasHit = false;
+                hitInfo = default;
+                float best = float.MaxValue;
+                foreach (var h in Physics.RaycastAll(startPos, shootDirection, range, hitMask, QueryTriggerInteraction.Ignore))
+                {
+                    if (h.collider.transform.IsChildOf(ignoreRoot)) continue;
+                    if (h.distance < best)
+                    {
+                        best = h.distance;
+                        hitInfo = h;
+                        hasHit = true;
+                    }
+                }
+            }
+            else
+            {
+                hasHit = Physics.Raycast(startPos, shootDirection, out hitInfo, range, hitMask, QueryTriggerInteraction.Ignore);
+            }
 
             Vector3 endPoint = hasHit ? hitInfo.point : (startPos + shootDirection * range);
 

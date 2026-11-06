@@ -1,4 +1,5 @@
 using UnityEngine;
+using EndlessSurvival.World;
 
 namespace EndlessSurvival.Inventory
 {
@@ -12,6 +13,13 @@ namespace EndlessSurvival.Inventory
 
         [Tooltip("Tint applied to the chest once it is empty")]
         public Color emptyColor = new Color(0.25f, 0.25f, 0.25f);
+
+        [Header("Texts")]
+        [Tooltip("Interaction prompt (e.g. \"Search vehicle\" on abandoned cars)")]
+        public string openPrompt = "Open chest";
+        public string emptyPrompt = "Open chest (empty)";
+        [Tooltip("Title of the container column in the inventory screen")]
+        public string containerTitle = "CHEST";
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -39,11 +47,27 @@ namespace EndlessSurvival.Inventory
         private void EnsureRolled()
         {
             if (_storage != null) return;
+            Fill(lootTable != null ? lootTable.Roll() : null);
+        }
 
+        /// <summary>
+        /// Rolls the contents now from a seeded random (same seed, same contents), e.g. for chunk-spawned containers.
+        /// A null table (or rng) leaves the container empty.
+        /// </summary>
+        public void FillFrom(LootTable table, SeededRandom rng)
+        {
+            lootTable = table;
+            if (_storage != null) _storage.Changed -= UpdateTint;
+            _storage = null;
+            Fill(table != null && rng != null ? table.Roll(rng) : null);
+        }
+
+        private void Fill(System.Collections.Generic.List<ItemStack> stacks)
+        {
             _storage = new ItemStorage(0f);
-            if (lootTable != null)
+            if (stacks != null)
             {
-                foreach (ItemStack stack in lootTable.Roll())
+                foreach (ItemStack stack in stacks)
                     _storage.Add(stack.item, stack.amount);
             }
 
@@ -53,7 +77,7 @@ namespace EndlessSurvival.Inventory
 
         public string GetPrompt()
         {
-            return Storage.IsEmpty ? "Open chest (empty)" : "Open chest";
+            return Storage.IsEmpty ? emptyPrompt : openPrompt;
         }
 
         public string Interact(PlayerInventory user)

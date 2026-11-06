@@ -26,11 +26,11 @@ namespace EndlessSurvival.World.Road
         [Header("3D Thickness & Elevation")]
         [Tooltip("Height of road surface above base terrain to eliminate clipping and Z-fighting")]
         [Range(0.1f, 1.2f)]
-        public float roadElevation = 0.45f;
+        public float roadElevation = 0.225f;
 
         [Tooltip("Vertical thickness of the side curbs/skirts extending down into the terrain")]
         [Range(0.2f, 1.5f)]
-        public float roadThickness = 0.80f;
+        public float roadThickness = 0.40f;
 
         [Header("Cross-Section Preset & Style")]
         [Tooltip("Road cross-section style: Kaldırımlı, Bariyerli, Otoyol, Açık Kırsal, vb.")]
@@ -277,7 +277,7 @@ namespace EndlessSurvival.World.Road
             float sidewalkWidth = dims.sidewalkWidth;
             bool enableGuardrails = dims.guardrails;
 
-            float skirtDepth = 0.80f;
+            float skirtDepth = roadThickness;
             float tileRate = activeProfile != null ? activeProfile.textureTileRate : 0.15f;
 
             int steps = SampleSteps;

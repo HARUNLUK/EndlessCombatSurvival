@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EndlessSurvival.World.Road;
 using EndlessSurvival.World.POI;
+using EndlessSurvival.Inventory;
 
 namespace EndlessSurvival.World
 {
@@ -76,6 +77,12 @@ namespace EndlessSurvival.World
         [Range(0f, 1f)] public float openDoorChance = 0.25f;
         [Range(0f, 1f)] public float openHoodChance = 0.15f;
         [Range(0f, 1f)] public float brokenGlassChance = 0.3f;
+
+        [Header("Yağma (her araç sandık gibi aranabilir)")]
+        [Tooltip("Araç enkazından çıkabilecek eşyalar (hurda metal, akü, buji, motor parçası...). Boşsa araçlar aranamaz.")]
+        public LootTable lootTable;
+        [Tooltip("Yanmış araçların içinde bir şey kalmış olma ihtimali (kalanı boş)")]
+        [Range(0f, 1f)] public float burnedLootChance = 0.5f;
 
         [Header("Yerleşim")]
         [Tooltip("Tekil enkazlar arası en az mesafe")]
@@ -372,6 +379,7 @@ namespace EndlessSurvival.World
             col.transform.localPosition = container.InverseTransformPoint(groundPos + groundRot * (poseRot * solidBounds.center + lift));
             col.transform.localRotation = containerInv * groundRot * poseRot;
             col.AddComponent<BoxCollider>().size = solidBounds.size;
+            AddLoot(col, burned);
 
             if (debris || (!offRoad && (pose == WreckPose.Crossways || pose == WreckPose.OnSide || pose == WreckPose.Flipped)))
                 SpawnDebris(rng, mb, container, groundPos, groundRot, length);
@@ -379,6 +387,25 @@ namespace EndlessSurvival.World
             _placed.Add(new Placement { position = groundPos, localZ = localZ, side = side, onRoad = !offRoad });
             _clearings.Add(new ChunkVegetationSpawner.PoiExclusionZone(groundPos, length * 0.5f + 2.5f));
             return true;
+        }
+
+        /// <summary>
+        /// Makes the wreck searchable like a chest. Contents come from the chunk seed and the wreck's number (not the
+        /// placement stream), so the same seed always gives the same loot. Burned wrecks are often already empty.
+        /// </summary>
+        private void AddLoot(GameObject wreck, bool burned)
+        {
+            if (lootTable == null) return;
+
+            int seed = SeededRandom.Combine(SeededRandom.Combine(_chunk.ChunkSeed != 0 ? _chunk.ChunkSeed : _chunk.WorldSeed, "wreck_loot"), _placed.Count);
+            var rng = new SeededRandom(seed);
+            bool empty = burned && !rng.Chance(burnedLootChance);
+
+            var chest = wreck.AddComponent<LootChest>();
+            chest.openPrompt = "Search vehicle";
+            chest.emptyPrompt = "Search vehicle (empty)";
+            chest.containerTitle = "VEHICLE";
+            chest.FillFrom(empty ? null : lootTable, rng);
         }
 
         private Quaternion PoseRotation(WreckPose pose, SeededRandom rng, float side, float facing)

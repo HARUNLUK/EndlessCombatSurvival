@@ -343,7 +343,7 @@ namespace EndlessSurvival.Inventory
 
             if (vehicleTitleText != null)
             {
-                if (chestMode) vehicleTitleText.text = container.IsEmpty ? "CHEST (empty)" : "CHEST";
+                if (chestMode) vehicleTitleText.text = container.IsEmpty ? _chest.containerTitle + " (empty)" : _chest.containerTitle;
                 else vehicleTitleText.text = hasContainer ? "VEHICLE STORAGE (unlimited)" : "VEHICLE STORAGE (out of reach)";
             }
 

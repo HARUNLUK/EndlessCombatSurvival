@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_SparkPlug
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: Spark Plugs
+  category: 2
+  description: Pulled from a dead engine. Still good.
+  weight: 0.1
+  value: 5
+  useAmount: 1
+  equipSlot: 1
+  armor: 0
+  weaponPrefab: {fileID: 0}
+  worldColor: {r: 0.85, g: 0.85, b: 0.8, a: 1}
+  worldScale: {x: 0.1, y: 0.1, z: 0.25}
+  worldModel: {fileID: 0}
+  worldModelScale: 1

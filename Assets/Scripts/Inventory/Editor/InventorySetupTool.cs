@@ -58,6 +58,7 @@ namespace EndlessSurvival.Inventory.Editor
 
             SetupEnemyPrefab(enemyTable);
             SetupChunkPrefab(roadsideTable, chestPrefab);
+            AssignVehicleTable(CreateVehicleTable(pickupPrefab));
             foreach (string path in VehiclePrefabPaths) SetupVehiclePrefab(path);
 
             AssetDatabase.SaveAssets();
@@ -109,6 +110,81 @@ namespace EndlessSurvival.Inventory.Editor
 
             CreateEquipmentItems();
             CreateSurvivalItems();
+            // Last, so the item database keeps the order (and indices) of the existing items
+            CreateVehicleSalvageItems();
+        }
+
+        private static void CreateVehicleSalvageItems()
+        {
+            //       key           name            category               kg    val use  color                                     scale
+            MakeItem("CarBattery", "Car Battery",  ItemCategory.Material, 6.0f, 20, 1, new Color(0.15f, 0.15f, 0.17f), new Vector3(0.35f, 0.25f, 0.20f), "Heavy, but it still holds a charge. Useful for vehicle electrics.");
+            MakeItem("SparkPlug",  "Spark Plugs",  ItemCategory.Material, 0.1f, 5,  1, new Color(0.85f, 0.85f, 0.80f), new Vector3(0.10f, 0.10f, 0.25f), "Pulled from a dead engine. Still good.");
+            MakeItem("RubberHose", "Rubber Hose",  ItemCategory.Material, 0.4f, 3,  1, new Color(0.10f, 0.10f, 0.10f), new Vector3(0.40f, 0.08f, 0.08f), "Coolant hose. Cracked at one end.");
+        }
+
+        // ------------------------------------------------------------------ Vehicle wreck loot
+
+        private const string VehicleLootTablePath = LootDir + "/Loot_Vehicle.asset";
+
+        /// <summary>
+        /// Abandoned vehicles on the roads are searchable like chests. Creates the car part items (if missing, appended
+        /// to the item database), the Loot_Vehicle table and assigns it to the wreck spawner of every chunk type prefab.
+        /// </summary>
+        [MenuItem("Endless Survival/Setup Vehicle Wreck Loot")]
+        public static void SetupVehicleWreckLoot()
+        {
+            EnsureFolder("Assets/Data");
+            EnsureFolder(ItemsDir);
+            EnsureFolder(LootDir);
+
+            CreateItems();
+            CreateDatabase();
+            WorldPickup pickup = AssetDatabase.LoadAssetAtPath<WorldPickup>($"{PrefabDir}/Pickup_Cube.prefab");
+            LootTable table = CreateVehicleTable(pickup);
+            AssetDatabase.SaveAssets();
+
+            int assigned = AssignVehicleTable(table);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[InventorySetupTool] Vehicle wreck loot ready: {VehicleLootTablePath}, assigned to {assigned} chunk prefab(s).");
+        }
+
+        private static LootTable CreateVehicleTable(WorldPickup pickup)
+        {
+            // Mostly car parts and salvage, sometimes what the driver left behind
+            LootTable table = MakeTable("Loot_Vehicle", pickup, 1, 4,
+                new Entry("ScrapMetal", 30, 1, 4), new Entry("SparkPlug", 12, 1, 3), new Entry("RubberHose", 10, 1, 2),
+                new Entry("Electronics", 10, 1, 2), new Entry("CarBattery", 6, 1, 1), new Entry("EnginePart", 6, 1, 1),
+                new Entry("FuelCan", 8, 1, 1), new Entry("DuctTape", 6, 1, 2), new Entry("ToolKit", 2, 1, 1),
+                new Entry("Flashlight", 3, 1, 1), new Entry("Coins", 6, 2, 12), new Entry("CrackedPhone", 4, 1, 1),
+                new Entry("EmptyBottle", 4, 1, 1), new Entry("SodaCan", 4, 1, 1), new Entry("WaterBottle", 3, 1, 1),
+                new Entry("EnergyBar", 3, 1, 1), new Entry("TeddyBear", 1, 1, 1));
+            return table;
+        }
+
+        private static int AssignVehicleTable(LootTable table)
+        {
+            int count = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs/Chunks" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (asset == null || asset.GetComponent<EndlessSurvival.World.Chunk>() == null) continue;
+
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    var spawner = root.GetComponent<EndlessSurvival.World.AbandonedVehicleSpawner>();
+                    if (spawner == null) spawner = root.AddComponent<EndlessSurvival.World.AbandonedVehicleSpawner>();
+                    spawner.lootTable = table;
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                    count++;
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(root);
+                }
+            }
+            return count;
         }
 
         private static void MakeItem(string key, string displayName, ItemCategory category, float weight, int value, int useAmount,

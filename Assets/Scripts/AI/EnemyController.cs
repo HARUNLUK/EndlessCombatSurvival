@@ -43,6 +43,30 @@ namespace EndlessCombat.AI
         public float attackCooldown = 1.5f;
         public float damage = 10f;
         private float lastAttackTime;
+        [Tooltip("Yakın mesafede atış sapması (derece)")]
+        public float aimSpreadClose = 0.5f;
+        [Tooltip("attackRange sınırında atış sapması (derece)")]
+        public float aimSpreadFar = 2.5f;
+        [Tooltip("Hedef görüşten çıksa bile bu süre boyunca nişan almaya devam eder")]
+        public float lostSightGrace = 1f;
+        private float _lastSeenTime = -999f;
+
+        [Header("Pathfinding")]
+        [Tooltip("Seconds between path recalculations while moving")]
+        public float repathInterval = 0.3f;
+        [Tooltip("Recalculate early when the destination moves more than this (m)")]
+        public float repathDestinationDelta = 1.5f;
+        [Tooltip("A path corner counts as reached within this horizontal distance (m)")]
+        public float cornerReachDistance = 0.6f;
+        [Tooltip("How far from the NavMesh the enemy or destination may be and still get a path (m)")]
+        public float navMeshSampleDistance = 4f;
+        private NavMeshPath _path;
+        private readonly Vector3[] _pathCorners = new Vector3[64];
+        private int _pathCornerCount;
+        private int _pathCornerIndex;
+        private float _lastRepathTime = -999f;
+        private Vector3 _pathDestination;
+        private bool _hasPath;
 
         [Header("Loot")]
         [Tooltip("Loot rolled and dropped as pickups when this enemy dies")]
@@ -87,7 +111,9 @@ namespace EndlessCombat.AI
                 controller.skinWidth = 0.01f; // Zeminle aradaki tampon boşluğu minimuma indiriyoruz ki havada süzülmesin
             }
 
+            // Movement stays on the CharacterController (gravity, collisions); the NavMesh only supplies the route
             if (agent != null) agent.enabled = false;
+            _path = new NavMeshPath();
 
             if (target == null)
             {
@@ -154,31 +180,41 @@ namespace EndlessCombat.AI
                 // Savaş Durumu
                 suspicionMeter = 100f;
 
-                if (distanceToTarget <= attackRange && canSee)
+                if (canSee) _lastSeenTime = Time.time;
+                // Kısa süreli görüş kaybı (animasyon/kemik titremesi) silahı indirmesin
+                bool hasSight = canSee || Time.time - _lastSeenTime < lostSightGrace;
+
+                if (distanceToTarget <= attackRange && hasSight)
                 {
                     animator.SetBool("IsAiming", true);
                     transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
 
-                    if (Time.time >= lastAttackTime + attackCooldown)
+                    if (canSee && Time.time >= lastAttackTime + attackCooldown)
                     {
                         Attack();
                     }
 
                     if (distanceToTarget > stopDist)
                     {
-                        moveVelocity = direction * (moveSpeed * 0.7f);
+                        moveVelocity = GetPathDirection(target.position) * (moveSpeed * 0.7f);
                         isMoving = true;
                     }
                 }
                 else if (distanceToTarget <= detectionRange * 1.3f)
                 {
                     animator.SetBool("IsAiming", false);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
 
                     if (distanceToTarget > stopDist)
                     {
-                        moveVelocity = direction * moveSpeed;
+                        // Face the walking direction so going around an obstacle looks natural
+                        Vector3 pathDir = GetPathDirection(target.position);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(pathDir), Time.deltaTime * 10f);
+                        moveVelocity = pathDir * moveSpeed;
                         isMoving = true;
+                    }
+                    else
+                    {
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
                     }
                 }
                 else
@@ -216,8 +252,9 @@ namespace EndlessCombat.AI
                     toInvestigate.y = 0;
                     if (toInvestigate.magnitude > 1.5f && _investigateTimer > 0f)
                     {
-                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(toInvestigate.normalized), Time.deltaTime * 6f);
-                        moveVelocity = toInvestigate.normalized * (moveSpeed * 0.5f);
+                        Vector3 pathDir = GetPathDirection(_investigatePoint);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(pathDir), Time.deltaTime * 6f);
+                        moveVelocity = pathDir * (moveSpeed * 0.5f);
                         isMoving = true;
                     }
 
@@ -286,18 +323,67 @@ namespace EndlessCombat.AI
             }
         }
 
+        /// <summary>
+        /// Horizontal unit direction to walk in to reach the destination, following the NavMesh route
+        /// around walls and rocks. Falls back to a straight line when there is no NavMesh or no path.
+        /// </summary>
+        private Vector3 GetPathDirection(Vector3 destination)
+        {
+            Vector3 straight = destination - transform.position;
+            straight.y = 0f;
+            straight = straight.sqrMagnitude > 0.0001f ? straight.normalized : transform.forward;
+
+            bool destinationMoved = (destination - _pathDestination).sqrMagnitude > repathDestinationDelta * repathDestinationDelta;
+            if (Time.time - _lastRepathTime >= repathInterval || (destinationMoved && Time.time - _lastRepathTime >= 0.1f))
+            {
+                RecalculatePath(destination);
+            }
+
+            if (!_hasPath) return straight;
+
+            while (_pathCornerIndex < _pathCornerCount)
+            {
+                Vector3 toCorner = _pathCorners[_pathCornerIndex] - transform.position;
+                toCorner.y = 0f;
+                if (toCorner.magnitude > cornerReachDistance) return toCorner.normalized;
+                _pathCornerIndex++;
+            }
+
+            return straight;
+        }
+
+        private void RecalculatePath(Vector3 destination)
+        {
+            _lastRepathTime = Time.time;
+            _pathDestination = destination;
+            _hasPath = false;
+
+            if (LocalNavMeshBuilder.Instance == null || !LocalNavMeshBuilder.Instance.HasNavMesh) return;
+            if (!NavMesh.SamplePosition(transform.position, out NavMeshHit fromHit, navMeshSampleDistance, NavMesh.AllAreas)) return;
+            if (!NavMesh.SamplePosition(destination, out NavMeshHit toHit, navMeshSampleDistance, NavMesh.AllAreas)) return;
+            if (!NavMesh.CalculatePath(fromHit.position, toHit.position, NavMesh.AllAreas, _path)) return;
+            if (_path.status == NavMeshPathStatus.PathInvalid) return;
+
+            _pathCornerCount = _path.GetCornersNonAlloc(_pathCorners);
+            // Corner 0 is the start point itself
+            _pathCornerIndex = _pathCornerCount > 1 ? 1 : 0;
+            _hasPath = _pathCornerCount > 0;
+        }
+
         private void Attack()
         {
             lastAttackTime = Time.time;
             
             if (weapon != null)
             {
-                Vector3 aimPoint = target.position + Vector3.up * 1.5f;
-                LayerMask hitMask = ~0; 
-                
-                // (weapon.transform.LookAt kaldırıldı çünkü silahı elin içinde büküp kırık gösteriyordu)
-                // Animasyon ve Root yönelmesi hedefe baktığı için mermi Muzzle.forward yönünde gidecek.
-                weapon.TryFire(aimPoint, hitMask, out RaycastHit hit);
+                // Gövde ortasına nişan al (kafa değil) ki küçük sapmalar ıskalamaya yol açmasın
+                Vector3 aimPoint = target.position + Vector3.up * 1.1f;
+                LayerMask hitMask = ~0;
+
+                // Mermi animasyondan bağımsız olarak namludan doğrudan hedefe gider; mesafeye göre hafif sapma.
+                float dist = Vector3.Distance(transform.position, target.position);
+                float spread = Mathf.Lerp(aimSpreadClose, aimSpreadFar, Mathf.Clamp01(dist / attackRange));
+                weapon.TryFire(aimPoint, hitMask, out RaycastHit hit, true, spread, transform);
             }
             else
             {
@@ -442,12 +528,25 @@ namespace EndlessCombat.AI
 
             // Siper / Engel (Raycast) kontrolü
             int mask = LayerMask.GetMask("Default", "Environment");
-            if (Physics.Raycast(eyePos, dirToTarget.normalized, out RaycastHit hit, dist, mask))
+            // Kendi collider'larımızı (hitbox, silah) ve trigger'ları yok say; aksi halde silah kalkınca
+            // kendi kolumuz/silahımız ışını keser, görüş kaybolur, silah iner, tekrar görür... (titreme)
+            var hits = Physics.RaycastAll(eyePos, dirToTarget.normalized, dist, mask, QueryTriggerInteraction.Ignore);
+            float nearest = float.MaxValue;
+            Collider nearestCol = null;
+            foreach (var h in hits)
             {
-                if (!hit.collider.CompareTag("Player"))
+                if (h.collider.transform.IsChildOf(transform)) continue;
+                if (h.distance < nearest)
                 {
-                    return false;
+                    nearest = h.distance;
+                    nearestCol = h.collider;
                 }
+            }
+
+            if (nearestCol != null)
+            {
+                bool isPlayer = nearestCol.CompareTag("Player") || nearestCol.transform.IsChildOf(target);
+                if (!isPlayer) return false;
             }
 
             float distFactor = 1f - Mathf.Clamp01(dist / effectiveRange);

@@ -1157,7 +1157,7 @@ MonoBehaviour:
   aimRotationOffset: 45
   detectionRange: 30
   attackRange: 15
-  attackCooldown: 1.5
+  attackCooldown: 0.6
   damage: 10
   dropTable: {fileID: 11400000, guid: c695a741898ba9b4b91cb9fd935f1536, type: 2}
   heldWeaponItem: {fileID: 11400000, guid: fc03a84f96abd5840990848f0f1e6a5c, type: 2}
