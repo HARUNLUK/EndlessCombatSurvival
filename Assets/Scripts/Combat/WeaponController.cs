@@ -9,7 +9,16 @@ namespace EndlessCombat.Combat
     {
         [Header("Weapon Identity & Type")]
         [SerializeField] private string weaponName = "Assault Rifle";
+        [Tooltip("Rifle and Pistol shoot; Melee weapons need a MeleeWeapon component on the same object")]
+        [SerializeField] private WeaponType weaponType = WeaponType.Rifle;
         [SerializeField] private bool isAutomatic = true;
+
+        [Header("Holding (non-rifle weapons)")]
+        [Tooltip("Body yaw offset while aiming. Rifles use the PlayerShooter value; pistols use this one.")]
+        [Range(-90f, 90f)]
+        [SerializeField] private float aimYawOffset = 0f;
+        [Tooltip("Lock the left hand to the LeftHandGrip point (two handed rifles). Off for pistols and melee weapons.")]
+        [SerializeField] private bool useLeftHandGrip = true;
 
         [Header("Ballistics & Damage")]
         [SerializeField] private float damage = 25f;
@@ -45,13 +54,16 @@ namespace EndlessCombat.Combat
         private Coroutine reloadCoroutine;
 
         public string WeaponName => weaponName;
+        public WeaponType Type => weaponType;
+        public bool IsFirearm => weaponType == WeaponType.Rifle || weaponType == WeaponType.Pistol;
+        public float AimYawOffset => aimYawOffset;
         public bool IsAutomatic => isAutomatic;
         public int CurrentAmmo => currentAmmo;
         public int ReserveAmmo => reserveAmmo;
         public int MagazineCapacity => magazineCapacity;
         public bool IsReloading => isReloading;
         public Transform MuzzlePoint => muzzlePoint != null ? muzzlePoint : transform;
-        public Transform LeftHandGrip => leftHandGrip;
+        public Transform LeftHandGrip => useLeftHandGrip ? leftHandGrip : null;
         public bool InfiniteAmmo => infiniteAmmo;
 
         private void Awake()
@@ -85,7 +97,7 @@ namespace EndlessCombat.Combat
                 muzzleFlash = muzzlePoint.GetComponentInChildren<ParticleSystem>();
             }
 
-            if (leftHandGrip == null)
+            if (leftHandGrip == null && useLeftHandGrip)
             {
                 Transform foundGrip = transform.Find("LeftHandGrip");
                 if (foundGrip != null)
@@ -203,14 +215,29 @@ namespace EndlessCombat.Combat
                 if (damageable != null && !damageable.IsDead)
                 {
                     damageable.TakeDamage(damage, hitInfo.point, hitInfo.normal);
+                    if (IsPlayerWeapon) CombatHooks.RaisePlayerFirearmHit(damageable, damage);
                 }
 
                 // Impact particle effect
                 SpawnImpactEffect(hitInfo.point, hitInfo.normal);
             }
 
+            if (IsPlayerWeapon) CombatHooks.RaisePlayerFired();
+            CombatHooks.RaiseWeaponFired(transform.position, IsPlayerWeapon);
             onShoot?.Invoke();
             return true;
+        }
+
+        private int _playerOwned = -1;
+
+        /// <summary>True when the weapon is held by the player (cached; weapons never change owner).</summary>
+        public bool IsPlayerWeapon
+        {
+            get
+            {
+                if (_playerOwned < 0) _playerOwned = GetComponentInParent<PlayerShooter>() != null ? 1 : 0;
+                return _playerOwned == 1;
+            }
         }
 
         /// <summary>Removes all magazine and reserve rounds and returns the total.</summary>
@@ -221,6 +248,12 @@ namespace EndlessCombat.Combat
             reserveAmmo = 0;
             NotifyAmmoChanged();
             return total;
+        }
+
+        /// <summary>Enemies never run dry (their weapons are made from the player item prefabs).</summary>
+        public void MakeInfiniteAmmo()
+        {
+            infiniteAmmo = true;
         }
 
         public void AddReserveAmmo(int amount)

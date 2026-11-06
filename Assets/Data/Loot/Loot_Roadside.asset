@@ -156,3 +156,43 @@ MonoBehaviour:
     weight: 7
     minAmount: 1
     maxAmount: 2
+  - item: {fileID: 11400000, guid: 8342a128fb7f50e41842a58cc632992c, type: 2}
+    weight: 1.2
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: 0139aa29386c2044a9952bd99d62927e, type: 2}
+    weight: 2
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: e732868079b1f9e4ba188fab99d27044, type: 2}
+    weight: 3
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: 2da8fbfe795b5db40a3274f01dd12ced, type: 2}
+    weight: 1.5
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: ae1e544301340934ab8c9c9c3eef854d, type: 2}
+    weight: 6
+    minAmount: 1
+    maxAmount: 3
+  - item: {fileID: 11400000, guid: ed4af06b2f310994da846bcc72730dfb, type: 2}
+    weight: 0.6
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: c85d2b280cd855e4694afb458e93c60f, type: 2}
+    weight: 3
+    minAmount: 1
+    maxAmount: 2
+  - item: {fileID: 11400000, guid: f4721657e1885bd4a8b9225cb86e19bd, type: 2}
+    weight: 1.5
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: 3f8817e3b8fb33b4ba04d07acb009dc7, type: 2}
+    weight: 0.8
+    minAmount: 1
+    maxAmount: 1
+  - item: {fileID: 11400000, guid: e941f540243df894383e95b3a9a1a451, type: 2}
+    weight: 2
+    minAmount: 1
+    maxAmount: 2

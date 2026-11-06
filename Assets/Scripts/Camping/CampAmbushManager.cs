@@ -194,7 +194,7 @@ namespace EndlessSurvival.Camping
                 }
             }
 
-            ShowBanner("⚠️ KAMP BASKINI!", $"Düşmanlar kamp ateşini bastı! ({_activeAmbushEnemies.Count} Düşman)", new Color(0.85f, 0.15f, 0.15f, 0.92f), 8f);
+            ShowBanner("KAMP BASKINI!", $"Düşmanlar kamp ateşini bastı! ({_activeAmbushEnemies.Count} Düşman)", new Color(0.85f, 0.15f, 0.15f, 0.92f), 8f);
             Debug.Log($"<color=red>[CampAmbushManager] Kamp Baskını Başladı! {_activeAmbushEnemies.Count} düşman kampa saldırıyor.</color>");
         }
 
@@ -228,7 +228,7 @@ namespace EndlessSurvival.Camping
             // Ödül Sandığını Kamp Alanına Bırak
             SpawnRewardChest(_currentCampPosition);
 
-            ShowBanner("🎉 BASKIN PÜSKÜRTÜLDÜ!", "Düşmanlar temizlendi! Askeri ganimet sandığı kampa bırakıldı.", new Color(0.12f, 0.65f, 0.28f, 0.95f), 7f);
+            ShowBanner("BASKIN PÜSKÜRTÜLDÜ!", "Düşmanlar temizlendi! Askeri ganimet sandığı kampa bırakıldı.", new Color(0.12f, 0.65f, 0.28f, 0.95f), 7f);
             Debug.Log("<color=green>[CampAmbushManager] Baskın başarıyla püskürtüldü ve ganimet sandığı oluşturuldu!</color>");
         }
 
@@ -344,7 +344,7 @@ namespace EndlessSurvival.Camping
             _bannerTitleText.fontStyle = FontStyle.Bold;
             _bannerTitleText.alignment = TextAnchor.MiddleCenter;
             _bannerTitleText.color = Color.white;
-            _bannerTitleText.text = "⚠️ KAMP BASKINI!";
+            _bannerTitleText.text = "KAMP BASKINI!";
 
             // Alt Açıklama Metni
             GameObject subObj = new GameObject("SubtitleText");

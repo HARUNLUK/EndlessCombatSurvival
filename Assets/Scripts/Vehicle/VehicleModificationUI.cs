@@ -119,6 +119,9 @@ namespace EndlessSurvival.Vehicle
 
         public static void Open()
         {
+            // One Tab panel for everything: the workshop lives in its vehicle tab
+            if (EndlessSurvival.Survival.SurvivalPanel.OpenTab(EndlessSurvival.Survival.HubTab.Vehicle)) return;
+
             if (Instance == null)
             {
                 AutoInitialize();
@@ -240,7 +243,7 @@ namespace EndlessSurvival.Vehicle
             infoText.alignment = TextAnchor.MiddleLeft;
             infoText.color = Color.white;
 
-            string statusIcon = mod.isInstalled ? "<color=#00ff88>✔</color>" : "◻";
+            string statusIcon = mod.isInstalled ? "<color=#00ff88>[X]</color>" : "[ ]";
             string costStr = $"{mod.scrapCost}x Hurda Metal" + (string.IsNullOrEmpty(mod.secondaryItemKeyword) ? "" : $" + {mod.secondaryItemCost}x {mod.secondaryItemKeyword}");
 
             infoText.text = $"<b>{statusIcon} {mod.displayName}</b>\n" +
@@ -343,7 +346,7 @@ namespace EndlessSurvival.Vehicle
             titleText.fontStyle = FontStyle.Bold;
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = new Color(1.0f, 0.85f, 0.40f);
-            titleText.text = "🔧 ARAÇ MODİFİYE ATÖLYESİ (SURVIVAL MODS)";
+            titleText.text = "ARAÇ MODİFİYE ATÖLYESİ (SURVIVAL MODS)";
 
             // Araç Durum Özeti Çubuğu
             GameObject statsObj = new GameObject("StatsBar");

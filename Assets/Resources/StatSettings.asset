@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edafc0da8b67b1649b34242867a1f337, type: 3}
+  m_Name: StatSettings
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Survival.StatSettings
+  startValue: 5
+  maxValue: 100
+  growthMultiplier: 1
+  diminishingPower: 1.6
+  hardshipMultiplier: 2
+  marksmanshipPerHit: 0.6
+  meleePerHit: 0.8
+  strengthPerMeleeHit: 0.25
+  toughnessPerDamage: 0.05
+  endurancePerSprintSecond: 0.025
+  strengthPerOverloadedSecond: 0.03
+  stealthPerSneakSecond: 0.04
+  naturePerGather: 0.5
+  mechanicsPerCraft: 0.9
+  firstAidPerUse: 1.5
+  drivingPerSecond: 0.008
+  marksmanshipSpreadAtZero: 1.2
+  meleeDamageBonus: 0.6
+  meleeSpeedBonus: 0.25
+  strengthMeleeBonus: 0.25
+  toughnessDamageReduction: 0.3
+  toughnessBleedReduction: 0.5
+  enduranceStaminaBonus: 0.8
+  enduranceSprintSpeedBonus: 0.12
+  enduranceDrainReduction: 0.3
+  stealthNoiseReduction: 0.35
+  stealthSuspicionReduction: 0.4
+  naturePoisonReduction: 0.6
+  natureExtraYieldChance: 0.6
+  mechanicsCraftTimeReduction: 0.5
+  mechanicsSaveMaterialChance: 0.3
+  firstAidHealBonus: 0.8
+  drivingGripBonus: 0.15
+  effectiveFloor: 0.4
+  penalties:
+  - condition: 0
+    stats: 040000000300000001000000
+    maxDrop: 0.4
+  - condition: 1
+    stats: 0300000000000000
+    maxDrop: 0.4
+  - condition: 2
+    stats: 00000000050000000700000009000000
+    maxDrop: 0.35
+  - condition: 3
+    stats: 0500000003000000
+    maxDrop: 0.2
+  - condition: 4
+    stats: 0000000007000000
+    maxDrop: 0.3
+  - condition: 5
+    stats: 030000000400000005000000
+    maxDrop: 0.35
+  - condition: 6
+    stats: 040000000300000001000000
+    maxDrop: 0.35
+  - condition: 7
+    stats: 0300000005000000
+    maxDrop: 0.3
+  - condition: 8
+    stats: 00000000
+    maxDrop: 0.5
+  - condition: 9
+    stats: 000000000500000007000000
+    maxDrop: 0.3

@@ -102,6 +102,10 @@ namespace EndlessSurvival.Inventory
                 return;
             }
 
+            // One row per database item: items added after the panel was built get copies of the last row
+            playerRows = ExtendRows(playerRows, "PlayerRow");
+            vehicleRows = ExtendRows(vehicleRows, "VehicleRow");
+
             WireRows();
             WireActions();
 
@@ -117,6 +121,23 @@ namespace EndlessSurvival.Inventory
 
             if (inventoryPanel != null) inventoryPanel.SetActive(false);
             Refresh();
+        }
+
+        private ItemRowUI[] ExtendRows(ItemRowUI[] rows, string prefix)
+        {
+            if (database == null || rows == null || rows.Length == 0) return rows;
+            ItemRowUI template = rows[rows.Length - 1];
+            if (template == null || rows.Length >= database.Count) return rows;
+
+            var list = new System.Collections.Generic.List<ItemRowUI>(rows);
+            while (list.Count < database.Count)
+            {
+                // Rows sit in a VerticalLayoutGroup, so a copy under the same parent stacks below the others
+                ItemRowUI copy = Instantiate(template, template.transform.parent);
+                copy.name = $"{prefix}_{list.Count}";
+                list.Add(copy);
+            }
+            return list.ToArray();
         }
 
         private static void Wire(ItemRowUI row, int buttonIndex, UnityAction action)
@@ -265,6 +286,17 @@ namespace EndlessSurvival.Inventory
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
             }
+        }
+
+        /// <summary>The inventory window; the Tab panel's other tabs are drawn in the same rectangle.</summary>
+        public RectTransform PanelRect => inventoryPanel != null ? inventoryPanel.transform as RectTransform : null;
+
+        /// <summary>Shows/hides the inventory window while the screen stays open (other tab selected).</summary>
+        public void SetPanelVisible(bool visible)
+        {
+            if (!IsOpen || inventoryPanel == null || inventoryPanel.activeSelf == visible) return;
+            inventoryPanel.SetActive(visible);
+            if (visible) Refresh();
         }
 
         private bool VehicleAccessible()

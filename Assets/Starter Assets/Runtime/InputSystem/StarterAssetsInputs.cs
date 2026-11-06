@@ -51,9 +51,12 @@ namespace StarterAssets
 			move = newMoveDirection;
 		} 
 
+		/// <summary>Mouse sensitivity from the pause menu settings (Package 5.2).</summary>
+		public static float LookSensitivity = 1f;
+
 		public void LookInput(Vector2 newLookDirection)
 		{
-			look = newLookDirection;
+			look = newLookDirection * LookSensitivity;
 		}
 
 		public void JumpInput(bool newJumpState)

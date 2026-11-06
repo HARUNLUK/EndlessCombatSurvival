@@ -25,6 +25,7 @@ namespace EndlessSurvival.Story
         public MonoBehaviour playerInputs;
 
         private bool _isOpen;
+        public bool IsOpen => _isOpen;
         private bool _wasCursorLocked;
         private float _previousTimeScale;
 

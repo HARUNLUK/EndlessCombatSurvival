@@ -50,6 +50,11 @@ namespace EndlessSurvival.World
     /// </summary>
     public class ChunkManager : MonoBehaviour
     {
+        /// <summary>Raised when a chunk finished building (terrain, road, vegetation in place). Survival spawners listen.</summary>
+        public static event System.Action<Chunk> ChunkBuilt;
+        /// <summary>Seed chosen in the main menu for the next world (consumed once in Awake).</summary>
+        public static string PendingSeed;
+
         public static ChunkManager Instance { get; private set; }
 
         [Header("Seed")]
@@ -274,6 +279,13 @@ namespace EndlessSurvival.World
             }
             Instance = this;
             EnsureSettingsDefaults();
+
+            // A seed typed in the main menu (new game) wins over the inspector seed
+            if (!string.IsNullOrEmpty(PendingSeed))
+            {
+                masterSeed = PendingSeed;
+                PendingSeed = null;
+            }
 
             // Resolve the master seed
             if (string.IsNullOrEmpty(masterSeed))
@@ -513,6 +525,7 @@ namespace EndlessSurvival.World
 
             chunk.name = $"Chunk_{index}_{chunk.TypeName}_{chunk.roadType}_{chunk.crossSectionType}";
             chunk.MarkBuilt();
+            ChunkBuilt?.Invoke(chunk);
             RemoveBackdropProxy(index);
         }
 

@@ -21,6 +21,11 @@ namespace EndlessSurvival.Save
     {
         public static SaveManager Instance { get; private set; }
 
+        /// <summary>Raised while a save is built: add <see cref="SavedExtension"/> entries to data.extensions.</summary>
+        public static event Action<SaveData> CollectingSave;
+        /// <summary>Raised while a save is applied, after the player and vehicle state.</summary>
+        public static event Action<SaveData> ApplyingLoad;
+
         private const string SaveFileName = "survival_save.json";
         private string SaveFilePath => Path.Combine(Application.persistentDataPath, SaveFileName);
 
@@ -95,6 +100,21 @@ namespace EndlessSurvival.Save
         public bool IsNoteRead(string noteId)
         {
             return !string.IsNullOrEmpty(noteId) && _readNoteIds.Contains(noteId);
+        }
+
+        /// <summary>World seed stored in the save file (null when there is no readable save). Used by the main menu.</summary>
+        public string PeekSavedSeed()
+        {
+            try
+            {
+                if (!HasSaveFile()) return null;
+                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SaveFilePath));
+                return data != null ? data.masterSeed : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public bool HasSaveFile()
@@ -234,11 +254,14 @@ namespace EndlessSurvival.Save
                     }
                 }
 
+                // 7. Hayatta kalma sistemleri kendi verilerini ekler
+                CollectingSave?.Invoke(data);
+
                 // JSON'a Çevir ve Kaydet
                 string json = JsonUtility.ToJson(data, true);
                 File.WriteAllText(SaveFilePath, json);
 
-                string msg = isAutoSave ? "💾 OTOMATİK KAYIT ALINDI (Kamp)" : "💾 OYUN KAYDEDİLDİ [F5]";
+                string msg = isAutoSave ? "OTOMATİK KAYIT ALINDI (Kamp)" : "OYUN KAYDEDİLDİ [F5]";
                 ShowNotification(msg, new Color(0.15f, 0.55f, 0.25f, 0.95f));
                 Debug.Log($"<color=green>[SaveManager] Oyun başarıyla kaydedildi: {SaveFilePath}</color>");
                 return true;
@@ -246,7 +269,7 @@ namespace EndlessSurvival.Save
             catch (Exception ex)
             {
                 Debug.LogError($"[SaveManager] Kayıt başarısız oldu: {ex.Message}");
-                ShowNotification("⚠️ KAYIT HATASI!", new Color(0.75f, 0.15f, 0.15f, 0.95f));
+                ShowNotification("KAYIT HATASI!", new Color(0.75f, 0.15f, 0.15f, 0.95f));
                 return false;
             }
         }
@@ -260,7 +283,7 @@ namespace EndlessSurvival.Save
             if (!HasSaveFile())
             {
                 Debug.LogWarning("[SaveManager] Yüklenecek kayıt dosyası bulunamadı.");
-                ShowNotification("⚠️ KAYIT BULUNAMADI!", new Color(0.7f, 0.4f, 0.1f, 0.95f));
+                ShowNotification("KAYIT BULUNAMADI!", new Color(0.7f, 0.4f, 0.1f, 0.95f));
                 return false;
             }
 
@@ -280,7 +303,7 @@ namespace EndlessSurvival.Save
             catch (Exception ex)
             {
                 Debug.LogError($"[SaveManager] Yükleme sırasında hata oluştu: {ex.Message}");
-                ShowNotification("⚠️ YÜKLEME HATASI!", new Color(0.75f, 0.15f, 0.15f, 0.95f));
+                ShowNotification("YÜKLEME HATASI!", new Color(0.75f, 0.15f, 0.15f, 0.95f));
                 return false;
             }
         }
@@ -389,6 +412,9 @@ namespace EndlessSurvival.Save
                 }
             }
 
+            // Hayatta kalma sistemlerinin verileri
+            ApplyingLoad?.Invoke(data);
+
             // Eğer oyuncu araç içindeyken kaydedilmişse araca bindir
             if (data.isPlayerInsideVehicle && vehicleInteract != null && !vehicleInteract.IsPlayerInside)
             {
@@ -397,7 +423,7 @@ namespace EndlessSurvival.Save
 
             yield return null;
 
-            ShowNotification("📂 OYUN BAŞARIYLA YÜKLENDİ [F9]", new Color(0.12f, 0.45f, 0.75f, 0.95f));
+            ShowNotification("OYUN BAŞARIYLA YÜKLENDİ [F9]", new Color(0.12f, 0.45f, 0.75f, 0.95f));
             Debug.Log("<color=green>[SaveManager] Kayıt başarıyla yüklendi ve sahne güncellendi!</color>");
         }
 
@@ -486,7 +512,7 @@ namespace EndlessSurvival.Save
             _bannerObj.SetActive(false);
         }
 
-        private void ShowNotification(string message, Color bgColor)
+        public void ShowNotification(string message, Color bgColor)
         {
             if (_bannerObj == null) CreateNotificationUI();
 

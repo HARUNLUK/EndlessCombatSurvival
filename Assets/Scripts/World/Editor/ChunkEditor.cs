@@ -90,7 +90,7 @@ namespace EndlessSurvival.World.Editor
             EditorGUILayout.LabelField("Prefab Kayıt ve Onarım (Overrides)", EditorStyles.boldLabel);
 
             GUI.backgroundColor = new Color(0.1f, 0.85f, 0.45f);
-            if (GUILayout.Button("💾 Geçersiz Scriptleri Onar & Prefab'a Kaydet", GUILayout.Height(32)))
+            if (GUILayout.Button("Geçersiz Scriptleri Onar & Prefab'a Kaydet", GUILayout.Height(32)))
             {
                 PrefabMissingScriptFixer.CleanAndApplyToPrefab(chunk);
             }
@@ -151,11 +151,11 @@ namespace EndlessSurvival.World.Editor
 
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
-            if (GUILayout.Button(new GUIContent("🎲 Yeni Seed", "Her şey yeni: seçenekler + yol kıvrımı / kamp / ağaçlar"), GUILayout.Height(24)))
+            if (GUILayout.Button(new GUIContent("Yeni Seed", "Her şey yeni: seçenekler + yol kıvrımı / kamp / ağaçlar"), GUILayout.Height(24)))
                 result = ChunkPreviewSeed.NewSeed();
-            if (GUILayout.Button(new GUIContent("🎲 Seçenekler", "Sadece seçenek harfleri yeni ('-' öncesi); kıvrım / kamp / ağaçlar aynı"), GUILayout.Height(24)))
+            if (GUILayout.Button(new GUIContent("Seçenekler", "Sadece seçenek harfleri yeni ('-' öncesi); kıvrım / kamp / ağaçlar aynı"), GUILayout.Height(24)))
                 result = ChunkPreviewSeed.ShuffleOptions(chunk.editorPreviewSeed);
-            if (GUILayout.Button(new GUIContent("🎲 Şekil", "Seçenekler aynı; yol kıvrımı / kamp / ağaçlar yeni ('-' sonrası)"), GUILayout.Height(24)))
+            if (GUILayout.Button(new GUIContent("Şekil", "Seçenekler aynı; yol kıvrımı / kamp / ağaçlar yeni ('-' sonrası)"), GUILayout.Height(24)))
                 result = ChunkPreviewSeed.ShuffleShape(chunk.editorPreviewSeed);
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();

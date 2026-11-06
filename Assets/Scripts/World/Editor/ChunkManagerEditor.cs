@@ -93,7 +93,7 @@ namespace EndlessSurvival.World.Editor
                 if (i < count && t == runType) continue;
 
                 string range = runStart == i - 1 ? $"{runStart}" : $"{runStart}-{i - 1}";
-                sb.Append(runType.IsSpecial ? $"{range}  ★ {runType.Name} (özel, {(runType.profile != null ? runType.profile.DisplayName : "?")} içinde)" : $"{range}  {runType.Name}");
+                sb.Append(runType.IsSpecial ? $"{range}  * {runType.Name} (özel, {(runType.profile != null ? runType.profile.DisplayName : "?")} içinde)" : $"{range}  {runType.Name}");
                 if (i < count) sb.Append('\n');
                 runStart = i;
                 runType = t;

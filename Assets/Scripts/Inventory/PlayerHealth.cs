@@ -38,6 +38,16 @@ namespace EndlessSurvival.Inventory
         private float _current;
         private bool _initialized;
 
+        /// <summary>Survival systems scale incoming hit damage (toughness stat).</summary>
+        public static System.Func<float> DamageTakenMultiplier = () => 1f;
+        /// <summary>Survival systems scale the chance that a hit starts bleeding (toughness stat).</summary>
+        public static System.Func<float> BleedChanceMultiplier = () => 1f;
+
+        /// <summary>Raised after a hit was applied (final damage, armor and stats included).</summary>
+        public event System.Action<float> Damaged;
+        /// <summary>Raised when a new bleeding wound opens.</summary>
+        public event System.Action BleedingStarted;
+
         public bool IsDead { get; private set; }
         public float CurrentHealth
         {
@@ -91,15 +101,16 @@ namespace EndlessSurvival.Inventory
             GameStatsTracker.Instance?.SetCauseOfDeath("Düşman Ateşi / Çatışma");
 
             float reduction = equipment != null ? equipment.DamageReduction : 0f;
-            float finalDamage = damage * (1f - reduction);
+            float finalDamage = damage * (1f - reduction) * Mathf.Max(0f, DamageTakenMultiplier());
             _current = Mathf.Max(0f, _current - finalDamage);
 
             // Chance to trigger bleeding on significant damage
-            if (!isBleeding && finalDamage >= 8f && Random.value < bleedChanceOnHit)
+            if (!isBleeding && finalDamage >= 8f && Random.value < bleedChanceOnHit * Mathf.Max(0f, BleedChanceMultiplier()))
             {
                 StartBleeding();
             }
 
+            Damaged?.Invoke(finalDamage);
             RefreshUI();
 
             if (_current <= 0f) Die();
@@ -131,6 +142,7 @@ namespace EndlessSurvival.Inventory
             if (IsDead || isBleeding) return;
             isBleeding = true;
             RefreshUI();
+            BleedingStarted?.Invoke();
             Debug.Log("<color=red>[PlayerHealth] KANAMA BAŞLADI! Bandaj veya medkit kullanmalısın!</color>");
         }
 

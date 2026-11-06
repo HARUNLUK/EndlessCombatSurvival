@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3593b2576c4e9f848982da28645bd500, type: 3}
+  m_Name: Recipe_Torch
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Survival.RecipeDefinition
+  displayName: "Me\u015Fale"
+  description: 
+  station: 0
+  inputs:
+  - item: {fileID: 11400000, guid: e941f540243df894383e95b3a9a1a451, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: c85d2b280cd855e4694afb458e93c60f, type: 2}
+    amount: 1
+  tools: []
+  outputs:
+  - item: {fileID: 11400000, guid: ebba57125b309d44281fb82e77b48007, type: 2}
+    amount: 1
+  craftSeconds: 2
+  effect: 0
+  trainsStat: 7
+  natureBonusOutput: 0

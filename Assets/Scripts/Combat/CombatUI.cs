@@ -62,7 +62,7 @@ namespace EndlessCombat.Combat
 
             if (crosshairRoot != null)
             {
-                if (playerShooter.IsHolstered || playerShooter.CurrentWeapon == null)
+                if (!playerShooter.HoldsFirearm)
                 {
                     crosshairRoot.SetActive(false);
                 }
@@ -78,9 +78,16 @@ namespace EndlessCombat.Combat
 
             if (playerShooter.IsHolstered)
             {
-                if (ammoText != null) ammoText.text = "[Sırtta]";
+                if (ammoText != null) ammoText.text = "[Sırtta] Yumruk";
 #if TMPro
-                if (ammoTextTMP != null) ammoTextTMP.text = "[Sırtta]";
+                if (ammoTextTMP != null) ammoTextTMP.text = "[Sırtta] Yumruk";
+#endif
+            }
+            else if (weaponController != null && !weaponController.IsFirearm)
+            {
+                if (ammoText != null) ammoText.text = weaponController.WeaponName;
+#if TMPro
+                if (ammoTextTMP != null) ammoTextTMP.text = weaponController.WeaponName;
 #endif
             }
             else if (wasHolstered)
@@ -115,13 +122,14 @@ namespace EndlessCombat.Combat
             }
             else if (ammoText != null)
             {
-                ammoText.text = "NO WEAPON";
+                ammoText.text = "Yumruk";
             }
         }
 
         private void UpdateAmmoDisplay(int current, int reserve)
         {
             if (playerShooter != null && playerShooter.IsHolstered) return;
+            if (weaponController != null && !weaponController.IsFirearm) return;
 
             string displayString = (weaponController != null && weaponController.InfiniteAmmo) ? "∞" : $"{current} / {reserve}";
 

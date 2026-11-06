@@ -13,7 +13,7 @@ namespace EndlessSurvival.World.Editor
 
             // Header Banner
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("🌲 CHUNK VEGETATION & FORESTRY SYSTEM", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("CHUNK VEGETATION & FORESTRY SYSTEM", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 spawner.renderMode == ChunkVegetationSpawner.VegetationRenderMode.TerrainTrees
                     ? "AKTİF MOD: [Terrain Trees] Tüm ağaçlar, kayalar ve çalılar Unity Terrain GPU instanced motoru üzerinden sıfır GameObject yüküyle çizilir."
@@ -24,7 +24,7 @@ namespace EndlessSurvival.World.Editor
             // Render Mode Fast Switch Buttons
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = spawner.renderMode == ChunkVegetationSpawner.VegetationRenderMode.TerrainTrees ? new Color(0.2f, 0.8f, 0.4f) : Color.white;
-            if (GUILayout.Button("🌿 Terrain Modu (Önerilen)", GUILayout.Height(28)))
+            if (GUILayout.Button("Terrain Modu (Önerilen)", GUILayout.Height(28)))
             {
                 Undo.RecordObject(spawner, "Switch to TerrainTrees Mode");
                 spawner.renderMode = ChunkVegetationSpawner.VegetationRenderMode.TerrainTrees;
@@ -33,7 +33,7 @@ namespace EndlessSurvival.World.Editor
             }
 
             GUI.backgroundColor = spawner.renderMode == ChunkVegetationSpawner.VegetationRenderMode.GameObjects ? new Color(1.0f, 0.7f, 0.2f) : Color.white;
-            if (GUILayout.Button("📦 GameObject Modu", GUILayout.Height(28)))
+            if (GUILayout.Button("GameObject Modu", GUILayout.Height(28)))
             {
                 Undo.RecordObject(spawner, "Switch to GameObjects Mode");
                 spawner.renderMode = ChunkVegetationSpawner.VegetationRenderMode.GameObjects;
@@ -51,21 +51,21 @@ namespace EndlessSurvival.World.Editor
 
             // Generate Button
             GUI.backgroundColor = new Color(0.25f, 0.75f, 1.0f);
-            if (GUILayout.Button("🌲 Ağaçları ve Bitki Örtüsünü Yeniden Oluştur (Generate)", GUILayout.Height(32)))
+            if (GUILayout.Button("Ağaçları ve Bitki Örtüsünü Yeniden Oluştur (Generate)", GUILayout.Height(32)))
             {
                 spawner.GenerateVegetation();
                 EditorUtility.SetDirty(spawner.gameObject);
             }
 
             GUI.backgroundColor = new Color(0.2f, 0.85f, 0.5f);
-            if (GUILayout.Button("🚫 Tüm Ağaç/Kaya/Çalı Çarpışmalarını İptal Et (No Collision)", GUILayout.Height(28)))
+            if (GUILayout.Button("Tüm Ağaç/Kaya/Çalı Çarpışmalarını İptal Et (No Collision)", GUILayout.Height(28)))
             {
                 VegetationSetupUtility.StripAllVegetationColliders();
                 VegetationSetupUtility.SetupForestVegetation();
             }
 
             GUI.backgroundColor = new Color(1.0f, 0.45f, 0.2f);
-            if (GUILayout.Button("🗑️ Vegetation_Container'ları Tamamen Sil (Terrain Modu)", GUILayout.Height(26)))
+            if (GUILayout.Button("Vegetation_Container'ları Tamamen Sil (Terrain Modu)", GUILayout.Height(26)))
             {
                 VegetationSetupUtility.PurgeAllVegetationContainers();
             }

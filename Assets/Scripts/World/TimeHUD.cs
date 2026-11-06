@@ -108,27 +108,27 @@ namespace EndlessSurvival.World
 
                 if (cycle.CurrentHour >= 5.5f && cycle.CurrentHour < 7.5f)
                 {
-                    icon = "🌅";
+                    icon = "";
                     textColor = new Color(1.0f, 0.8f, 0.5f);
                 }
                 else if (cycle.CurrentHour >= 7.5f && cycle.CurrentHour < 17.5f)
                 {
-                    icon = "☀️";
+                    icon = "";
                     textColor = new Color(1.0f, 0.95f, 0.75f);
                 }
                 else if (cycle.CurrentHour >= 17.5f && cycle.CurrentHour < 19.5f)
                 {
-                    icon = "🌇";
+                    icon = "";
                     textColor = new Color(1.0f, 0.65f, 0.45f);
                 }
                 else
                 {
-                    icon = "🌙";
+                    icon = "";
                     textColor = new Color(0.65f, 0.80f, 1.0f);
                 }
 
                 string phase = showPhaseName ? $" {cycle.GetPhaseString()}" : "";
-                timeText.text = $"{icon} {cycle.GetTimeString()}{phase}";
+                timeText.text = $"{icon}{cycle.GetTimeString()}{phase}";
                 timeText.color = textColor;
             }
         }

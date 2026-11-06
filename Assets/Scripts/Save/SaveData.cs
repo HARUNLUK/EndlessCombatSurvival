@@ -50,6 +50,9 @@ namespace EndlessSurvival.Save
 
         [Header("Camping")]
         public List<SavedCampfire> placedCampfires = new List<SavedCampfire>();
+
+        // Survival systems (stamina, temperature, stats, weather...) each store a JSON blob under their own key
+        public List<SavedExtension> extensions = new List<SavedExtension>();
     }
 
     [Serializable]
@@ -64,6 +67,21 @@ namespace EndlessSurvival.Save
         {
             itemName = name;
             amount = count;
+        }
+    }
+
+    [Serializable]
+    public class SavedExtension
+    {
+        public string key;
+        public string json;
+
+        public SavedExtension() { }
+
+        public SavedExtension(string key, string json)
+        {
+            this.key = key;
+            this.json = json;
         }
     }
 

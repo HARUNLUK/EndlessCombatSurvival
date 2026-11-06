@@ -21,8 +21,45 @@ namespace EndlessSurvival.Camping
         private Image _fadeOverlay;
         private Text _fadeText;
 
-        public static bool IsOpen => _instance != null && _instance._panelRoot != null && _instance._panelRoot.activeSelf;
+        private static bool PanelActive => _instance != null && _instance._panelRoot != null && _instance._panelRoot.activeSelf;
+
+        /// <summary>True while the old campfire window or the Kamp tab of the Tab panel is showing.</summary>
+        public static bool IsOpen => PanelActive || EndlessSurvival.Survival.SurvivalPanel.Showing(EndlessSurvival.Survival.HubTab.Camp);
         public static float LastCloseTime => _lastCloseTime;
+
+        /// <summary>Fire the Kamp tab works on (set by [E] on a fire).</summary>
+        public static PlayerCampfire BoundFire => _instance != null ? _instance._activeFire : null;
+        public static string LastFeedback { get; private set; }
+        public static Color LastFeedbackColor { get; private set; } = Color.white;
+
+        public enum CampAction
+        {
+            AddFuel,
+            CookMeat,
+            CookStew,
+            BoilWater,
+            Sit,
+            Rest,
+            Bandage
+        }
+
+        /// <summary>Runs a campfire action from the Kamp tab of the Tab panel.</summary>
+        public static void Do(CampAction action, PlayerCampfire fire, PlayerInventory user)
+        {
+            if (_instance == null) CreateUI();
+            _instance._activeFire = fire;
+            _instance._activeUser = user;
+            switch (action)
+            {
+                case CampAction.AddFuel: _instance.OnAddFuelClicked(); break;
+                case CampAction.CookMeat: _instance.OnCookMeatClicked(); break;
+                case CampAction.CookStew: _instance.OnCookStewClicked(); break;
+                case CampAction.BoilWater: _instance.OnBoilWaterClicked(); break;
+                case CampAction.Sit: _instance.OnSitClicked(); break;
+                case CampAction.Rest: _instance.OnRestClicked(); break;
+                case CampAction.Bandage: _instance.OnBandageClicked(); break;
+            }
+        }
 
         public static void Open(PlayerCampfire fire, PlayerInventory user)
         {
@@ -33,6 +70,15 @@ namespace EndlessSurvival.Camping
 
             _instance._activeFire = fire;
             _instance._activeUser = user;
+            LastFeedback = null;
+
+            // One Tab panel for everything: the campfire lives in its Kamp tab
+            if (EndlessSurvival.Survival.SurvivalPanel.OpenTab(EndlessSurvival.Survival.HubTab.Camp))
+            {
+                _openTime = Time.unscaledTime;
+                return;
+            }
+
             _instance._panelRoot.SetActive(true);
             _instance.RefreshUI();
             _openTime = Time.unscaledTime;
@@ -52,6 +98,13 @@ namespace EndlessSurvival.Camping
 
         public static void Close()
         {
+            if (EndlessSurvival.Survival.SurvivalPanel.Showing(EndlessSurvival.Survival.HubTab.Camp))
+            {
+                EndlessSurvival.Survival.SurvivalPanel.CloseHub();
+                _lastCloseTime = Time.unscaledTime;
+                return;
+            }
+
             if (_instance != null && _instance._panelRoot != null)
             {
                 _instance._panelRoot.SetActive(false);
@@ -131,21 +184,21 @@ namespace EndlessSurvival.Camping
             _instance._feedbackText = CreateText(panel.transform, "Feedback", "", 14, FontStyle.Italic, new Vector2(0, 245), new Vector2(500, 30), Color.green);
 
             // 1. Yakacak Ekle Butonu
-            CreateButton(panel.transform, "Btn_Fuel", "🪵 Yakacak Ekle (+3 Dakika)", new Vector2(0, 195), new Vector2(460, 42), () => _instance.OnAddFuelClicked());
+            CreateButton(panel.transform, "Btn_Fuel", "Yakacak Ekle (+3 Dakika)", new Vector2(0, 195), new Vector2(460, 42), () => _instance.OnAddFuelClicked());
 
             // 2. Pişirme Butonları Bölümü
             CreateText(panel.transform, "SectionCooking", "--- YEMEK PİŞİRME ---", 15, FontStyle.Bold, new Vector2(0, 145), new Vector2(500, 30), new Color(0.8f, 0.8f, 0.8f));
 
-            CreateButton(panel.transform, "Btn_CookMeat", "🥩 Çiğ Et ➔ Pişmiş Et (+45 Açlık, +15 Can)", new Vector2(0, 95), new Vector2(460, 40), () => _instance.OnCookMeatClicked());
-            CreateButton(panel.transform, "Btn_CookStew", "🍲 Fasulye ➔ Sıcak Güveç (+40 Açlık, +10 Su)", new Vector2(0, 45), new Vector2(460, 40), () => _instance.OnCookStewClicked());
-            CreateButton(panel.transform, "Btn_BoilWater", "💧 Boş Şişe ➔ Kaynamış Temiz Su (+50 Su)", new Vector2(0, -5), new Vector2(460, 40), () => _instance.OnBoilWaterClicked());
+            CreateButton(panel.transform, "Btn_CookMeat", "Çiğ Et -> Pişmiş Et (+45 Açlık, +15 Can)", new Vector2(0, 95), new Vector2(460, 40), () => _instance.OnCookMeatClicked());
+            CreateButton(panel.transform, "Btn_CookStew", "Fasulye -> Sıcak Güveç (+40 Açlık, +10 Su)", new Vector2(0, 45), new Vector2(460, 40), () => _instance.OnCookStewClicked());
+            CreateButton(panel.transform, "Btn_BoilWater", "Boş Şişe -> Kaynamış Temiz Su (+50 Su)", new Vector2(0, -5), new Vector2(460, 40), () => _instance.OnBoilWaterClicked());
 
             // 3. Dinlenme & Sıhhat Bölümü
             CreateText(panel.transform, "SectionRest", "--- DİNLENME & SIHHAT ---", 15, FontStyle.Bold, new Vector2(0, -55), new Vector2(500, 30), new Color(0.8f, 0.8f, 0.8f));
 
-            CreateButton(panel.transform, "Btn_Sit", "🔥 Ateş Başında Yere Otur [C]", new Vector2(0, -100), new Vector2(460, 40), () => _instance.OnSitClicked());
-            CreateButton(panel.transform, "Btn_Rest", "🏕️ Ateş Başında Uyu / Zamanı İlerlet (+40 Can)", new Vector2(0, -150), new Vector2(460, 40), () => _instance.OnRestClicked());
-            CreateButton(panel.transform, "Btn_StopBleed", "🩹 Yara Sar & Bandaj Yap", new Vector2(0, -200), new Vector2(460, 40), () => _instance.OnBandageClicked());
+            CreateButton(panel.transform, "Btn_Sit", "Ateş Başında Yere Otur [C]", new Vector2(0, -100), new Vector2(460, 40), () => _instance.OnSitClicked());
+            CreateButton(panel.transform, "Btn_Rest", "Ateş Başında Uyu / Zamanı İlerlet (+40 Can)", new Vector2(0, -150), new Vector2(460, 40), () => _instance.OnRestClicked());
+            CreateButton(panel.transform, "Btn_StopBleed", "Yara Sar & Bandaj Yap", new Vector2(0, -200), new Vector2(460, 40), () => _instance.OnBandageClicked());
 
             // 4. Kapat Butonu
             CreateButton(panel.transform, "Btn_Close", "Kapat [ESC]", new Vector2(0, -280), new Vector2(460, 45), () => Close());
@@ -200,7 +253,9 @@ namespace EndlessSurvival.Camping
             if (_activeFire == null || _activeUser == null) return;
 
             // Envanterden yakacak aranır (FuelCan, ScrapMetal veya genel yakacak)
-            ItemDefinition fuelItem = FindItemWithCategory(ItemCategory.Fuel) ?? FindItemNamed("Fuel", "Scrap");
+            ItemDefinition fuelItem = FindItemNamed("Item_Firewood");
+            if (fuelItem == null || _activeUser.Storage.GetCount(fuelItem) <= 0)
+                fuelItem = FindItemWithCategory(ItemCategory.Fuel) ?? FindItemNamed("Fuel", "Scrap");
             if (fuelItem != null && _activeUser.Storage.GetCount(fuelItem) > 0)
             {
                 _activeUser.Storage.Remove(fuelItem, 1);
@@ -223,7 +278,7 @@ namespace EndlessSurvival.Camping
                 return;
             }
 
-            ItemDefinition rawMeat = FindItemNamed("DriedMeat", "Meat");
+            ItemDefinition rawMeat = FindItemNamed("Item_RawMeat");
             if (rawMeat != null && _activeUser.Storage.GetCount(rawMeat) > 0)
             {
                 _activeUser.Storage.Remove(rawMeat, 1);
@@ -267,7 +322,8 @@ namespace EndlessSurvival.Camping
                 return;
             }
 
-            ItemDefinition bottle = FindItemNamed("EmptyBottle", "Bottle");
+            // Package 2.9: dirty water from creeks is boiled (salt water needs the distiller)
+            ItemDefinition bottle = FindItemNamed("Item_DirtyWater");
             if (bottle != null && _activeUser.Storage.GetCount(bottle) > 0)
             {
                 _activeUser.Storage.Remove(bottle, 1);
@@ -277,7 +333,7 @@ namespace EndlessSurvival.Camping
             }
             else
             {
-                ShowFeedback("Envanterinde boş şişe yok!", Color.red);
+                ShowFeedback("Envanterinde kirli su yok! (dereden şişe doldur)", Color.red);
             }
         }
 
@@ -306,7 +362,7 @@ namespace EndlessSurvival.Camping
             Close();
 
             // Ekran karartma (Fade to black)
-            if (_fadeText != null) _fadeText.text = "💤 Kamp ateşinin başında dinleniliyor...";
+            if (_fadeText != null) _fadeText.text = "Kamp ateşinin başında dinleniliyor...";
             if (_fadeOverlay != null)
             {
                 for (float t = 0; t <= 1f; t += Time.deltaTime * 2.5f)
@@ -336,7 +392,7 @@ namespace EndlessSurvival.Camping
 
             if (isAmbushed)
             {
-                sleepReport = "<color=red>⚠️ TEHLİKE: Uykunuz silah ve ayak sesleriyle bölündü!\nDüşmanlar kampınızı bastı!</color>";
+                sleepReport = "<color=red>TEHLİKE: Uykunuz silah ve ayak sesleriyle bölündü!\nDüşmanlar kampınızı bastı!</color>";
             }
 
             if (_fadeText != null)
@@ -417,6 +473,8 @@ namespace EndlessSurvival.Camping
 
         private void ShowFeedback(string msg, Color col)
         {
+            LastFeedback = msg;
+            LastFeedbackColor = col;
             if (_feedbackText != null)
             {
                 _feedbackText.text = msg;

@@ -1,0 +1,11 @@
+player prefab: Assets/Starter Assets/Runtime/ThirdPersonController/Prefabs/PlayerArmature.prefab
+REST UAL1_Standard.fbx avatar=UAL1_StandardAvatar human=True  L=90deg (fwd -0,02)  R=90deg (fwd -0,02)
+REST UAL2_Standard.fbx avatar=UAL2_StandardAvatar human=True  L=90deg (fwd -0,02)  R=90deg (fwd -0,02)
+REST PlayerArmature.prefab avatar=ArmatureAvatar human=True  L=41deg (fwd 0,04)  R=41deg (fwd 0,04)
+CLIP Armature|Idle_Loop  L=24deg (fwd -0,27)  R=30deg (fwd -0,48)
+CLIP Armature|Pistol_Idle_Loop  L=60deg (fwd 0,85)  R=83deg (fwd 0,99)
+CLIP Armature|Pistol_Aim_Neutral  L=61deg (fwd 0,85)  R=86deg (fwd 0,99)
+CLIP Armature|Sword_Idle  L=47deg (fwd 0,22)  R=43deg (fwd -0,68)
+CLIP Armature|Sword_Attack  L=107deg (fwd -0,78)  R=55deg (fwd 0,42)
+CLIP Armature|Punch_Jab  L=82deg (fwd 0,98)  R=40deg (fwd -0,30)
+CLIP Armature|OverhandThrow  L=111deg (fwd -0,72)  R=22deg (fwd 0,37)

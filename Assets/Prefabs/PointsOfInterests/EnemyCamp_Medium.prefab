@@ -3240,6 +3240,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.POI.EnemyCampPOI
   spawnChance: 1
+  placementZone: 0
+  minRoadClearance: 45
   campType: 1
   possibleDialogues:
   - {fileID: 11400000, guid: dca10342148297c4c9033670fed955e4, type: 2}
@@ -3247,6 +3249,12 @@ MonoBehaviour:
   dialogueTriggerDistance: 35
   enemyPrefabs:
   - {fileID: 6573041981299693663, guid: 7e74ec794582fee429dfc861a0361ef7, type: 3}
+  - {fileID: 6573041981299693663, guid: 7e74ec794582fee429dfc861a0361ef7, type: 3}
+  - {fileID: 6573041981299693663, guid: 7e74ec794582fee429dfc861a0361ef7, type: 3}
+  - {fileID: 3070826875746469233, guid: 8d114212c90229c45b8c9bf75555234c, type: 3}
+  - {fileID: 3070826875746469233, guid: 8d114212c90229c45b8c9bf75555234c, type: 3}
+  - {fileID: 2981841693167374466, guid: 175b110ebf7e64c498ce31db9688368f, type: 3}
+  - {fileID: 4206012342966105189, guid: 6efc534e767934848bb354938586b593, type: 3}
   minEnemies: 3
   maxEnemies: 4
   spawnRadius: 7

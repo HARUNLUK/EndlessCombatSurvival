@@ -69,6 +69,15 @@ namespace EndlessSurvival.World
 
         public event Action<float> OnHourChanged;
 
+        /// <summary>Raised after any sleep (camp or vehicle) with the hours slept. Survival systems listen.</summary>
+        public static event Action<float, bool> Slept;
+        /// <summary>Set to true right before SleepToNextPhase when sleeping in the vehicle (reset after the sleep).</summary>
+        public static bool NextSleepInVehicle;
+        /// <summary>Weather: sun and ambient light multiplier (rain, snow, fog darken the day).</summary>
+        public static float WeatherLightMultiplier = 1f;
+        /// <summary>Weather: extra exponential fog density (fog, rain, snow). Fog is forced on while above 0.</summary>
+        public static float WeatherFogDensityAdd = 0f;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoInitialize()
         {
@@ -214,7 +223,7 @@ namespace EndlessSurvival.World
             }
 
             sunLight.color = targetColor;
-            sunLight.intensity = targetIntensity;
+            sunLight.intensity = targetIntensity * WeatherLightMultiplier;
             sunLight.shadows = (currentHour >= 5.5f && currentHour <= 19.5f) ? LightShadows.Soft : LightShadows.Hard;
 
             // 3. Ambiyans Aydınlatması
@@ -225,12 +234,12 @@ namespace EndlessSurvival.World
             RenderSettings.ambientSkyColor = ambientSky;
             RenderSettings.ambientEquatorColor = ambientEquator;
             RenderSettings.ambientGroundColor = ambientGround;
-            RenderSettings.ambientIntensity = Mathf.Lerp(0.35f, 1.0f, dayFactor);
+            RenderSettings.ambientIntensity = Mathf.Lerp(0.35f, 1.0f, dayFactor) * Mathf.Lerp(1f, WeatherLightMultiplier, 0.7f);
 
-            // 4. Sis Ayarı
-            if (controlFog)
+            // 4. Sis Ayarı (hava durumu sisi her zaman uygulanır)
+            if (controlFog || WeatherFogDensityAdd > 0f)
             {
-                RenderSettings.fog = FogActive;
+                RenderSettings.fog = FogActive || WeatherFogDensityAdd > 0f;
                 Color targetFog;
                 if (isDusk)
                     targetFog = _duskFogColor;
@@ -241,7 +250,7 @@ namespace EndlessSurvival.World
 
                 RenderSettings.fogColor = targetFog;
                 float density = ActiveFogDensity;
-                RenderSettings.fogDensity = Mathf.Lerp(density * 1.4f, density, dayFactor);
+                RenderSettings.fogDensity = Mathf.Lerp(density * 1.4f, density, dayFactor) + WeatherFogDensityAdd;
             }
         }
 
@@ -313,6 +322,9 @@ namespace EndlessSurvival.World
             string summary = $"{roundedHours} saat uyunarak dinlenildi. {phaseName} (Saat: {timeStr})";
 
             Debug.Log($"<color=cyan>[DayNightCycle] {summary}</color>");
+            bool inVehicle = NextSleepInVehicle;
+            NextSleepInVehicle = false;
+            Slept?.Invoke(hoursPassed, inVehicle);
             return (hoursPassed, summary);
         }
 
@@ -340,12 +352,12 @@ namespace EndlessSurvival.World
         public string GetTimeWithIcon()
         {
             string icon;
-            if (currentHour >= 5.5f && currentHour < 7.5f) icon = "🌅";
-            else if (currentHour >= 7.5f && currentHour < 17.5f) icon = "☀️";
-            else if (currentHour >= 17.5f && currentHour < 19.5f) icon = "🌇";
-            else icon = "🌙";
+            if (currentHour >= 5.5f && currentHour < 7.5f) icon = "";
+            else if (currentHour >= 7.5f && currentHour < 17.5f) icon = "";
+            else if (currentHour >= 17.5f && currentHour < 19.5f) icon = "";
+            else icon = "";
 
-            return $"{icon} {GetTimeString()} ({GetPhaseString()})";
+            return $"{icon}{GetTimeString()} ({GetPhaseString()})";
         }
     }
 }

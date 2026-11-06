@@ -67,6 +67,16 @@ namespace EndlessCombat.Combat
         public bool IsHolstered => isHolstered;
         public Transform HolsterSocket => holsterSocket;
 
+        /// <summary>What the character holds right now: Unarmed when there is no weapon or it is holstered.</summary>
+        public WeaponType HandType => (isHolstered || currentWeapon == null) ? WeaponType.Unarmed : currentWeapon.Type;
+        public bool HoldsFirearm => !isHolstered && currentWeapon != null && currentWeapon.IsFirearm;
+
+        /// <summary>Body yaw offset while aiming: rifles use this shooter's value, other weapons their own.</summary>
+        public float CurrentAimYawOffset =>
+            (currentWeapon != null && currentWeapon.Type != WeaponType.Rifle) ? currentWeapon.AimYawOffset : aimBodyYawOffset;
+
+        private CombatAnimator combatAnimator;
+
         private struct BonePose
         {
             public Transform bone;
@@ -111,6 +121,16 @@ namespace EndlessCombat.Combat
             if (isHolstered)
             {
                 SetHolstered(true);
+            }
+
+            // Package 1 helpers are added at runtime so the scene does not need editing
+            combatAnimator = CombatAnimator.GetOrAdd(animator);
+            if (GetComponent<PlayerMelee>() == null) gameObject.AddComponent<PlayerMelee>();
+            if (GetComponent<PlayerThrower>() == null) gameObject.AddComponent<PlayerThrower>();
+            if (animator != null && animator.GetComponent<FootstepEmitter>() == null)
+            {
+                var steps = animator.gameObject.AddComponent<FootstepEmitter>();
+                steps.isPlayer = true;
             }
         }
 
@@ -245,8 +265,15 @@ namespace EndlessCombat.Combat
         {
             if (animator == null) return;
 
-            // When holstered, layer weight blends to 0, returning character to unarmed locomotion and idle
-            float targetLayerWeight = (isHolstered || currentWeapon == null) ? 0f : 1f;
+            // Rifle / pistol upper body layer by weapon type; holstered, melee or no weapon = free arms (unarmed locomotion)
+            if (combatAnimator == null) combatAnimator = CombatAnimator.GetOrAdd(animator);
+            if (combatAnimator != null)
+            {
+                combatAnimator.SetWeaponType(HandType);
+                return;
+            }
+
+            float targetLayerWeight = HandType == WeaponType.Rifle ? 1f : 0f;
             currentUpperBodyLayerWeight = Mathf.MoveTowards(currentUpperBodyLayerWeight, targetLayerWeight, Time.deltaTime * 6f);
             animator.SetLayerWeight(1, currentUpperBodyLayerWeight);
         }
@@ -298,9 +325,15 @@ namespace EndlessCombat.Combat
         {
             if (currentWeapon == null || isHolstered) return;
 
+            if (!currentWeapon.IsFirearm) return;
+
             if (currentWeapon.TryReload())
             {
-                if (animator != null)
+                if (currentWeapon.Type == WeaponType.Pistol)
+                {
+                    if (combatAnimator != null) combatAnimator.SetTrigger(CombatAnimator.PistolReload);
+                }
+                else if (animator != null)
                 {
                     animator.SetTrigger(animReloadHash);
                 }
@@ -316,7 +349,18 @@ namespace EndlessCombat.Combat
             float blendSpeed = isAiming ? 5.5f : 8f; // ~0.18s blend in, ~0.12s blend out
             currentAimWeight = Mathf.MoveTowards(currentAimWeight, targetAimWeight, Time.deltaTime * blendSpeed);
 
+            // Aim pitch for the pistol aim blend (Pistol_Aim_Down / Neutral / Up clips)
+            if (combatAnimator != null && mainCamera != null)
+            {
+                float pitch = Mathf.Asin(Mathf.Clamp(mainCamera.transform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+                combatAnimator.SetAimPitch(Mathf.Clamp(pitch / 50f, -1f, 1f));
+            }
+
             if (currentAimWeight <= 0.001f) return;
+
+            // Procedural bone bending (chest / right hand / left hand grip) is tuned for the rifle only.
+            // Other weapons play their animation clips untouched.
+            if (currentWeapon == null || currentWeapon.Type != WeaponType.Rifle) return;
 
             // Fallback character body rotation if tpController isn't doing it
             if (tpController == null && mainCamera != null && isAiming)
@@ -326,7 +370,7 @@ namespace EndlessCombat.Combat
 
                 if (cameraForward.sqrMagnitude > 0.001f)
                 {
-                    Quaternion yawOffset = Quaternion.Euler(0f, -aimBodyYawOffset, 0f);
+                    Quaternion yawOffset = Quaternion.Euler(0f, -CurrentAimYawOffset, 0f);
                     Vector3 adjustedForward = yawOffset * cameraForward.normalized;
 
                     Quaternion targetRot = Quaternion.LookRotation(adjustedForward);
@@ -502,7 +546,8 @@ namespace EndlessCombat.Combat
             aimPressed = Input.GetMouseButton(1);
 #endif
 
-            if (EndlessSurvival.Inventory.InventoryUI.IsOpen || currentWeapon == null) aimPressed = false;
+            // Only firearms aim; melee weapons and fists attack with the left button without aiming
+            if (EndlessSurvival.Inventory.InventoryUI.IsOpen || currentWeapon == null || !currentWeapon.IsFirearm) aimPressed = false;
 
             if (aimPressed != isAiming)
             {
@@ -516,18 +561,18 @@ namespace EndlessCombat.Combat
                 if (tpController != null)
                 {
                     tpController.IsAiming = isAiming;
-                    tpController.AimYawOffset = aimBodyYawOffset;
+                    tpController.AimYawOffset = CurrentAimYawOffset;
                 }
             }
             else if (isAiming && tpController != null)
             {
-                tpController.AimYawOffset = aimBodyYawOffset;
+                tpController.AimYawOffset = CurrentAimYawOffset;
             }
         }
 
         private void HandleShootInput()
         {
-            if (currentWeapon == null || isHolstered)
+            if (currentWeapon == null || isHolstered || !currentWeapon.IsFirearm)
             {
                 isShooting = false;
                 return;
@@ -559,7 +604,8 @@ namespace EndlessCombat.Combat
 
             if (shootTriggered)
             {
-                if (isAiming)
+                bool isRifle = currentWeapon.Type == WeaponType.Rifle;
+                if (isAiming && isRifle)
                 {
                     // Snap aim weight to full so bullet hits target with 100% accuracy immediately
                     currentAimWeight = 1f;
@@ -568,13 +614,18 @@ namespace EndlessCombat.Combat
 
                 Vector3 aimTargetPoint = GetAimPoint();
 
-                if (currentWeapon.TryFire(aimTargetPoint, aimColliderMask, out _))
+                // The pistol is not bent toward the target, so its bullet goes from the muzzle straight to the crosshair point
+                if (currentWeapon.TryFire(aimTargetPoint, aimColliderMask, out _, !isRifle, Mathf.Max(0f, CombatHooks.PlayerSpreadDegrees()), isRifle ? null : transform))
                 {
                     // Silah sesi yay (etraftaki düşmanları uyar)
                     PlayerStealthController.Instance?.EmitGunshotNoise(transform.position);
 
                     // Only trigger fire recoil animation when actively aiming and not already in firing transition
-                    if (isAiming && animator != null)
+                    if (isAiming && currentWeapon.Type == WeaponType.Pistol)
+                    {
+                        if (combatAnimator != null) combatAnimator.SetTrigger(CombatAnimator.PistolFire);
+                    }
+                    else if (isAiming && animator != null)
                     {
                         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(1);
                         if (!stateInfo.IsName("Firing Rifle"))

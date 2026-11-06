@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3593b2576c4e9f848982da28645bd500, type: 3}
+  m_Name: Recipe_CookFish
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Survival.RecipeDefinition
+  displayName: "Bal\u0131k pi\u015Fir"
+  description: 
+  station: 1
+  inputs:
+  - item: {fileID: 11400000, guid: e12089a4125341e4eba58979e6f464eb, type: 2}
+    amount: 1
+  tools: []
+  outputs:
+  - item: {fileID: 11400000, guid: 160e6c931fb9e4149a862d79a5ed82a5, type: 2}
+    amount: 1
+  craftSeconds: 3
+  effect: 0
+  trainsStat: 6
+  natureBonusOutput: 1

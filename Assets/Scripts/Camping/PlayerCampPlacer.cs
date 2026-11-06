@@ -17,6 +17,7 @@ namespace EndlessSurvival.Camping
 
         [Header("State")]
         private bool _isPlacing = false;
+        public bool IsPlacing => _isPlacing;
         private GameObject _ghostPreview;
         private Material _ghostMat;
         private Camera _mainCam;
@@ -57,7 +58,7 @@ namespace EndlessSurvival.Camping
             if (placePressed)
             {
                 // UI açıkken veya araçtayken kamp kurma moduna geçilmez
-                if (CampfireUI.IsOpen || !gameObject.activeInHierarchy) return;
+                if (CampfireUI.IsOpen || InventoryUI.IsOpen || !gameObject.activeInHierarchy) return;
 
                 TogglePlacementMode();
             }
@@ -82,6 +83,13 @@ namespace EndlessSurvival.Camping
                     CancelPlacement();
                 }
             }
+        }
+
+        /// <summary>Starts the campfire placement ghost (Kamp tab button).</summary>
+        public void BeginPlacement()
+        {
+            if (_isPlacing || !gameObject.activeInHierarchy) return;
+            TogglePlacementMode();
         }
 
         private void TogglePlacementMode()
@@ -145,7 +153,8 @@ namespace EndlessSurvival.Camping
             // Yakacak harca (varsa)
             if (_inventory != null)
             {
-                ItemDefinition wood = FindItemNamed("Wood", "Scrap", "Material");
+                ItemDefinition wood = FindItemNamed("Item_Firewood");
+                if (wood == null) wood = FindItemNamed("ScrapMetal");
                 if (wood != null && _inventory.Storage.GetCount(wood) > 0)
                 {
                     _inventory.Storage.Remove(wood, 1);

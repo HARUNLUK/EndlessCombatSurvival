@@ -26,3 +26,16 @@ MonoBehaviour:
   worldScale: {x: 0.35, y: 0.35, z: 0.35}
   worldModel: {fileID: 0}
   worldModelScale: 1
+  spoilHours: 48
+  spoilsInto: {fileID: 11400000, guid: 6cbd67a2210d39b41a3f7c0c79393d20, type: 2}
+  poisonChance: 0
+  thirstPenalty: 0
+  stressRelief: 5
+  warmth: 3
+  leavesItem: {fileID: 0}
+  effects: 0
+  insulation: 0
+  waterproof: 0
+  noise: 0
+  identifiedName: 
+  natureToIdentify: 20

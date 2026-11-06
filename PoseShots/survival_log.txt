@@ -1,0 +1,30 @@
+director: True  player: True  menuOpen: True  timeScale: 0
+menu closed: menuOpen=False timeScale=1
+chunks: 3
+resource nodes: 6  (trees 2)
+animals: 0 []
+wreck salvage: 10  pumps: 0  traders: 0
+buildings: 0
+recipes: 27  settings items: 62
+vitals: stamina 104/104 fatigue 1,0 body 97 felt 3,5C ambient 3,5C stress 0,0 carry comfort 31,3
+weather: Snow 0,83
+stats: Nişancılık  5 / 5 | Yakın Dövüş  5 / 5 | Sağlamlık  5 / 5 | Dayanıklılık  5 / 5 | Güç  5 / 5 | Gizlilik  5 / 5 | Doğa  5 / 5 | Mekanik  5 / 5 | İlk Yardım  5 / 5 | Sürüş  5 / 5
+craft bandage can=True reason=
+bandages 0 -> 1, cloth left 2
+cook meat away from fire: Yanan bir kamp ateşi yanında olmalısın
+raw meat added: 2, fatigue 1,3
+after 42h: raw 0 rotten 2 fatigue 100,0 totalHours 42,4
+vitals: body 90 felt -5,4 stamina cap 52 weather Snow
+water near player: None
+save ok=True survival keys: survival.clock,survival.stats,survival.vitals,survival.spoilage,survival.vehiclehome
+near animal Deer dist 38,6 hunting False
+near animal Wolf dist 1,6 hunting True
+player health 91 stress 23,9
+hub tab Inventory: ok=True open=True showing=True inventoryPanelVisible=True campfireIsOpen=False
+hub tab Craft: ok=True open=True showing=True inventoryPanelVisible=False campfireIsOpen=False
+hub tab Camp: ok=True open=True showing=True inventoryPanelVisible=False campfireIsOpen=True
+hub tab Vehicle: ok=True open=True showing=True inventoryPanelVisible=False campfireIsOpen=False
+hub tab Status: ok=True open=True showing=True inventoryPanelVisible=False campfireIsOpen=False
+hub closed: open=False inventoryOpen=False
+notifications: Sağlamlık 6 -> 7 / Sağlamlık 7 -> 8
+errors/exceptions logged: 0

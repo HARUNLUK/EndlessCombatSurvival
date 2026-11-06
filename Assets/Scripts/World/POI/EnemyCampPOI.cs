@@ -190,7 +190,7 @@ namespace EndlessSurvival.World.POI
                 }
             }
 
-            int spawnCount = rng.Range(minEnemies, maxEnemies + 1);
+            int spawnCount = EndlessSurvival.Survival.DifficultyCurve.ScaleEnemyCount(rng.Range(minEnemies, maxEnemies + 1), transform.position);
             spawnedSpeakers.Clear();
 
             int seatIndex = 0;
@@ -243,7 +243,7 @@ namespace EndlessSurvival.World.POI
                     }
                 }
                 
-                GameObject prefab = rng.Pick(enemyPrefabs);
+                GameObject prefab = EndlessSurvival.Survival.DifficultyCurve.PickEnemyPrefab(rng, enemyPrefabs, transform.position);
                 GameObject spawnedEnemy = null;
 #if UNITY_EDITOR
                 if (!Application.isPlaying)
@@ -266,6 +266,7 @@ namespace EndlessSurvival.World.POI
                     var controller = spawnedEnemy.GetComponent<EnemyController>();
                     if (controller != null)
                     {
+                        EndlessSurvival.Survival.DifficultyCurve.ApplyToEnemy(controller, transform.position);
                         if (shouldSit)
                         {
                             controller.initialState = EnemyController.EnemyState.Sitting;

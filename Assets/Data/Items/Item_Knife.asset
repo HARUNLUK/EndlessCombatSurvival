@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_Knife
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: Knife
+  category: 6
+  description: Fast, short reach.
+  weight: 0.3
+  value: 25
+  useAmount: 1
+  equipSlot: 5
+  armor: 0
+  weaponPrefab: {fileID: 7265631362095188123, guid: f968258a5f4ddd24b9baee34c3f596bf, type: 3}
+  worldColor: {r: 0.7, g: 0.72, b: 0.75, a: 1}
+  worldScale: {x: 0.3, y: 0.04, z: 0.06}
+  worldModel: {fileID: 0}
+  worldModelScale: 1

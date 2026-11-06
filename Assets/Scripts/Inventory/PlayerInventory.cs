@@ -83,11 +83,28 @@ namespace EndlessSurvival.Inventory
 
             bool isFood = item.category == ItemCategory.Food;
             float missing = isFood ? survival.maxHunger - survival.Hunger : survival.maxThirst - survival.Thirst;
-            if (missing < 0.5f) return isFood ? "Not hungry" : "Not thirsty";
+
+            // Salt water and similar: drinking is allowed even when it makes things worse
+            if (missing < 0.5f && item.thirstPenalty <= 0f) return isFood ? "Not hungry" : "Not thirsty";
 
             Storage.Remove(item, 1);
             float restored = isFood ? survival.Eat(item.useAmount) : survival.Drink(item.useAmount);
-            return $"{(isFood ? "Ate" : "Drank")} {item.DisplayName} (+{Mathf.RoundToInt(restored)} {(isFood ? "hunger" : "thirst")})";
+            if (item.thirstPenalty > 0f) survival.SetValues(survival.Hunger, survival.Thirst - item.thirstPenalty, survival.Bladder);
+            GiveBack(item);
+            ItemConsumed?.Invoke(item, this);
+            string penalty = item.thirstPenalty > 0f ? $" (-{Mathf.RoundToInt(item.thirstPenalty)} thirst, salty!)" : "";
+            return $"{(isFood ? "Ate" : "Drank")} {item.DisplayName} (+{Mathf.RoundToInt(restored)} {(isFood ? "hunger" : "thirst")}){penalty}";
+        }
+
+        /// <summary>Raised after a consumable was used (food, drink, medicine). Survival systems apply extra effects.</summary>
+        public static event Action<ItemDefinition, PlayerInventory> ItemConsumed;
+
+        /// <summary>First aid stat: multiplier for health restored by medical items.</summary>
+        public static Func<float> HealMultiplier = () => 1f;
+
+        private void GiveBack(ItemDefinition item)
+        {
+            if (item.leavesItem != null) Storage.Add(item.leavesItem, 1);
         }
 
         /// <summary>Consumes one consumable from the backpack. Returns a feedback message.</summary>
@@ -101,15 +118,24 @@ namespace EndlessSurvival.Inventory
             var health = GetComponent<PlayerHealth>();
             if (health == null) return "Cannot use this right now";
             if (health.IsDead) return null;
-            if (health.CurrentHealth >= health.maxHealth - 0.5f && !health.isBleeding) return "Health is already full";
+            bool hasEffect = item.effects != ConsumableEffect.None;
+            if (!hasEffect && health.CurrentHealth >= health.maxHealth - 0.5f && !health.isBleeding) return "Health is already full";
 
             Storage.Remove(item, 1);
-            float healed = health.Heal(item.useAmount);
-            bool stoppedBleed = health.isBleeding;
-            health.StopBleeding();
+            float healed = item.useAmount > 0 ? health.Heal(item.useAmount * Mathf.Max(0.1f, HealMultiplier())) : 0f;
+            bool stoppedBleed = false;
+            // Medical items with a heal amount stop bleeding; pure effect items (ointment, tea) do not
+            if (item.useAmount > 0)
+            {
+                stoppedBleed = health.isBleeding;
+                health.StopBleeding();
+            }
+            GiveBack(item);
+            ItemConsumed?.Invoke(item, this);
 
             string bleedNote = stoppedBleed ? " & Kanama durduruldu!" : "";
-            return $"Used {item.DisplayName} (+{Mathf.RoundToInt(healed)} health{bleedNote})";
+            string healNote = healed > 0f ? $" (+{Mathf.RoundToInt(healed)} health{bleedNote})" : bleedNote;
+            return $"Used {item.DisplayName}{healNote}";
         }
 
         /// <summary>Adds items and returns how many units were accepted.</summary>
@@ -127,7 +153,8 @@ namespace EndlessSurvival.Inventory
             {
                 int rounds = amount * Mathf.Max(1, item.useAmount);
                 WeaponController weapon = FindWeapon();
-                if (weapon != null) weapon.AddReserveAmmo(rounds);
+                // Melee weapons carry no rounds: keep them loose for the next firearm
+                if (weapon != null && weapon.IsFirearm) weapon.AddReserveAmmo(rounds);
                 else AddLooseAmmo(rounds);
                 return amount;
             }

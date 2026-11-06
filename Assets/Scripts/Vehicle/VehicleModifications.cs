@@ -13,7 +13,10 @@ namespace EndlessSurvival.Vehicle
         OffroadTires,       // Arazi Tekerleri & Zırhlı Jantlar
         RoofRack,           // Tavan Zırh Kafesi & Portbagaj
         RoofLightbar,       // Tavan Projektörü / Sis Spot Barı
-        ExternalFuelTanks   // Harici Yedek Yakıt Bidonları
+        ExternalFuelTanks,  // Harici Yedek Yakıt Bidonları
+        WaterTank,          // Su deposu (Paket 2.19)
+        RainTarp,           // Yağmur brandası: yağmurda depoya su toplar
+        DryingLine          // Kurutma ipi: sürerken et kurur
     }
 
     [Serializable]
@@ -86,6 +89,30 @@ namespace EndlessSurvival.Vehicle
         }
 
         private void InitializeModList()
+        {
+            InitializeDefaultMods();
+            EnsureSurvivalMods();
+        }
+
+        /// <summary>Package 2.19 mods are merged into lists saved before they existed.</summary>
+        private void EnsureSurvivalMods()
+        {
+            AddIfMissing(VehicleModType.WaterTank, "Su Deposu", "Bagaja bağlanan 40 litrelik su bidonu.", "Temiz su taşır (Tab > Araç).", 3, "RubberHose", 1);
+            AddIfMissing(VehicleModType.RainTarp, "Yağmur Brandası", "Tavan portbagajına gerilen huni şeklinde branda.", "Yağmurda, sürerken bile su deposuna su toplar.", 2, "Cloth", 3);
+            AddIfMissing(VehicleModType.DryingLine, "Kurutma İpi", "Kabin arkasına gerilen et kurutma ipi.", "Sürerken bagajdaki çiğ et kurur.", 1, "Cloth", 1);
+        }
+
+        private void AddIfMissing(VehicleModType type, string name, string desc, string benefit, int scrap, string keyword, int keywordCost)
+        {
+            if (GetModItem(type) != null) return;
+            modifications.Add(new VehicleModItem
+            {
+                type = type, displayName = name, description = desc, statBenefit = benefit,
+                scrapCost = scrap, secondaryItemKeyword = keyword, secondaryItemCost = keywordCost
+            });
+        }
+
+        private void InitializeDefaultMods()
         {
             if (modifications.Count == 0)
             {

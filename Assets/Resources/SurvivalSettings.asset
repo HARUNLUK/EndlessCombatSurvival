@@ -1,0 +1,242 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8795388cfdf5d242b34d1d851163ab5, type: 3}
+  m_Name: SurvivalSettings
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Survival.SurvivalSettings
+  items:
+  - {fileID: 11400000, guid: 5ec3ecd7c6d747248b3244d8c3d784fb, type: 2}
+  - {fileID: 11400000, guid: 6cbd67a2210d39b41a3f7c0c79393d20, type: 2}
+  - {fileID: 11400000, guid: e941f540243df894383e95b3a9a1a451, type: 2}
+  - {fileID: 11400000, guid: c85d2b280cd855e4694afb458e93c60f, type: 2}
+  - {fileID: 11400000, guid: 9c44a0ed8b04ddf45b4d0cbe2d26c2db, type: 2}
+  - {fileID: 11400000, guid: 4164717e362c56446942b51e288197cf, type: 2}
+  - {fileID: 11400000, guid: 32dafbc0e6cfb4f44be1b545540f90f0, type: 2}
+  - {fileID: 11400000, guid: 9cdc1c18febe93144a5690506ebe01e8, type: 2}
+  - {fileID: 11400000, guid: f4721657e1885bd4a8b9225cb86e19bd, type: 2}
+  - {fileID: 11400000, guid: c7e2b2e21ab812e418973ae2824989f0, type: 2}
+  - {fileID: 11400000, guid: 03ea9cbe1b42c9444a05bad308508d77, type: 2}
+  - {fileID: 11400000, guid: f517d26bccf3ed342a5398a051871c72, type: 2}
+  - {fileID: 11400000, guid: e12089a4125341e4eba58979e6f464eb, type: 2}
+  - {fileID: 11400000, guid: 849296ef07a037146908785b6997988b, type: 2}
+  - {fileID: 11400000, guid: 160e6c931fb9e4149a862d79a5ed82a5, type: 2}
+  - {fileID: 11400000, guid: fb9a66c0bf4d5e54ea78491ccc29451b, type: 2}
+  - {fileID: 11400000, guid: 5c2c55b4a6e3262408094af611c2f000, type: 2}
+  - {fileID: 11400000, guid: e02fcc1e71ef66b488d32504a4e6fd25, type: 2}
+  - {fileID: 11400000, guid: 60143d83374e03742ad87ed914adbe8e, type: 2}
+  - {fileID: 11400000, guid: e2d1a020bb8a4e94ea1638ad41242695, type: 2}
+  - {fileID: 11400000, guid: e87efb1f600203747a42faf732e04bea, type: 2}
+  - {fileID: 11400000, guid: f39eb825ec003f14487f910db901e677, type: 2}
+  - {fileID: 11400000, guid: 21aa452205637094b81d85293c2baf47, type: 2}
+  - {fileID: 11400000, guid: ebba57125b309d44281fb82e77b48007, type: 2}
+  - {fileID: 11400000, guid: 6ad773aaae32dcc4a8ff75deeb9ec2fd, type: 2}
+  - {fileID: 11400000, guid: 3f8817e3b8fb33b4ba04d07acb009dc7, type: 2}
+  - {fileID: 11400000, guid: 189d96404ebf10140a0cd7afcb3a4a44, type: 2}
+  - {fileID: 11400000, guid: fd7c2da33afa82747ac999f64cc6f607, type: 2}
+  - {fileID: 11400000, guid: bb8e099ae226b22438de89be055129ac, type: 2}
+  - {fileID: 11400000, guid: e043e4640b668f54197189dc576d17bf, type: 2}
+  - {fileID: 11400000, guid: 7b6c8929db876a94d918442976bc704d, type: 2}
+  - {fileID: 11400000, guid: 59b3868d4f282524faad6a3d56287249, type: 2}
+  - {fileID: 11400000, guid: fa888f4218c6bdc4582e4b7b3e8a4e36, type: 2}
+  - {fileID: 11400000, guid: 5fa2816c02418f047ba3003a5fc9cea7, type: 2}
+  - {fileID: 11400000, guid: 97fec4105af890b4d824797c5db84120, type: 2}
+  - {fileID: 11400000, guid: edd1ff6b849a5c142a2eb84f3b5b14a9, type: 2}
+  - {fileID: 11400000, guid: 72d7fbec8fccb5342a49f9985ad73f98, type: 2}
+  - {fileID: 11400000, guid: 26a6cf7c1d6322a4f9cd3b421c020729, type: 2}
+  - {fileID: 11400000, guid: c2fc1f9d7b9e7f3429f4063be6c39436, type: 2}
+  - {fileID: 11400000, guid: a4f6a40d18a57874faffbf762247d044, type: 2}
+  - {fileID: 11400000, guid: 50cf31dcf87e18343895c6560aebcfe3, type: 2}
+  - {fileID: 11400000, guid: d33e3bcf309890a43a77d154eee4dd4e, type: 2}
+  - {fileID: 11400000, guid: 284b5a77f39e66848947eb1033fe3f0d, type: 2}
+  - {fileID: 11400000, guid: 30a7c1ba49268f94eae04f9bdcd88d90, type: 2}
+  - {fileID: 11400000, guid: 82417bf9cace37546bd7a77a196f647a, type: 2}
+  - {fileID: 11400000, guid: 7bc87acbb0c175348a5fffc4ae27bae9, type: 2}
+  - {fileID: 11400000, guid: 58c5b9ff5fd47ca4993f77466d9a9c48, type: 2}
+  - {fileID: 11400000, guid: ec3ee0c9b4dc3cd47b919eb43253a04c, type: 2}
+  - {fileID: 11400000, guid: 37543bc3acfe8764ebcd26e5ae31cad4, type: 2}
+  - {fileID: 11400000, guid: d071f87062ea065479085428bed78e32, type: 2}
+  - {fileID: 11400000, guid: e732868079b1f9e4ba188fab99d27044, type: 2}
+  - {fileID: 11400000, guid: eb3c890ad287e1b4fbbf5587a540d861, type: 2}
+  - {fileID: 11400000, guid: 0139aa29386c2044a9952bd99d62927e, type: 2}
+  - {fileID: 11400000, guid: fb4adb574e444a74baa796eec86caf22, type: 2}
+  - {fileID: 11400000, guid: cd7af093d25b90e48a8df0d52deb6308, type: 2}
+  - {fileID: 11400000, guid: 3c700447137784645b6dd9d9282ab909, type: 2}
+  - {fileID: 11400000, guid: 1a7eb923a12ff75468c741bda58944b9, type: 2}
+  - {fileID: 11400000, guid: 05e95db3730bf4942a38ecf6bfc705db, type: 2}
+  - {fileID: 11400000, guid: c291f8490d7c5944ca33027e6dd372e0, type: 2}
+  - {fileID: 11400000, guid: 7234b7896604d9d49b25eefb62f3cdb7, type: 2}
+  - {fileID: 11400000, guid: f1521b16012f08745bf36031a3e973d9, type: 2}
+  - {fileID: 11400000, guid: 9a988e12f6d7a124a8695fb75d868321, type: 2}
+  recipes:
+  - {fileID: 11400000, guid: 34015f7e441e50e4f968fc3289f16be8, type: 2}
+  - {fileID: 11400000, guid: 145443fa0958980418ddbfbf1579d4a5, type: 2}
+  - {fileID: 11400000, guid: 938c86ee6f6e7fa4e897ae3430d4815d, type: 2}
+  - {fileID: 11400000, guid: 811026e6259246043a456ef9af7700a2, type: 2}
+  - {fileID: 11400000, guid: d059ddc6768528f458c77fce9012862a, type: 2}
+  - {fileID: 11400000, guid: bad77bbd1d19454418c0fa9c5f893b01, type: 2}
+  - {fileID: 11400000, guid: fbeeabcc7b47400489df60788f4cb238, type: 2}
+  - {fileID: 11400000, guid: 84038a764bda0f242b71bf5557f7f01f, type: 2}
+  - {fileID: 11400000, guid: 1e59e2d52fc69004a944701b7e3ac0bb, type: 2}
+  - {fileID: 11400000, guid: c21dba7e7b5505844a1ee948c7455a86, type: 2}
+  - {fileID: 11400000, guid: 77acffb227e9dec418c19ed65009fdc6, type: 2}
+  - {fileID: 11400000, guid: 2a81313469d57be4fa0fa2a3127eb68d, type: 2}
+  - {fileID: 11400000, guid: 193bd6a5eb31ef648918d4c2a544f256, type: 2}
+  - {fileID: 11400000, guid: 89b77b5c0e48ba54a824763ef222d4d1, type: 2}
+  - {fileID: 11400000, guid: 305afaf1ab1b9ad42badac5cdbf9a5d4, type: 2}
+  - {fileID: 11400000, guid: 7c9926c103e003e4f866859442378f33, type: 2}
+  - {fileID: 11400000, guid: 2a794bfab476eaa41a52b66a553ca6d6, type: 2}
+  - {fileID: 11400000, guid: 7c3cf71e0c6fb8646b1a7d29ca974c38, type: 2}
+  - {fileID: 11400000, guid: bc96e2d3878ab024d865df6dca9f4c62, type: 2}
+  - {fileID: 11400000, guid: 5fe1400e77a345d42af72dd6ec82fc91, type: 2}
+  - {fileID: 11400000, guid: 1d84904b2c917df49b37ef924a49ce3f, type: 2}
+  - {fileID: 11400000, guid: b4d810d71dd144649b0d12287874daa5, type: 2}
+  - {fileID: 11400000, guid: bb43b2a0cffb0364785b71f3fee7f8cf, type: 2}
+  - {fileID: 11400000, guid: 06c099164aee8b64ea3b57227ba22fb9, type: 2}
+  - {fileID: 11400000, guid: 8bd63079bc8a7d1499e8c97e0f47afb6, type: 2}
+  - {fileID: 11400000, guid: 11c386e347e94944fb1b8ea840ae537a, type: 2}
+  - {fileID: 11400000, guid: 1b47765b9e124ff4193d5e886358d868, type: 2}
+  pickupPrefab: {fileID: 4753128589801956333, guid: ece485f30819638429c3d2d56ad9fb75, type: 3}
+  chestPrefab: {fileID: 8276443001971815938, guid: 8fe5b518c641f1d43a28a37c1e32406e, type: 3}
+  humanEnemyPrefabs:
+  - {fileID: 4206012342966105189, guid: 6efc534e767934848bb354938586b593, type: 3}
+  - {fileID: 2981841693167374466, guid: 175b110ebf7e64c498ce31db9688368f, type: 3}
+  - {fileID: 3070826875746469233, guid: 8d114212c90229c45b8c9bf75555234c, type: 3}
+  - {fileID: 6573041981299693663, guid: 7e74ec794582fee429dfc861a0361ef7, type: 3}
+  houseLoot: {fileID: 11400000, guid: 18b1d83dd669b4e4283ba86185326f71, type: 2}
+  gasStationLoot: {fileID: 11400000, guid: dbbae579eaae3a34bbd34bb8bf7ca6a4, type: 2}
+  wreckLoot: {fileID: 11400000, guid: bf164bd5f4d33b648b1503d49ea48367, type: 2}
+  traderStock:
+  - {fileID: 11400000, guid: c291f8490d7c5944ca33027e6dd372e0, type: 2}
+  - {fileID: 11400000, guid: 37543bc3acfe8764ebcd26e5ae31cad4, type: 2}
+  - {fileID: 11400000, guid: 72d7fbec8fccb5342a49f9985ad73f98, type: 2}
+  - {fileID: 11400000, guid: 1a7eb923a12ff75468c741bda58944b9, type: 2}
+  - {fileID: 11400000, guid: edd1ff6b849a5c142a2eb84f3b5b14a9, type: 2}
+  - {fileID: 11400000, guid: 5ec3ecd7c6d747248b3244d8c3d784fb, type: 2}
+  - {fileID: 11400000, guid: 6ad773aaae32dcc4a8ff75deeb9ec2fd, type: 2}
+  - {fileID: 11400000, guid: c85d2b280cd855e4694afb458e93c60f, type: 2}
+  - {fileID: 11400000, guid: 4164717e362c56446942b51e288197cf, type: 2}
+  - {fileID: 11400000, guid: eb3c890ad287e1b4fbbf5587a540d861, type: 2}
+  - {fileID: 11400000, guid: 3c700447137784645b6dd9d9282ab909, type: 2}
+  - {fileID: 11400000, guid: 3f8817e3b8fb33b4ba04d07acb009dc7, type: 2}
+  - {fileID: 11400000, guid: 7234b7896604d9d49b25eefb62f3cdb7, type: 2}
+  - {fileID: 11400000, guid: 0139aa29386c2044a9952bd99d62927e, type: 2}
+  - {fileID: 11400000, guid: 21aa452205637094b81d85293c2baf47, type: 2}
+  - {fileID: 11400000, guid: e87efb1f600203747a42faf732e04bea, type: 2}
+  - {fileID: 11400000, guid: bb8e099ae226b22438de89be055129ac, type: 2}
+  - {fileID: 11400000, guid: e043e4640b668f54197189dc576d17bf, type: 2}
+  - {fileID: 11400000, guid: 7b6c8929db876a94d918442976bc704d, type: 2}
+  - {fileID: 11400000, guid: 26a6cf7c1d6322a4f9cd3b421c020729, type: 2}
+  - {fileID: 11400000, guid: cd7af093d25b90e48a8df0d52deb6308, type: 2}
+  - {fileID: 11400000, guid: 189d96404ebf10140a0cd7afcb3a4a44, type: 2}
+  maxStamina: 100
+  sprintDrainPerSecond: 11
+  jumpCost: 9
+  regenPerSecond: 16
+  regenDelay: 1.1
+  lowNeedRegenMultiplier: 0.4
+  exhaustedRecoverAt: 25
+  fatiguePerGameHour: 4.5
+  fatiguePerStamina: 0.012
+  sleepRecoveryPerHour: 13
+  vehicleSleepEfficiency: 0.6
+  staminaCapAtFullFatigue: 0.5
+  fatigueWarning: 70
+  toiletDuration: 4
+  toiletDangerRadius: 18
+  toiletNeglectGrace: 90
+  toiletNeglectSpeed: 0.88
+  toiletNeglectStaminaRegen: 0.6
+  hardLimitMultiplier: 1.5
+  overloadSpeedAtHardLimit: 0.6
+  carryPerStrength: 0.25
+  dayTemperature: 19
+  nightTemperature: 8
+  mountainOffset: -11
+  desertDayOffset: 9
+  desertNightOffset: -5
+  coastOffset: -1
+  rainOffset: -4
+  snowOffset: -9
+  fogOffset: -2
+  campfireWarmth: 17
+  campfireRadius: 6
+  vehicleWarmth: 11
+  comfortTemperature: 12
+  coolingPerDegree: 0.06
+  warmingPerSecond: 1.4
+  coldThreshold: 40
+  freezingThreshold: 15
+  freezingDamagePerSecond: 0.45
+  rainWetPerSecond: 1.2
+  waterWetPerSecond: 22
+  dryPerSecond: 0.35
+  dryNearFirePerSecond: 3
+  dryInVehiclePerSecond: 1.5
+  wetChill: 8
+  poisonSeconds: 150
+  poisonDamagePerSecond: 0.3
+  spoiledPoisonChance: 0.85
+  infectionDelay: 240
+  infectionDamagePerSecond: 0.12
+  feverChill: 6
+  stressInCombatPerSecond: 2.2
+  stressNoticedPerSecond: 1.2
+  stressPerHit: 4
+  stressLowHealthPerSecond: 0.8
+  stressKill: 6
+  stressDarkNightPerSecond: 0.15
+  stressNeedsPerSecond: 0.12
+  stressPredatorAttack: 8
+  stressDecayPerSecond: 0.35
+  stressRestFloor: 25
+  stressCampfirePerSecond: 0.8
+  stressSleepPerHour: 9
+  panicThreshold: 80
+  panicTriggerSeconds: 12
+  panicDuration: 25
+  panicCooldown: 120
+  panicAimSway: 4.5
+  anxietyPerGameHour: 0.76
+  anxietyStressLevel: 60
+  anxietyPerPanic: 2
+  anxietyWarning: 70
+  anxietyMild: 100
+  anxietyModerate: 160
+  anxietySevere: 240
+  anxietyCalmSleepPerHour: 1.6
+  anxietyCampfirePerGameHour: 0.8
+  nightmareChanceMild: 0.25
+  nightmareChanceSevere: 0.6
+  anxietyStressGainMultiplier: 1.4
+  vehicleSpoilMultiplier: 0.85
+  dryingLineHours: 3
+  fishWaitMin: 4
+  fishWaitMax: 12
+  fishBiteWindow: 1.1
+  trapCatchChance: 0.55
+  weatherSegmentHours: 5
+  rainChance: 0.25
+  snowChanceMountain: 0.45
+  fogChance: 0.15
+  rainGripMultiplier: 0.82
+  snowGripMultiplier: 0.68
+  kmForMaxDifficulty: 15
+  enemyCountBonusAtMax: 1
+  enemyHealthBonusAtMax: 0.6
+  enemyDamageBonusAtMax: 0.4
+  lootExtraRollsAtMax: 2
+  fuelScarcityAtMax: 0.55
+  encounterChance: 0.55
+  nightWolfCheckSeconds: 90
+  nightWolfChance: 0.18
+  traderChance: 0.12
+  traderMarkup: 1.6
+  traderSellBack: 0.5

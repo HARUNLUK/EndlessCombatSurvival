@@ -23,3 +23,18 @@ MonoBehaviour:
   weaponPrefab: {fileID: 0}
   worldColor: {r: 0.9, g: 0.15, b: 0.15, a: 1}
   worldScale: {x: 0.35, y: 0.2, z: 0.25}
+  worldModel: {fileID: 0}
+  worldModelScale: 1
+  spoilHours: 0
+  spoilsInto: {fileID: 0}
+  poisonChance: 0
+  thirstPenalty: 0
+  stressRelief: 0
+  warmth: 0
+  leavesItem: {fileID: 0}
+  effects: 1
+  insulation: 0
+  waterproof: 0
+  noise: 0
+  identifiedName: 
+  natureToIdentify: 20

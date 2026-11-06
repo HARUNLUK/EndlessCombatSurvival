@@ -179,9 +179,10 @@ namespace EndlessCombat.Combat
             bool isMoving = _inputs.move != Vector2.zero;
             if (!isMoving) return 0f;
 
-            if (_isCrouching) return crouchNoiseRadius;
-            if (_inputs.sprint) return sprintNoiseRadius;
-            return walkNoiseRadius;
+            float m = Mathf.Max(0f, CombatHooks.PlayerNoiseMultiplier());
+            if (_isCrouching) return crouchNoiseRadius * m;
+            if (_inputs.sprint) return sprintNoiseRadius * m;
+            return walkNoiseRadius * m;
         }
 
         /// <summary>
@@ -194,6 +195,7 @@ namespace EndlessCombat.Combat
 
         public void AlertNearbyEnemies(Vector3 soundOrigin, float radius)
         {
+            CombatHooks.RaiseNoise(soundOrigin, radius);
             Collider[] hits = Physics.OverlapSphere(soundOrigin, radius);
             foreach (var hit in hits)
             {

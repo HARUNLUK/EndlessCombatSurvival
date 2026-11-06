@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3593b2576c4e9f848982da28645bd500, type: 3}
+  m_Name: Recipe_RepairVehicle
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Survival.RecipeDefinition
+  displayName: "Arac\u0131 tamir et"
+  description: 
+  station: 2
+  inputs:
+  - item: {fileID: 11400000, guid: 189d96404ebf10140a0cd7afcb3a4a44, type: 2}
+    amount: 1
+  tools: []
+  outputs: []
+  craftSeconds: 8
+  effect: 3
+  trainsStat: 7
+  natureBonusOutput: 0

@@ -15,7 +15,20 @@ namespace EndlessSurvival.Inventory
         Apparel,
         Consumable,
         Food,
-        Drink
+        Drink,
+        Throwable
+    }
+
+    /// <summary>Extra effects of consumables, handled by the survival systems.</summary>
+    [System.Flags]
+    public enum ConsumableEffect
+    {
+        None = 0,
+        CleansWound = 1,     // alcohol, clean water on a wound: stops infection from starting
+        CuresInfection = 2,  // herbal ointment
+        CuresPoison = 4,     // herbal tea, charcoal
+        RestoresStamina = 8,
+        ReducesFatigue = 16  // coffee-like
     }
 
     public enum EquipSlot
@@ -70,7 +83,50 @@ namespace EndlessSurvival.Inventory
         [Tooltip("Uniform scale applied when a world model is used")]
         public float worldModelScale = 1f;
 
-        public string DisplayName => string.IsNullOrEmpty(displayName) ? name : displayName;
+        [Header("Survival: food and drink")]
+        [Tooltip("Game hours until this item spoils (0 = never)")]
+        public float spoilHours = 0f;
+        [Tooltip("Item this turns into when it spoils (empty = it disappears)")]
+        public ItemDefinition spoilsInto;
+        [Tooltip("Chance (0-1) that eating/drinking this poisons the player")]
+        [Range(0f, 1f)] public float poisonChance = 0f;
+        [Tooltip("Extra thirst lost when drinking this (salt water)")]
+        public float thirstPenalty = 0f;
+        [Tooltip("Stress removed when consumed (cooked food, alcohol). Negative adds stress.")]
+        public float stressRelief = 0f;
+        [Tooltip("Body warmth gained when consumed (hot food/tea), degrees for a short while")]
+        public float warmth = 0f;
+        [Tooltip("Item given back after use (empty bottle after drinking)")]
+        public ItemDefinition leavesItem;
+        public ConsumableEffect effects = ConsumableEffect.None;
+
+        [Header("Survival: apparel")]
+        [Tooltip("Insulation of worn apparel (degrees of cold it blocks)")]
+        public float insulation = 0f;
+        [Tooltip("0 = soaks through, 1 = fully waterproof")]
+        [Range(0f, 1f)] public float waterproof = 0f;
+        [Tooltip("Extra movement noise while worn (0.15 = +15% noise radius)")]
+        public float noise = 0f;
+
+        [Header("Survival: identification")]
+        [Tooltip("Name shown once the player can tell what this really is (Nature stat). Empty = always the normal name.")]
+        public string identifiedName = "";
+        [Tooltip("Nature stat needed to see identifiedName")]
+        public float natureToIdentify = 20f;
+
+        /// <summary>Set by the character stats: returns true when the player can identify the item.</summary>
+        public static System.Func<ItemDefinition, bool> IdentifyCheck;
+
+        public string DisplayName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(identifiedName) && IdentifyCheck != null && IdentifyCheck(this)) return identifiedName;
+                return string.IsNullOrEmpty(displayName) ? name : displayName;
+            }
+        }
+
+        public bool IsPerishable => spoilHours > 0f;
         public bool IsDirectPickup => category == ItemCategory.Ammo || category == ItemCategory.Currency;
         public bool IsEquippable => category == ItemCategory.Weapon || category == ItemCategory.Apparel;
         public bool IsConsumable => category == ItemCategory.Consumable || category == ItemCategory.Food || category == ItemCategory.Drink;
