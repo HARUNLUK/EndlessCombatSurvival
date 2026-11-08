@@ -72,6 +72,42 @@ namespace EndlessSurvival.Survival
         {
             PanelOpen = TradeOpen = PauseOpen = MenuOpen = false;
             _cursorUsers = 0;
+            _enforcedOpen = false;
+        }
+
+        private static bool _enforcedOpen;
+
+        /// <summary>
+        /// Runs every LateUpdate. Each panel locks/unlocks the cursor on its own, so when two panels overlap
+        /// (or the window regains focus) the cursor could end up locked while a panel is still open and the
+        /// UI stopped taking clicks. While any panel is open the cursor is kept free; when the last one closes
+        /// it is locked again once.
+        /// </summary>
+        internal static void EnforceCursor()
+        {
+            bool open = AnyOpen;
+            if (open)
+            {
+                if (Cursor.lockState != CursorLockMode.None) Cursor.lockState = CursorLockMode.None;
+                if (!Cursor.visible) Cursor.visible = true;
+                SetLook(false);
+            }
+            else if (_enforcedOpen)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                SetLook(true);
+            }
+            _enforcedOpen = open;
+            SyncStarterAssets(!open);
+        }
+
+        private static void SyncStarterAssets(bool locked)
+        {
+            // StarterAssetsInputs re-locks the cursor on window focus using this flag
+            var player = SurvivalDirector.Player;
+            var inputs = player != null ? player.GetComponent<StarterAssetsInputs>() : null;
+            if (inputs != null) inputs.cursorLocked = locked;
         }
 
         private static void SetLook(bool on)
@@ -265,6 +301,8 @@ namespace EndlessSurvival.Survival
 
             if (!_playerReady) TrySetupPlayer();
         }
+
+        private void LateUpdate() => SurvivalUIState.EnforceCursor();
 
         private void TrySetupPlayer()
         {

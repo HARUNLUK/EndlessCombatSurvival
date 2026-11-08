@@ -142,6 +142,8 @@ namespace EndlessSurvival.World
 
                 // Field river crossing: skip points that fall into the channel
                 if (chunk.IsField && point.y < chunk.transform.position.y + chunk.baseElevation - 1.5f) return false;
+                // River valley: not in the water or on its muddy banks
+                if (chunk.IsInRiver(point, 1.5f)) return false;
 
                 // Mountains: nothing down in the canyon below the road (the player can't climb back up),
                 // nor inside a mountain mesh beside the road

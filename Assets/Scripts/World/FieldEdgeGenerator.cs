@@ -21,7 +21,7 @@ namespace EndlessSurvival.World
     /// Fences, trees, corn and hay bales are combined into one mesh per side (simple boxes).
     /// </summary>
     [DisallowMultipleComponent]
-    public class FieldEdgeGenerator : MonoBehaviour
+    public class FieldEdgeGenerator : MonoBehaviour, IBackdropRiver
     {
         public const string CONTAINER_NAME = "Field_Edges";
 

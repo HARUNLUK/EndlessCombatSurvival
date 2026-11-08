@@ -210,6 +210,7 @@ namespace EndlessSurvival.World
         private float _baselineY = 20f;  // chunk.baseElevation, cached for per-sample use
         private List<Vector2> _poiKeepouts = new List<Vector2>(); // chunk-local (x, z) of POIs
 
+        private ValleyRiverGenerator _valley; // river valley course (cliffs, rocks and vegetation keep clear of it), null otherwise
         private float[] _roadX;          // road center X per heightmap row
         private float _roadHalfWidth = 9f;
         private int _seaIndex = -1;      // index into _sides of the sea side, -1 = no sea
@@ -273,6 +274,9 @@ namespace EndlessSurvival.World
             int startSeam = chunk != null ? chunk.ChunkIndex : 0;
 
             var rng = new SeededRandom(SeededRandom.Combine(planSeed, "boundary"));
+            // River valley: planned before this (RoadTerrainAdapter), the cliffs start beyond the river's far bank
+            _valley = chunk != null ? chunk.GetComponent<ValleyRiverGenerator>() : null;
+            if (_valley != null && !_valley.IsActive) _valley = null;
             List<Vector2> keepouts = CollectPoiKeepouts(chunk);
             _poiKeepouts = keepouts;
 
@@ -363,6 +367,7 @@ namespace EndlessSurvival.World
                         float f = Mathf.Exp(-dz * dz) * w;
                         inner = Mathf.Max(inner, Mathf.Lerp(baseInner, poiDist + poiClearance, f));
                     }
+                    if (_valley != null) inner = Mathf.Max(inner, _valley.CliffClearance(sign, r));
                     inner = Mathf.Min(inner, halfWidth - ramp - 8f);
 
                     side.inner[r] = inner;
@@ -1085,6 +1090,7 @@ namespace EndlessSurvival.World
         {
             if (_sides == null) return false;
             if (IsInCanyonRiver(chunkLocal) || IsInsideMountain(chunkLocal) || IsOnFoothillCliff(chunkLocal)) return true;
+            if (_valley != null && _valley.IsNearRiver(chunkLocal, 2.5f)) return true;
 
             SampleSide(_sides[chunkLocal.x < 0f ? 0 : 1], chunkLocal.z, out float inner, out float ramp, out float h);
             float d = Mathf.Abs(chunkLocal.x) - inner;
@@ -1177,6 +1183,12 @@ namespace EndlessSurvival.World
                         ? inner + rng.Range(-3f, ramp * 0.3f)
                         : inner + rng.Range(0f, 18f);
                     d = Mathf.Min(d, _halfWidth - size * 0.3f);
+                    // River valley bends cut through the side cliffs: no rock wall across the river
+                    if (_valley != null && _valley.IsNearRiver(new Vector3(sign * d, 0f, z), size * 0.7f))
+                    {
+                        z += settings.rockSpacing * 0.5f;
+                        continue;
+                    }
                     SpawnCluster(mb, container, chunk, terrain, sign * d, z, size, rng);
 
                     if (side.style == ChunkBoundaryStyle.Rocks && rng.Chance(0.6f))

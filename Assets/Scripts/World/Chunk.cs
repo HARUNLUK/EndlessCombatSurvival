@@ -266,6 +266,14 @@ namespace EndlessSurvival.World
         [Tooltip("Dağ Eteği tipinde dağın karşısındaki alçak arazi. Oyunda ChunkManager bölüm başına seçer.")]
         public FoothillLowland foothillLowland = FoothillLowland.Forest;
 
+        [Header("Nehir Vadisi - sadece Nehir Vadisi tipinde")]
+        [Tooltip("Chunk girişinde nehrin olduğu taraf (-1 sol, +1 sağ). Oyunda ChunkManager bölüm planından ayarlar; komşu chunk'ın çıkışıyla aynıdır.")]
+        public float riverEntrySide = 1f;
+        [Tooltip("Chunk çıkışında nehrin olduğu taraf. Girişten farklıysa nehir chunk ortasında yolun altından (köprüyle) öbür tarafa geçer.")]
+        public float riverExitSide = 1f;
+        [Tooltip("Nehrin yolu kestiği Z (sadece giriş ve çıkış tarafı farklıysa)")]
+        public float riverCrossingZ = 250f;
+
         [Header("Yolun Yanal Konumu (chunk merkezine göre)")]
         [Tooltip("Yolun chunk'a girdiği X (0 = orta). Sadece dağ-dağ birleşimlerinde 0 olmaz; komşu chunk'ın çıkışıyla aynıdır.")]
         public float roadEntryX = 0f;
@@ -291,6 +299,39 @@ namespace EndlessSurvival.World
         public bool HasSea => IsCoast || HasFoothillSea;
         /// <summary>Field edge decorations (fences, corn, streams): field chunks, and the lowland of field foothills.</summary>
         public bool UsesFieldEdges => IsField || (IsFoothill && foothillLowland == FoothillLowland.Field);
+
+        /// <summary>Nehir Vadisi: forest terrain with a wide river beside the road (<see cref="ValleyRiverGenerator"/>).</summary>
+        public bool IsRiverValley => !IsMountain && !IsField && !IsCoast && riverValleySettings != null && riverValleySettings.enabled;
+        /// <summary>First chunk of a river valley run: the river comes in from the mountains at the side.</summary>
+        public bool RiverEntersFromSide => IsRiverValley && !PrevSameType;
+        /// <summary>Last chunk of a river valley run: the river leaves into the mountains at the side.</summary>
+        public bool RiverLeavesToSide => IsRiverValley && !NextSameType;
+        /// <summary>The river passes under the road (bridge) in this chunk.</summary>
+        public bool HasRiverCrossing => IsRiverValley && !RiverEntersFromSide && !RiverLeavesToSide
+                                        && !Mathf.Approximately(riverEntrySide, riverExitSide);
+
+        /// <summary>Chunk-local X side (-1 / +1) of the river at a Z (0 = no river valley).</summary>
+        public float RiverSideAt(float localZ)
+        {
+            if (!IsRiverValley) return 0f;
+            if (HasRiverCrossing) return localZ < riverCrossingZ ? riverEntrySide : riverExitSide;
+            return riverEntrySide;
+        }
+
+        /// <summary>
+        /// Moves a Z out of the stretch where the river crosses under the road, so camps/structures placed beside the
+        /// road at that Z stay dry. Unchanged when there is no crossing.
+        /// </summary>
+        public float AvoidRiverCrossingZ(float localZ, float clearance)
+        {
+            if (!HasRiverCrossing) return localZ;
+            float dz = localZ - riverCrossingZ;
+            if (Mathf.Abs(dz) >= clearance) return localZ;
+            float moved = riverCrossingZ + (dz < 0f ? -clearance : clearance);
+            // Stay inside the chunk; if that side has no room, take the other one
+            if (moved < 40f || moved > chunkLength - 40f) moved = riverCrossingZ + (dz < 0f ? clearance : -clearance);
+            return Mathf.Clamp(moved, 40f, chunkLength - 40f);
+        }
 
         // Type identity and neighbor types, set by ChunkManager from the type plan. Without that info (a lone chunk
         // previewed in the editor) both neighbors are assumed to be the same type, i.e. seamless.
@@ -336,7 +377,24 @@ namespace EndlessSurvival.World
             if (IsCoast) return -SeaSign;
             // Cliff road: the other side of the road is a precipice, so land objects go on the mountain side
             if (IsMountain && mountainLayout == MountainLayout.Ledge) return uphillOnRight ? 1f : -1f;
+            // River valley: away from the river (at the chunk entry; use GetLandSideAt where the Z is known)
+            if (IsRiverValley) return -riverEntrySide;
             return rolledSide;
+        }
+
+        /// <summary><see cref="GetLandSide"/> at a chunk-local Z (in a river valley the river may change sides mid-chunk).</summary>
+        public float GetLandSideAt(float rolledSide, float localZ)
+        {
+            if (IsRiverValley) return -RiverSideAt(localZ);
+            return GetLandSide(rolledSide);
+        }
+
+        /// <summary>A world point is in the river valley's water or on its banks (+ margin). False for other types.</summary>
+        public bool IsInRiver(Vector3 worldPosition, float margin)
+        {
+            if (!IsRiverValley) return false;
+            var river = GetComponent<ValleyRiverGenerator>();
+            return river != null && river.IsNearRiver(transform.InverseTransformPoint(worldPosition), margin);
         }
 
         [Header("Bu Tipin Yol Ayarları (Procedural)")]
@@ -351,6 +409,9 @@ namespace EndlessSurvival.World
 
         [Tooltip("Sadece biomeType = Mountain iken: alt tip (karlı/alpin) ve dağ yolu ayarları")]
         public MountainTypeSettings mountainSettings = new MountainTypeSettings();
+
+        [Tooltip("Nehir Vadisi tipi ayarları (nehir genişliği, kıyı, köprülü geçiş, su görünümü)")]
+        public RiverValleySettings riverValleySettings = new RiverValleySettings();
 
         /// <summary>
         /// Makes this instance the given procedural type: identity, road settings and the boundary/backdrop look are
@@ -368,6 +429,7 @@ namespace EndlessSurvival.World
             curveSettings = CloneSettings(type.curveSettings) ?? new RoadCurveSettings();
             roadStyle = CloneSettings(type.roadStyle) ?? new ChunkRoadStyle();
             mountainSettings = CloneSettings(type.mountainSettings) ?? new MountainTypeSettings();
+            riverValleySettings = CloneSettings(type.riverValley) ?? new RiverValleySettings();
             ApplyLook(type);
         }
 
@@ -878,6 +940,9 @@ namespace EndlessSurvival.World
             var fieldEdges = GetComponent<FieldEdgeGenerator>();
             if (fieldEdges == null && UsesFieldEdges && procedural) fieldEdges = gameObject.AddComponent<FieldEdgeGenerator>();
 
+            var valleyRiver = GetComponent<ValleyRiverGenerator>();
+            if (valleyRiver == null && IsRiverValley && procedural) valleyRiver = gameObject.AddComponent<ValleyRiverGenerator>();
+
             Terrain previewTerrain = ChunkTerrain;
             var previewSpline = GetComponentInChildren<Road.RoadSpline>();
             CapturePoiGrounding();
@@ -893,6 +958,7 @@ namespace EndlessSurvival.World
             if (backdrop != null) backdrop.Generate(previewContainer.transform, previewTerrain);
 
             if (fieldEdges != null) fieldEdges.Generate(previewContainer.transform, previewTerrain);
+            if (valleyRiver != null) valleyRiver.Generate(previewContainer.transform, previewTerrain);
 
             // In play mode the endless OceanSurface provides the sea; the preview gets its own water quad
             if (HasSea) OceanSurface.CreatePreviewQuad(previewContainer.transform, this);

@@ -38,6 +38,10 @@ namespace EndlessSurvival.World
         [Tooltip("Alt tip (karlı/alpin), kenar yolu, yol yüksekliği, Dağ Eteği")]
         public MountainTypeSettings mountainSettings = new MountainTypeSettings();
 
+        [Header("Nehir Vadisi (sadece Biome = Forest)")]
+        [Tooltip("Açıksa tip Nehir Vadisi'dir: yolun yanında yolla birlikte akan geniş bir nehir, ara sıra köprüyle karşıya geçiş")]
+        public RiverValleySettings riverValley = new RiverValleySettings();
+
         [Header("Kenar (uçurum / kayalar)")]
         public BiomeBoundarySettings boundary = new BiomeBoundarySettings();
 
@@ -52,6 +56,7 @@ namespace EndlessSurvival.World
         public string DisplayName => !string.IsNullOrEmpty(displayName) ? displayName : name;
         public bool IsMountain => biome == ChunkBiomeType.Mountain;
         public bool IsFoothill => IsMountain && mountainSettings != null && mountainSettings.foothills;
+        public bool IsRiverValley => biome == ChunkBiomeType.Forest && riverValley != null && riverValley.enabled;
 
         /// <summary>Backdrop look for a mountain sub-type (alpine mountains have their own).</summary>
         public BiomeBackdropSettings BackdropFor(MountainVariant variant)

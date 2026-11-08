@@ -513,6 +513,8 @@ namespace EndlessSurvival.World
             if (_chunk.Manager != null && _chunk.ChunkIndex == 0 && localZ < startClearLength) return false;
 
             if (_fieldEdges != null && _fieldEdges.IsNearRiver(_chunk.transform.InverseTransformPoint(roadWorld), 10f)) return false;
+            // River valley bridge: no wrecks on the bridge deck
+            if (_chunk.IsInRiver(roadWorld, 10f)) return false;
 
             Vector3 probe = wreckPos ?? roadWorld;
             float poiSqr = poiClearance * poiClearance;

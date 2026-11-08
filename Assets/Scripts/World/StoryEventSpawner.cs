@@ -195,9 +195,26 @@ namespace EndlessSurvival.World
             Vector3 center = st.TransformPoint(roadSpline.GetPoint(t));
             Vector3 right = st.TransformDirection(roadSpline.GetRight(t));
 
+            // Nehir Vadisi: nehrin yolun altından geçtiği yerin (köprü) yanına konmaz
+            float localZ = chunk != null ? chunk.transform.InverseTransformPoint(center).z : 0f;
+            if (chunk != null && chunk.HasRiverCrossing)
+            {
+                float movedZ = chunk.AvoidRiverCrossingZ(localZ, 90f);
+                if (!Mathf.Approximately(movedZ, localZ))
+                {
+                    localZ = movedZ;
+                    Vector3 roadLocal = roadSpline.GetPointAtZ(localZ);
+                    center = st.TransformPoint(roadLocal);
+                    Vector3 ahead = st.TransformPoint(roadSpline.GetPointAtZ(Mathf.Min(localZ + 1f, chunk.chunkLength)));
+                    Vector3 fwd = ahead - center;
+                    fwd.y = 0f;
+                    if (fwd.sqrMagnitude > 1e-4f) right = Vector3.Cross(Vector3.up, fwd.normalized);
+                }
+            }
+
             float side = rng.Value < 0.5f ? -1f : 1f;
-            // Kıyı chunk'ında mağara/fener gibi yapılar her zaman kara tarafında olur
-            if (chunk != null) side = chunk.GetLandSide(side);
+            // Kıyı chunk'ında mağara/fener gibi yapılar her zaman kara tarafında olur (nehir vadisinde nehrin karşısında)
+            if (chunk != null) side = chunk.GetLandSideAt(side, localZ);
             Vector3 probePos = center + right * (side * minSafeDist);
 
             if (chunk != null)
@@ -205,7 +222,7 @@ namespace EndlessSurvival.World
                 Vector3 localInChunk = chunk.transform.InverseTransformPoint(probePos);
                 if (localInChunk.x < -215f || localInChunk.x > 215f)
                 {
-                    side = chunk.GetLandSide(-side); // flips, unless the land side is fixed (coast, ledge, foothill)
+                    side = chunk.GetLandSideAt(-side, localZ); // flips, unless the land side is fixed (coast, ledge, foothill, river)
                     probePos = center + right * (side * minSafeDist);
                     localInChunk = chunk.transform.InverseTransformPoint(probePos);
                     localInChunk.x = Mathf.Clamp(localInChunk.x, -215f, 215f);

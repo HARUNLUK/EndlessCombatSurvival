@@ -172,6 +172,9 @@ namespace EndlessSurvival.World
             // On a coast's sea side the mountains sink under the water; field river crossings continue as a valley
             var boundary = chunk.GetComponent<ChunkBoundaryGenerator>();
             var fieldEdges = chunk.GetComponent<FieldEdgeGenerator>();
+            var valleyRiver = chunk.GetComponent<ValleyRiverGenerator>();
+            IBackdropRiver backdropRiver = fieldEdges != null && fieldEdges.HasRiver ? fieldEdges
+                : valleyRiver != null && valleyRiver.IsActive ? valleyRiver : null;
 
             for (int s = 0; s < 2; s++)
             {
@@ -199,7 +202,7 @@ namespace EndlessSurvival.World
                     edgeY = (x, z) => SampleEdgeHeight(chunk, terrain, x - sign * 0.1f, z),
                     groundWeight = z => boundary != null ? boundary.GetMountainWeight(z) : 0f,
                     seaWeight = z => boundary != null ? boundary.GetSeaWeight(sign, z) : 0f,
-                    river = fieldEdges != null && fieldEdges.HasRiver ? fieldEdges : null
+                    river = backdropRiver
                 };
                 Mesh mesh = BuildSideMesh(ctx, sideSt, worldSeed, s, sign);
                 mesh.name = $"Backdrop_{(s == 0 ? "Left" : "Right")}_Chunk{chunk.ChunkIndex}";
@@ -405,7 +408,7 @@ namespace EndlessSurvival.World
             public System.Func<float, float, float> edgeY; // (x, localZ) -> chunk-local terrain height where the strip starts
             public System.Func<float, float> groundWeight; // localZ -> 0..1: mountain heights measured from the strip's foot instead of the baseline
             public System.Func<float, float> seaWeight;  // localZ -> 0..1 (coast sea side)
-            public FieldEdgeGenerator river;             // field river valley, null if none
+            public IBackdropRiver river;                 // field crossing river / river valley bend, null if none
         }
 
         private Mesh BuildSideMesh(SideContext ctx, BiomeBackdropSettings st, int worldSeed, int side, float sign)

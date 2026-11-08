@@ -54,6 +54,8 @@ namespace EndlessSurvival.World
         public static event System.Action<Chunk> ChunkBuilt;
         /// <summary>Seed chosen in the main menu for the next world (consumed once in Awake).</summary>
         public static string PendingSeed;
+        /// <summary>Start type for the next world (test tools; consumed once in Awake, wins over the inspector's Start Type).</summary>
+        public static ChunkTypeProfile PendingStartType;
 
         public static ChunkManager Instance { get; private set; }
 
@@ -286,6 +288,12 @@ namespace EndlessSurvival.World
                 masterSeed = PendingSeed;
                 PendingSeed = null;
             }
+            if (PendingStartType != null)
+            {
+                startType = PendingStartType;
+                PendingStartType = null;
+                _typeRng = null;
+            }
 
             // Resolve the master seed
             if (string.IsNullOrEmpty(masterSeed))
@@ -456,6 +464,10 @@ namespace EndlessSurvival.World
                 var fieldEdges = chunk.GetComponent<FieldEdgeGenerator>();
                 if (fieldEdges == null && chunk.UsesFieldEdges && procedural) fieldEdges = chunk.gameObject.AddComponent<FieldEdgeGenerator>();
 
+                // River valley: wide river beside the road (must exist before terrain conform: it carves the channel)
+                var valleyRiver = chunk.GetComponent<ValleyRiverGenerator>();
+                if (valleyRiver == null && chunk.IsRiverValley && procedural) valleyRiver = chunk.gameObject.AddComponent<ValleyRiverGenerator>();
+
                 // 3) Terrain under and around the road (also cliffs, coast, field hills, river channel)
                 // POIs then drop to the natural ground at their spot and the ground under them is leveled there
                 chunk.CapturePoiGrounding();
@@ -495,6 +507,13 @@ namespace EndlessSurvival.World
                 {
                     IEnumerator fieldSteps = fieldEdges.GenerateSteps(chunk.transform, terrain);
                     while (fieldSteps.MoveNext()) yield return "fieldEdges";
+                }
+
+                // 7b) River valley: water surface, then the bridge where it crosses under the road
+                if (valleyRiver != null)
+                {
+                    IEnumerator riverSteps = valleyRiver.GenerateSteps(chunk.transform, terrain);
+                    while (riverSteps.MoveNext()) yield return "river";
                 }
 
                 // 8) Abandoned vehicle wrecks on and beside the road (before vegetation: trees keep clear of them)
@@ -1011,6 +1030,51 @@ namespace EndlessSurvival.World
                 // A coast continues into a neighbor only if that neighbor is the same coast type, sea on the same side
                 chunk.coastContinuesAtStart = index > 0 && IsSameCoast(prev, entry);
                 chunk.coastContinuesAtEnd = IsSameCoast(next, entry);
+            }
+
+            if (chunk.IsRiverValley && !entry.IsSpecial)
+            {
+                RiverSides(index, out float entrySide, out float exitSide);
+                chunk.riverEntrySide = entrySide;
+                chunk.riverExitSide = exitSide;
+                int worldSeed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
+                chunk.riverCrossingZ = ValleyRiverGenerator.RollCrossingZ(worldSeed, index, chunk.riverValleySettings);
+            }
+        }
+
+        /// <summary>
+        /// River side (-1 / +1) at a river valley chunk's entry and exit seams, shared with the neighbors: the run's
+        /// rolled side at its first seam, flipped by every middle chunk whose crossing roll succeeds (the river passes
+        /// under the road there). The first and last chunk of a run never cross: the river comes in from / goes out to
+        /// the side mountains there.
+        /// </summary>
+        private void RiverSides(int index, out float entrySide, out float exitSide)
+        {
+            TypePlanEntry entry = GetTypePlan(index);
+            ChunkTypeRef type = entry.Type;
+            float side = entry.seaSide == CoastSide.Right ? 1f : -1f;
+            entrySide = exitSide = side;
+            if (entry.profile == null || !entry.profile.IsRiverValley) return;
+
+            int runStart = index;
+            while (runStart > 0 && index - runStart < 64 && GetTypePlan(runStart - 1).Type == type) runStart--;
+            int runEnd = index; // last chunk of the run
+            while (runEnd - index < 64 && GetTypePlan(runEnd + 1).Type == type) runEnd++;
+
+            int worldSeed = ResolvedSeed != 0 ? ResolvedSeed : SeededRandom.HashString(masterSeed);
+            float chance = entry.profile.riverValley.crossingChance;
+            for (int c = runStart; c <= index; c++)
+            {
+                bool crosses = c > runStart && c < runEnd && ValleyRiverGenerator.RollsCrossing(worldSeed, c, chance);
+                if (c == index)
+                {
+                    entrySide = side;
+                    exitSide = crosses ? -side : side;
+                }
+                else if (crosses)
+                {
+                    side = -side;
+                }
             }
         }
 

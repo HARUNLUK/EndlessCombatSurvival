@@ -1,0 +1,27 @@
+seed RIVER4
+chunk 0: Chunk_0_Nehir Vadisi_CurvedLeft_GuardrailOnly river=True entersFromSide=False leavesToSide=False entry=1 exit=1 crossing=False crossingZ=269 water=True
+chunk 1: Chunk_1_Nehir Vadisi_Straight_GuardrailOnly river=True entersFromSide=False leavesToSide=False entry=1 exit=-1 crossing=True crossingZ=266 water=True
+chunk 2: Chunk_2_Nehir Vadisi_CurvedRight_GuardrailOnly river=True entersFromSide=False leavesToSide=True entry=-1 exit=-1 crossing=False crossingZ=265 water=True
+shot river_01_aerial_crossing from (-160, 160, 546) at (0, 20, 766)
+shot river_01b_aerial_top from (0, 400, 706) at (0, 20, 766)
+   water at z=196: x 17,0..93,0 width 76,0 surfaceY=15,15
+   water at z=266: x -32,0..32,0 width 64,0 surfaceY=14,67
+   water at z=336: x -87,0..-15,0 width 72,0 surfaceY=14,07
+shot river_02_bridge_side_a from (55, 18, 696) at (0, 17, 766)
+shot river_02b_bridge_side_b from (-51, 17, 836) at (0, 17, 766)
+   bridge objects: 1, piers 0
+shot river_02c_on_bridge from (0, 22, 726) at (0, 21, 786)
+shot river_03_road_level from (-24, 22, 330) at (-4, 21, 420)
+shot river_03b_road_level_c2 from (11, 22, 1120) at (27, 21, 1220)
+   water at z=330: x -8,0..83,0 width 91,0 surfaceY=15,71
+   water at z=120: x -92,0..-3,0 width 89,0 surfaceY=13,58
+shot river_04_entry_bend from (-10, 180, -50) at (-10, 20, 210)
+shot river_04b_exit_bend from (10, 190, 1140) at (10, 20, 1420)
+   water at z=330: x -8,0..83,0 width 91,0 surfaceY=15,71
+   wading: bed 14,42, surface 15,71, depth 1,30
+shot river_05_wading_upstream from (38, 16, 330) at (38, 16, 360)
+shot river_05b_wading_to_road from (38, 16, 330) at (-24, 21, 340)
+   player in water: True kind=Fresh surface=15,71
+   player after 1.5s: y=14,41
+shot river_06_player_wading from (42, 17, 325) at (38, 15, 330)
+errors: 0

@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51c7dc95999318b45b55371307be6aee, type: 3}
+  m_Name: ChunkType_RiverValley
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkTypeProfile
+  displayName: Nehir Vadisi
+  biome: 0
+  flatSeamEdges: 0
+  allowSpecialChunks: 0
+  elevationConfig:
+    elevationChance: 0.5
+    maxHillHeight: 10
+    minHillHeight: 5
+    maxDipDepth: 5
+    minDipDepth: 1
+    hillWeight: 35
+    valleyWeight: 0
+    rollingHillsWeight: 0
+    mountainPassWeight: 15
+    elevatedChicaneWeight: 0
+    flatWeight: 50
+  curveSettings:
+    curveChance: 0.6
+    minBends: 1
+    maxBends: 3
+    minShift: 10
+    maxShift: 30
+    maxLateral: 35
+    maxSlope: 0.55
+    minTurnRadius: 35
+    lengthVariance: 2.5
+  roadStyle:
+    curveChanceMultiplier: 1
+    sharpCurveChance: 0
+    alwaysCurvy: 0
+    forceCrossSection: 1
+    forcedCrossSection: 3
+  mountainSettings:
+    snowyChance: 0.6
+    ledgeChance: 0.7
+    ledgeRoadMinOffset: 80
+    ledgeRoadMaxOffset: 100
+    roadMinHeight: 100
+    roadMaxHeight: 140
+    roadClimbPerChunk: 40
+    hillsideChance: 0.4
+    foothills: 0
+    lowlandForestWeight: 30
+    lowlandFieldWeight: 30
+    lowlandLandThenCoastWeight: 20
+    lowlandCoastWeight: 20
+    lowlandSlopeMin: 8
+    lowlandSlopeMax: 16
+    lowlandSlopeStart: 2.5
+    landStripMin: 50
+    landStripMax: 100
+    coastStripMin: 10
+    coastStripMax: 30
+  riverValley:
+    enabled: 1
+    crossingChance: 0.35
+    crossingMinZ: 210
+    crossingMaxZ: 290
+    crossingLength: 150
+    crossingWidth: 34
+    crossingMinDrop: 5
+    minWidth: 40
+    maxWidth: 80
+    widthNoise: 0.18
+    minGap: 6
+    maxGap: 25
+    minDrop: 3
+    maxDrop: 7
+    maxDepth: 1.3
+    minBank: 4
+    maxBank: 16
+    bendSideZ: 120
+    bendJoinZ: 300
+    bendBank: 24
+    waterColor: {r: 0.16, g: 0.34, b: 0.4, a: 0.84}
+    flowSpeed: 1.1
+    flowTile: 14
+    ambientScale: 0.45
+  boundary:
+    biome: 0
+    cliffWeight: 40
+    rocksWeight: 25
+    cliffAndRocksWeight: 35
+    minCliffHeight: 40
+    maxCliffHeight: 70
+    minRampWidth: 18
+    maxRampWidth: 38
+    minInnerEdge: 185
+    maxInnerEdge: 210
+    minRockSize: 14
+    maxRockSize: 30
+    rockSpacing: 22
+    rockColor: {r: 0.36, g: 0.36, b: 0.34, a: 1}
+    mossColor: {r: 0.26, g: 0.33, b: 0.21, a: 1}
+  backdrop:
+    biome: 0
+    riseDistance: 140
+    minAboveEdge: 12
+    baseHeight: 94.5
+    peakAmplitude: 351
+    detailAmplitude: 35
+    ridgeFrequency: 0.0028
+    rockLine: 120
+    snowLine: 210
+    rockSlope: 0.72
+    forestColor: {r: 0.15, g: 0.25, b: 0.13, a: 1}
+    rockColor: {r: 0.37, g: 0.35, b: 0.32, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}
+  alpineBackdrop:
+    biome: 4
+    riseDistance: 55
+    minAboveEdge: 20
+    baseHeight: 120
+    peakAmplitude: 340
+    detailAmplitude: 40
+    ridgeFrequency: 0.0032
+    rockLine: 110
+    snowLine: 240
+    rockSlope: 0.62
+    forestColor: {r: 0.2, g: 0.33, b: 0.17, a: 1}
+    rockColor: {r: 0.4, g: 0.39, b: 0.37, a: 1}
+    snowColor: {r: 0.94, g: 0.95, b: 0.97, a: 1}
+  foothillLowlandBackdrop:
+    biome: 6
+    riseDistance: 1500
+    minAboveEdge: 0
+    baseHeight: 12
+    peakAmplitude: 75
+    detailAmplitude: 6
+    ridgeFrequency: 0.0011
+    rockLine: 400
+    snowLine: 2000
+    rockSlope: 0.35
+    forestColor: {r: 0.24, g: 0.4, b: 0.2, a: 1}
+    rockColor: {r: 0.3, g: 0.4, b: 0.24, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}

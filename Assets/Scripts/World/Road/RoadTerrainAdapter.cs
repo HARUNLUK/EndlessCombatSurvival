@@ -62,6 +62,10 @@ namespace EndlessSurvival.World.Road
             float roadHalfWidth = roadGen != null ? roadGen.GetTotalHalfWidth() : 8.5f;
             float terrainXOffset = terrain.transform.localPosition.x; // Typically -250f
 
+            // River valley: river course first, the side cliffs then start beyond its far bank
+            var valley = terrain.GetComponentInParent<ValleyRiverGenerator>();
+            bool useValley = valley != null && valley.BuildPlan(hRes, terrainSize.z, terrainXOffset, terrainSize.x, spline, roadHalfWidth);
+
             // Side boundaries (cliffs) are added on top of the natural landscape, outside the road clearance
             var boundary = terrain.GetComponentInParent<ChunkBoundaryGenerator>();
             bool useBoundary = boundary != null && boundary.BuildPlan(spline, hRes, terrainSize.z, terrainSize.x * 0.5f, roadHalfWidth);
@@ -91,7 +95,8 @@ namespace EndlessSurvival.World.Road
 
                 // Seamless chunk border edge fade: ensure boundaries at Z=0 and Z=500 cleanly lock to baseline
                 float boundaryFade = Mathf.Clamp01(Mathf.Sin(normalizedZ * Mathf.PI));
-                float ambientAmplitude = boundaryFade * 8.0f * (useField && field.IsFullField ? field.ambientScale : 1f);
+                float ambientAmplitude = boundaryFade * 8.0f * (useField && field.IsFullField ? field.ambientScale : 1f)
+                                         * (useValley ? valley.AmbientScale : 1f);
 
                 for (int x = 0; x < hRes; x++)
                 {
@@ -138,6 +143,8 @@ namespace EndlessSurvival.World.Road
                     if (useBoundary) finalHeightMeters = boundary.ApplyAfterRoad(localX, z, finalHeightMeters, roadBedElevation);
                     // Field river crossing: channel cut under the road, which then spans it as a bridge
                     if (useField) finalHeightMeters = field.ApplyAfterRoad(localX, z, finalHeightMeters);
+                    // River valley: channel and banks beside the road (and under it, as a bridge, where it crosses)
+                    if (useValley) finalHeightMeters = valley.ApplyAfterRoad(localX, z, finalHeightMeters);
 
                     heights[z, x] = Mathf.Clamp01(finalHeightMeters / terrainSize.y);
                 }
@@ -259,7 +266,9 @@ namespace EndlessSurvival.World.Road
             // Soil on fields / sand on coast beaches (or restore plain grass)
             float terrainXOffset = terrain.transform.localPosition.x;
             // Foothills with a field lowland are painted by the mountain engine (boundary)
+            var valley = terrain.GetComponentInParent<ValleyRiverGenerator>();
             if (field != null && field.IsFullField) field.PaintTerrainLayers(terrain.terrainData, terrainXOffset);
+            else if (valley != null && valley.IsActive) valley.PaintTerrainLayers(terrain.terrainData);
             else if (boundary != null) boundary.PaintTerrainLayers(terrain.terrainData, heights, terrainXOffset);
         }
 

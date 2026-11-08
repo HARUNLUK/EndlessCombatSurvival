@@ -80,6 +80,7 @@ namespace EndlessSurvival.Survival
             point.y = terrain.SampleHeight(probe) + terrain.transform.position.y;
             if (chunk.HasSea && point.y < chunk.transform.position.y + WorldConstants.SeaLevel + 1f) return false;
             if (chunk.IsField && point.y < chunk.transform.position.y + chunk.baseElevation - 1.5f) return false;
+            if (chunk.IsInRiver(point, 1.5f)) return false;
             if (chunk.IsMountain)
             {
                 if (!chunk.IsFoothill && point.y < roadCenter.y - 3f) return false;

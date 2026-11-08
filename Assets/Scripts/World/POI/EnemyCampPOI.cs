@@ -108,6 +108,8 @@ namespace EndlessSurvival.World.POI
             if (randomizeCampLocation && chunk != null)
             {
                 float randZ = rng.Range(70f, 430f);
+                // River valley: never beside the bridge, where the river crosses under the road
+                randZ = chunk.AvoidRiverCrossingZ(randZ, 90f);
                 float roadLocalX = 0f;
                 if (spline != null)
                 {
@@ -117,14 +119,14 @@ namespace EndlessSurvival.World.POI
 
                 // Yolun sağına veya soluna, yoldan en az requiredClearance kadar uzağa yerleştir
                 // Kıyı chunk'ında kamp her zaman kara tarafında olur
-                float side = chunk.GetLandSide(rng.Value < 0.5f ? -1f : 1f);
+                float side = chunk.GetLandSideAt(rng.Value < 0.5f ? -1f : 1f, randZ);
                 float offset = rng.Range(requiredClearance, requiredClearance + 55f);
                 float campLocalX = roadLocalX + side * offset;
 
                 // Chunk sınırları (-215 ile +215) içinde kalmasını sağla
                 if (campLocalX < -215f || campLocalX > 215f)
                 {
-                    side = chunk.GetLandSide(-side); // flips, unless the land side is fixed (coast, ledge, foothill)
+                    side = chunk.GetLandSideAt(-side, randZ); // flips, unless the land side is fixed (coast, ledge, foothill, river)
                     campLocalX = roadLocalX + side * offset;
                     campLocalX = Mathf.Clamp(campLocalX, -215f, 215f);
                 }
