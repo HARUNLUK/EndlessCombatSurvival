@@ -90,6 +90,7 @@ namespace EndlessSurvival.Survival
                 DrawProgress(v);
             }
             if (!SurvivalPanel.IsHubOpen) DrawCompass();
+            if (!SurvivalPanel.IsHubOpen && VehicleParts.Instance != null) VehicleParts.Instance.DrawDrivingHud();
             DrawNotifications();
         }
 
@@ -189,6 +190,12 @@ namespace EndlessSurvival.Survival
             {
                 label = craft.CurrentJob.DisplayName + "...";
                 progress = craft.JobProgress;
+            }
+            var parts = VehicleParts.Instance;
+            if (label == null && parts != null && parts.CurrentJob != null)
+            {
+                label = parts.CurrentJob.label + "...";
+                progress = parts.JobProgress;
             }
             var fishing = SurvivalDirector.Instance != null ? SurvivalDirector.Instance.GetComponent<FishingController>() : null;
             if (label == null && fishing != null && fishing.StatusText != null) label = fishing.StatusText;

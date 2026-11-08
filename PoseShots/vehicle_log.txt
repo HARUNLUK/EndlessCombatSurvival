@@ -1,0 +1,48 @@
+renderer carBody center=(0.00, 0.83, 0.04) size=(1.67, 1.22, 2.91) mesh=carBody subs=3 mats=ColorPalette|CarBody|glass
+renderer antennaMesh center=(-0.58, 1.07, -1.06) size=(0.04, 1.11, 0.03) mats=ColorPalette
+renderer BackWheel center=(0.27, 0.76, -1.42) size=(0.67, 0.67, 0.36) mesh=BackWheel subs=1 mats=ColorPalette
+renderer DoorLeft center=(-0.71, 0.73, 0.06) size=(0.23, 0.71, 0.69) mesh=DoorLeft subs=2 mats=ColorPalette|CarBody
+renderer DoorRight center=(0.71, 0.73, 0.05) size=(0.24, 0.71, 0.69) mesh=DoorRight subs=2 mats=ColorPalette|CarBody
+renderer fuel center=(-0.33, 0.62, -1.29) size=(0.29, 0.39, 0.13) mesh=fuel subs=1 mats=ColorPalette
+renderer SteeringWheel center=(-0.31, 0.90, 0.28) size=(0.33, 0.36, 0.22) mesh=SteeringWheel subs=1 mats=ColorPalette
+renderer Bl_Wheel center=(0.68, 0.14, -0.71) size=(0.38, 0.75, 0.74) mesh=Bl_Wheel subs=1 mats=ColorPalette
+renderer BR_Wheel center=(-0.68, 0.15, -0.71) size=(0.38, 0.75, 0.74) mesh=BR_Wheel subs=1 mats=ColorPalette
+renderer Fl_Wheel center=(0.68, 0.13, 0.93) size=(0.38, 0.76, 0.74) mesh=Fl_Wheel subs=1 mats=ColorPalette
+renderer FR_Wheel center=(-0.68, 0.14, 0.93) size=(0.38, 0.75, 0.74) mesh=FR_Wheel subs=1 mats=ColorPalette
+mods in list: Bullbar, OffroadTires, RoofRack, RoofLightbar, ExternalFuelTanks, WaterTank, RainTarp, DryingLine, RadiatorGrille, WindowCage, DoorPlates, SpareTireMount, TowRope, SnowChains, BatteryInsulation, CabinInsulation
+install Bullbar: True
+install RadiatorGrille: True
+install DoorPlates: True
+install SpareTireMount: True
+install TowRope: True
+install SnowChains: True
+install CabinInsulation: True
+install BatteryInsulation: True
+fill spare: Yedek lastik askıya takıldı
+state: engineOn=False running=False battery=85/12C heat=19 rad=100 tires=[100,100,100,100] spare=True cabin=+0,1 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[1,00,1,00,1,00,1,00] cap=0
+shelter=0,74 rainEnters=False windshield: glass bounds center=(0.00, 1.17, 0.32) size=(1.10, 0.33, 0.17) tilt=27
+lamp Headlight_L local=(-0.52, 0.85, 1.84)
+lamp Headlight_R local=(0.52, 0.85, 1.84)
+shot vehicle_01_front_left
+shot vehicle_02_rear_right
+shot vehicle_03_left
+shot vehicle_04_right
+shot vehicle_05_top
+flat FL: engineOn=False running=False battery=85/12C heat=19 rad=100 tires=[0,100,100,100] spare=True cabin=+0,2 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,43,0,95,0,95,0,95] cap=45
+change tyre: Sol ön lastik değişiyor başladı. Yanından ayrılma.
+job still running: True progress=0,87
+after change: engineOn=False running=False battery=85/12C heat=13 rad=100 tires=[100,100,100,100] spare=False cabin=+1,0 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,95,0,95,0,95,0,95] cap=70
+cold start chance 0,35 (akü soğuk)
+entered (auto start attempt): engineOn=False running=False battery=40/-12C heat=13 rad=100 tires=[100,100,100,100] spare=False cabin=+1,0 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,95,0,95,0,95,0,95] cap=70
+cold tries 0: engineOn=True running=True battery=37/-12C heat=13 rad=100 tires=[100,100,100,100] spare=False cabin=+1,0 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,95,0,95,0,95,0,95] cap=70
+warm: engineOn=True running=True battery=90/15C heat=13 rad=100 tires=[100,100,100,100] spare=False cabin=+1,0 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,95,0,95,0,95,0,95] cap=70
+in cabin after 6 s: engineOn=True running=True battery=90/16C heat=17 rad=100 tires=[100,100,100,100] spare=False cabin=+1,3 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,95,0,95,0,95,0,95] cap=70 felt=12,4 ambient=11,1
+broken radiator: overheated=True engineOn=False running=False battery=90/16C heat=100 rad=0 tires=[100,100,100,100] spare=False cabin=+1,7 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=False grip=[0,95,0,95,0,95,0,95] cap=70
+shot vehicle_06_night_headlights
+shot vehicle_07_night_front
+night: engineOn=True running=True battery=87/16C heat=60 rad=100 tires=[100,100,100,100] spare=False cabin=+1,8 shelter=0,74 windows=[Plank,Plank,Plastic,Metal,Plank] lamps=True grip=[0,95,0,95,0,95,0,95] cap=70
+lamp Headlight_L active=True int=120,0 range=60 pos=(-0.6, 21.5, 13.3) fwd=(0.00, -0.13, 0.99) mask=-1 layer=1
+lamp Headlight_R active=True int=120,0 range=60 pos=(0.6, 21.5, 13.3) fwd=(0.00, -0.13, 0.99) mask=-1 layer=1
+shot vehicle_08_night_reflight
+lights in scene: TorchLight:Point, FireLight:Point, Headlight_R:Spot, AmbientLanternLight:Point, CaptureRefLight:Point, Directional Light:Directional, HutLight:Point, BrazierLight:Point, BrazierLight:Point, SearchlightBeam:Spot, TableOilLamp:Point, TorchLight:Point, CabinInteriorWarmLight:Point, TorchLight:Point, TorchLight:Point, HutLight:Point, Headlight_L:Spot
+errors: 0

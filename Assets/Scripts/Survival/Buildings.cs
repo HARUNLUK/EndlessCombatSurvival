@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using EndlessSurvival.Inventory;
 using EndlessSurvival.World;
 
@@ -168,11 +168,12 @@ namespace EndlessSurvival.Survival
 
             var empty = s.Item("Item_EmptyFuelCan");
             var full = s.Item("Item_FuelCan");
-            if (empty == null || full == null || user.Storage.GetCount(empty) <= 0) return "Boş bidon yok (aracı pompaya yanaştırabilirsin)";
-            user.Storage.Remove(empty, 1);
+            bool free = SurvivalTest.FreeResources; // test: no empty can needed
+            if (full == null || !free && (empty == null || user.Storage.GetCount(empty) <= 0)) return "Boş bidon yok (aracı pompaya yanaştırabilirsin)";
+            if (!free) user.Storage.Remove(empty, 1);
             if (user.Storage.Add(full, 1) <= 0)
             {
-                user.Storage.Add(empty, 1);
+                if (!free) user.Storage.Add(empty, 1);
                 return "Çantada yer yok";
             }
             fuelUnits--;

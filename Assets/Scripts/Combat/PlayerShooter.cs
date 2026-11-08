@@ -404,28 +404,9 @@ namespace EndlessCombat.Combat
                 }
             }
 
-            if (!hasCachedFingerPoses)
-            {
-                CacheLeftFingerPoses();
-            }
-
-            if (hasCachedFingerPoses)
-            {
-                for (int i = 0; i < leftFingerPoses.Count; i++)
-                {
-                    if (leftFingerPoses[i].bone != null)
-                    {
-                        if (weight < 0.999f)
-                        {
-                            leftFingerPoses[i].bone.localRotation = Quaternion.Slerp(leftFingerPoses[i].bone.localRotation, leftFingerPoses[i].localRotation, weight);
-                        }
-                        else
-                        {
-                            leftFingerPoses[i].bone.localRotation = leftFingerPoses[i].localRotation;
-                        }
-                    }
-                }
-            }
+            // Fingers are no longer forced here. The old code pressed the finger pose cached in Start() (the model's
+            // bind pose, before any animation ran: flat, stiff fingers) onto the left hand every aiming frame, which
+            // bent the fingers wrong. The rifle clips now drive the fingers themselves (their avatar T-pose is fixed).
         }
 
         public void AlignWeaponToAim(float weight = 1f)

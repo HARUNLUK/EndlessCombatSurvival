@@ -16,7 +16,16 @@ namespace EndlessSurvival.Vehicle
         ExternalFuelTanks,  // Harici Yedek Yakıt Bidonları
         WaterTank,          // Su deposu (Paket 2.19)
         RainTarp,           // Yağmur brandası: yağmurda depoya su toplar
-        DryingLine          // Kurutma ipi: sürerken et kurur
+        DryingLine,         // Kurutma ipi: sürerken et kurur
+        // Paket 6 (araç hayatta kalma)
+        RadiatorGrille,     // Radyatör ızgarası: ön darbede radyatör daha az hasar alır
+        WindowCage,         // Cam kafesi: camlar kırılmaz
+        DoorPlates,         // Kapı saçları: yandan mermi koruması, biraz ağırlık
+        SpareTireMount,     // Yedek lastik askısı: yanında 1 yedek lastik
+        TowRope,            // Çekme halatı: saplanınca kurtarma, enkaz/barikat çekme
+        SnowChains,         // Kar zinciri: karda tutuş, asfaltta yavaşlatır
+        BatteryInsulation,  // Akü yalıtımı: soğukta marş tutar
+        CabinInsulation     // Battaniye ve yalıtım: kabin ısısını tutar
     }
 
     [Serializable]
@@ -100,6 +109,24 @@ namespace EndlessSurvival.Vehicle
             AddIfMissing(VehicleModType.WaterTank, "Su Deposu", "Bagaja bağlanan 40 litrelik su bidonu.", "Temiz su taşır (Tab > Araç).", 3, "RubberHose", 1);
             AddIfMissing(VehicleModType.RainTarp, "Yağmur Brandası", "Tavan portbagajına gerilen huni şeklinde branda.", "Yağmurda, sürerken bile su deposuna su toplar.", 2, "Cloth", 3);
             AddIfMissing(VehicleModType.DryingLine, "Kurutma İpi", "Kabin arkasına gerilen et kurutma ipi.", "Sürerken bagajdaki çiğ et kurur.", 1, "Cloth", 1);
+
+            // Paket 6
+            AddIfMissing(VehicleModType.RadiatorGrille, "Radyatör Izgarası", "Panjurun önüne vidalanmış kalın tel ızgara.",
+                "Önden çarpmada ve ezmede radyatör çok daha az hasar alır.", 3, "", 0);
+            AddIfMissing(VehicleModType.WindowCage, "Cam Kafesi", "Bütün camların önüne kaynaklanmış tel örgü.",
+                "Camlar kırılmaz (mermi ve darbe). Görüşü etkilemez.", 5, "DuctTape", 1);
+            AddIfMissing(VehicleModType.DoorPlates, "Kapı Saçları", "Kapılara perçinlenmiş kalın saç plakalar.",
+                "Mermi hasarı azalır, yan camlara mermi işlemez. Ağırlık: motor biraz zayıflar.", 6, "", 0);
+            AddIfMissing(VehicleModType.SpareTireMount, "Yedek Lastik Askısı", "Arka kapıya bağlanan lastik askısı. Lastiği Parçalar bölümünden asarsın.",
+                "Yanında 1 yedek lastik taşırsın (bagajda yer kaplamaz, 8 kg).", 2, "", 0);
+            AddIfMissing(VehicleModType.TowRope, "Çekme Halatı", "Arka çekme kancasına sarılmış kalın halat.",
+                "[T]: saplanınca aracı kurtar, yoldaki enkazı veya barikatı çekip kaldır.", 1, "Rope", 1);
+            AddIfMissing(VehicleModType.SnowChains, "Kar Zinciri", "Tekerleklere sarılan zincirler.",
+                "Karda ve buzda tutuş artar; asfaltta yavaşlatır (en fazla 70 km/s).", 1, "Chain", 2);
+            AddIfMissing(VehicleModType.BatteryInsulation, "Akü Yalıtımı", "Akünün etrafına sarılmış kalın keçe.",
+                "Akü geç soğur; soğukta marş daha kolay tutar.", 0, "Cloth", 3);
+            AddIfMissing(VehicleModType.CabinInsulation, "Battaniye ve Yalıtım", "Kapı içlerine ve tavana gerilmiş battaniyeler.",
+                "Kabin ısısı daha yüksek olur ve motor kapalıyken daha geç soğur.", 0, "Blanket", 2);
         }
 
         private void AddIfMissing(VehicleModType type, string name, string desc, string benefit, int scrap, string keyword, int keywordCost)
@@ -193,7 +220,7 @@ namespace EndlessSurvival.Vehicle
             var item = GetModItem(type);
             if (item == null || item.isInstalled) return false;
 
-            if (!freeCost)
+            if (!freeCost && !EndlessSurvival.Survival.SurvivalTest.FreeResources) // test mode: mods are free
             {
                 var player = GameObject.FindGameObjectWithTag("Player");
                 var inv = player != null ? player.GetComponent<PlayerInventory>() : null;
@@ -256,7 +283,7 @@ namespace EndlessSurvival.Vehicle
 
                 case VehicleModType.RoofRack:
                     // Kabin tavan mermi hasarı azaltması ve araç canı artışı
-                    vehicleController.bulletDamageMultiplier = 0.15f;
+                    vehicleController.bulletDamageMultiplier = IsInstalled(VehicleModType.DoorPlates) ? 0.1f : 0.15f;
                     vehicleController.maxHealth = Mathf.Max(vehicleController.maxHealth, 150f);
                     vehicleController.currentHealth = Mathf.Min(vehicleController.maxHealth, vehicleController.currentHealth + 25f);
                     break;
@@ -266,6 +293,10 @@ namespace EndlessSurvival.Vehicle
                     {
                         _roofLightComponent.enabled = true;
                     }
+                    break;
+
+                case VehicleModType.DoorPlates:
+                    vehicleController.bulletDamageMultiplier = IsInstalled(VehicleModType.RoofRack) ? 0.1f : 0.2f;
                     break;
 
                 case VehicleModType.ExternalFuelTanks:
@@ -293,7 +324,11 @@ namespace EndlessSurvival.Vehicle
                     break;
 
                 case VehicleModType.RoofRack:
-                    vehicleController.bulletDamageMultiplier = 0.30f;
+                    vehicleController.bulletDamageMultiplier = IsInstalled(VehicleModType.DoorPlates) ? 0.2f : 0.30f;
+                    break;
+
+                case VehicleModType.DoorPlates:
+                    vehicleController.bulletDamageMultiplier = IsInstalled(VehicleModType.RoofRack) ? 0.15f : 0.30f;
                     break;
 
                 case VehicleModType.RoofLightbar:
@@ -332,6 +367,7 @@ namespace EndlessSurvival.Vehicle
 
         public bool HasRequiredMaterials(VehicleModItem item, PlayerInventory inv, VehicleStorage stash)
         {
+            if (EndlessSurvival.Survival.SurvivalTest.FreeResources) return true;
             int scrapCount = CountItems(inv, stash, "Scrap", "Metal");
             if (scrapCount < item.scrapCost) return false;
 
@@ -562,6 +598,116 @@ namespace EndlessSurvival.Vehicle
                 CreatePrimitiveBox(fuelObj, "Bracket_Right", new Vector3(0.55f, -0.05f, 0.02f), new Vector3(0.28f, 0.36f, 0.38f), steelMat);
             }
             if (fuelMod != null) fuelMod.visualRoot = fuelObj.gameObject;
+
+            BuildPackage6Visuals(modsParent, steelMat, rubberMat);
+        }
+
+        /// <summary>Paket 6 mods: simple boxes on the same layout as the older mods.</summary>
+        private void BuildPackage6Visuals(Transform modsParent, Material steelMat, Material rubberMat)
+        {
+            var wireMat = CreateMaterial("Mat_Mod_Wire", new Color(0.30f, 0.31f, 0.32f), 0.7f, 0.5f);
+            var plateMat = CreateMaterial("Mat_Mod_Plate", new Color(0.34f, 0.32f, 0.29f), 0.6f, 0.25f);
+            var ropeMat = CreateMaterial("Mat_Mod_Rope", new Color(0.62f, 0.52f, 0.33f), 0f, 0.2f);
+            var chainMat = CreateMaterial("Mat_Mod_Chain", new Color(0.55f, 0.56f, 0.58f), 0.9f, 0.6f);
+
+            Transform Root(VehicleModType type, string name, Vector3 pos)
+            {
+                Transform t = modsParent.Find(name);
+                bool built = t != null;
+                if (!built)
+                {
+                    t = new GameObject(name).transform;
+                    t.SetParent(modsParent, false);
+                    t.localPosition = pos;
+                }
+                var mod = GetModItem(type);
+                if (mod != null) mod.visualRoot = t.gameObject;
+                return built ? null : t; // null = already has children
+            }
+
+            var grille = Root(VehicleModType.RadiatorGrille, "Mod_RadiatorGrille", new Vector3(0f, 0.82f, 1.47f));
+            if (grille != null)
+            {
+                for (int i = 0; i < 5; i++)
+                    CreatePrimitiveBox(grille, "Bar_" + i, new Vector3(0f, -0.16f + i * 0.08f, 0f), new Vector3(1.0f, 0.03f, 0.04f), wireMat);
+                CreatePrimitiveBox(grille, "Frame_L", new Vector3(-0.5f, 0f, 0f), new Vector3(0.05f, 0.4f, 0.05f), steelMat);
+                CreatePrimitiveBox(grille, "Frame_R", new Vector3(0.5f, 0f, 0f), new Vector3(0.05f, 0.4f, 0.05f), steelMat);
+            }
+
+            var cage = Root(VehicleModType.WindowCage, "Mod_WindowCage", new Vector3(0f, 1.35f, 0.62f));
+            if (cage != null)
+            {
+                // Windshield mesh (tilted) and side window bars
+                var front = new GameObject("Front").transform;
+                front.SetParent(cage, false);
+                front.localRotation = Quaternion.Euler(-28f, 0f, 0f);
+                for (int i = 0; i < 6; i++)
+                    CreatePrimitiveBox(front, "V_" + i, new Vector3(-0.6f + i * 0.24f, 0f, 0f), new Vector3(0.025f, 0.55f, 0.025f), wireMat);
+                for (int i = 0; i < 3; i++)
+                    CreatePrimitiveBox(front, "H_" + i, new Vector3(0f, -0.22f + i * 0.22f, 0f), new Vector3(1.25f, 0.025f, 0.025f), wireMat);
+                foreach (float s in new[] { -1f, 1f })
+                    for (int i = 0; i < 5; i++)
+                        CreatePrimitiveBox(cage, (s < 0 ? "SideL_" : "SideR_") + i, new Vector3(s * 0.83f, 0f, -0.25f - i * 0.28f), new Vector3(0.025f, 0.45f, 0.025f), wireMat);
+            }
+
+            var plates = Root(VehicleModType.DoorPlates, "Mod_DoorPlates", new Vector3(0f, 0.95f, -0.25f));
+            if (plates != null)
+            {
+                CreatePrimitiveBox(plates, "Plate_L", new Vector3(-0.86f, 0f, 0f), new Vector3(0.04f, 0.42f, 1.5f), plateMat);
+                CreatePrimitiveBox(plates, "Plate_R", new Vector3(0.86f, 0f, 0f), new Vector3(0.04f, 0.42f, 1.5f), plateMat);
+                for (int i = 0; i < 4; i++)
+                {
+                    float z = -0.6f + i * 0.4f;
+                    CreatePrimitiveBox(plates, "Rivet_L" + i, new Vector3(-0.885f, 0.16f, z), new Vector3(0.02f, 0.04f, 0.04f), steelMat);
+                    CreatePrimitiveBox(plates, "Rivet_R" + i, new Vector3(0.885f, 0.16f, z), new Vector3(0.02f, 0.04f, 0.04f), steelMat);
+                }
+            }
+
+            var spare = Root(VehicleModType.SpareTireMount, "Mod_SpareTireMount", new Vector3(0f, 1.0f, -1.5f));
+            if (spare != null)
+            {
+                CreatePrimitiveBox(spare, "Bracket", new Vector3(0f, 0f, 0.04f), new Vector3(0.3f, 0.3f, 0.06f), steelMat);
+                var tyre = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                tyre.name = "SpareTire";
+                tyre.transform.SetParent(spare, false);
+                tyre.transform.localPosition = new Vector3(0f, 0f, -0.1f);
+                tyre.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                tyre.transform.localScale = new Vector3(0.62f, 0.11f, 0.62f);
+                var col = tyre.GetComponent<Collider>();
+                if (col != null) Destroy(col);
+                tyre.GetComponent<Renderer>().sharedMaterial = rubberMat;
+            }
+
+            var rope = Root(VehicleModType.TowRope, "Mod_TowRope", new Vector3(0.45f, 0.55f, -1.5f));
+            if (rope != null)
+            {
+                for (int i = 0; i < 3; i++)
+                    CreatePrimitiveBox(rope, "Coil_" + i, new Vector3(0f, i * 0.05f, 0f), new Vector3(0.3f, 0.04f, 0.3f), ropeMat);
+                CreatePrimitiveBox(rope, "Hook", new Vector3(-0.45f, -0.05f, 0.02f), new Vector3(0.12f, 0.08f, 0.12f), steelMat);
+            }
+
+            var chains = Root(VehicleModType.SnowChains, "Mod_SnowChains", Vector3.zero);
+            if (chains != null && vehicleController != null)
+            {
+                foreach (var wc in new[] { vehicleController.frontLeftCollider, vehicleController.frontRightCollider, vehicleController.rearLeftCollider, vehicleController.rearRightCollider })
+                {
+                    if (wc == null) continue;
+                    Vector3 p = transform.InverseTransformPoint(wc.transform.position);
+                    float r = wc.radius * wc.transform.lossyScale.y;
+                    float side = Mathf.Sign(p.x);
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float a = i * 60f;
+                        var link = CreatePrimitiveBox(chains, "Link", new Vector3(p.x + side * 0.02f, p.y - vehicleController.suspensionDistance * 0.5f, p.z), new Vector3(0.24f, 0.03f, 0.03f), chainMat);
+                        link.transform.localRotation = Quaternion.Euler(a, 0f, 0f);
+                        link.transform.localPosition += link.transform.localRotation * new Vector3(0f, r, 0f);
+                    }
+                }
+            }
+
+            // Insulation mods are inside the vehicle: no outer visual
+            Root(VehicleModType.BatteryInsulation, "Mod_BatteryInsulation", Vector3.zero);
+            Root(VehicleModType.CabinInsulation, "Mod_CabinInsulation", Vector3.zero);
         }
 
         private GameObject CreatePrimitiveBox(Transform parent, string name, Vector3 localPos, Vector3 localScale, Material mat)

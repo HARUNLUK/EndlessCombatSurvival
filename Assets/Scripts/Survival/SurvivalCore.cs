@@ -321,6 +321,10 @@ namespace EndlessSurvival.Survival
             gameObject.AddComponent<SurvivalPanel>();
             gameObject.AddComponent<FishingController>();
             gameObject.AddComponent<VehicleHome>();
+            gameObject.AddComponent<PlayerSurvivalAnimator>();
+            gameObject.AddComponent<VehicleParts>();
+            gameObject.AddComponent<SmokingAction>();
+            gameObject.AddComponent<HandsBusyHolster>();
             if (player.GetComponent<WaterFillInteractable>() == null) player.AddComponent<WaterFillInteractable>();
         }
 

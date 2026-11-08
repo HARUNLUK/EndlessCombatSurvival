@@ -41,6 +41,8 @@ namespace EndlessSurvival.Survival
         public LootTable wreckLoot;
         [Tooltip("Goods a trader can offer")]
         public ItemDefinition[] traderStock = new ItemDefinition[0];
+        [Tooltip("Humanoid trader model (made by Setup Survival Animations); a capsule is used when empty")]
+        public GameObject traderModelPrefab;
 
         [Header("Stamina (2.2)")]
         public float maxStamina = 100f;
@@ -72,6 +74,22 @@ namespace EndlessSurvival.Survival
         public float toiletNeglectGrace = 90f;
         public float toiletNeglectSpeed = 0.88f;
         public float toiletNeglectStaminaRegen = 0.6f;
+
+        [Header("Smoking (Smoking_System.md)")]
+        [Tooltip("Stress removed when the cigarette is finished")]
+        public float smokeStressRelief = 20f;
+        [Tooltip("Extra stress removed slowly after smoking, spread over smokeAfterHours game hours")]
+        public float smokeAfterRelief = 10f;
+        public float smokeAfterHours = 2f;
+        [Tooltip("Longest the smoking action lasts (the clip is cut here)")]
+        public float smokeMaxSeconds = 12f;
+        [Tooltip("Moving/cancelling within this many seconds gives the cigarette back (not lit yet)")]
+        public float smokeLightSeconds = 1.5f;
+        [Tooltip("Stamina regeneration is this much lower after smoking")]
+        [Range(0f, 1f)] public float smokeStaminaRegenPenalty = 0.15f;
+        public float smokeStaminaPenaltyGameMinutes = 10f;
+        [Tooltip("An alerted enemy or hunting animal this close interrupts smoking")]
+        public float smokeDangerRadius = 18f;
 
         [Header("Carry weight (2.7)")]
         [Tooltip("Above the backpack's comfortable weight the player slows down; the hard limit is this many times more")]

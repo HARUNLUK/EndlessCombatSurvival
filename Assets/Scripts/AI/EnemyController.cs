@@ -594,7 +594,8 @@ namespace EndlessCombat.AI
             
             EndlessSurvival.World.GameStatsTracker.Instance?.RecordEnemyKilled();
 
-            EnableRagdoll();
+            // The user's Mixamo death clip (Rifle Death) when the controller has it, ragdoll otherwise
+            if (!PlayDeathAnimation()) EnableRagdoll();
 
             LootSpawner.DropLoot(dropTable, transform.position);
             DropHeldWeapon();
@@ -639,6 +640,19 @@ namespace EndlessCombat.AI
                 // Bu yuzden kapatmiyoruz, sadece rigidbody'leri kinematic yapiyoruz.
             }
             if (animator != null) animator.enabled = true;
+        }
+
+        private bool PlayDeathAnimation()
+        {
+            if (animator == null) return false;
+            var layer = EndlessSurvival.Survival.SurvivalAnimLayer.GetOrAdd(animator);
+            if (layer == null || !layer.Available || layer.ClipLength(EndlessSurvival.Survival.SurvivalAnimClips.NpcDeath) <= 0f) return false;
+            animator.SetFloat("Speed", 0f);
+            animator.SetBool("IsAiming", false);
+            layer.SetInstant(EndlessSurvival.Survival.SurvAnim.Death);
+            var mainCol = GetComponent<Collider>();
+            if (mainCol != null) mainCol.enabled = false;
+            return true;
         }
 
         private void EnableRagdoll()

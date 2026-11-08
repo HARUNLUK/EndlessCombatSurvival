@@ -22,6 +22,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 32dafbc0e6cfb4f44be1b545540f90f0, type: 2}
   - {fileID: 11400000, guid: 9cdc1c18febe93144a5690506ebe01e8, type: 2}
   - {fileID: 11400000, guid: f4721657e1885bd4a8b9225cb86e19bd, type: 2}
+  - {fileID: 11400000, guid: 60a63b3d768ff134ca9d390f5b956678, type: 2}
+  - {fileID: 11400000, guid: 46fe1f334c149e14895b33a800791a03, type: 2}
+  - {fileID: 11400000, guid: fffb6240e5ddbb14483bc2b28f2c043f, type: 2}
+  - {fileID: 11400000, guid: 4629ce9d83ef90c4b8ae4aba4126be35, type: 2}
+  - {fileID: 11400000, guid: e80661b72052c99439c77cb09228438c, type: 2}
+  - {fileID: 11400000, guid: 2e6d356ec6050a74085532f141941a79, type: 2}
+  - {fileID: 11400000, guid: 8af1b786adaf5714a97671cd785c1573, type: 2}
+  - {fileID: 11400000, guid: 392fb1168ab0a064792911cc9aa76e9c, type: 2}
+  - {fileID: 11400000, guid: 99d7feccc63423c42935dee1baf496f6, type: 2}
   - {fileID: 11400000, guid: c7e2b2e21ab812e418973ae2824989f0, type: 2}
   - {fileID: 11400000, guid: 03ea9cbe1b42c9444a05bad308508d77, type: 2}
   - {fileID: 11400000, guid: f517d26bccf3ed342a5398a051871c72, type: 2}
@@ -91,6 +100,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 193bd6a5eb31ef648918d4c2a544f256, type: 2}
   - {fileID: 11400000, guid: 89b77b5c0e48ba54a824763ef222d4d1, type: 2}
   - {fileID: 11400000, guid: 305afaf1ab1b9ad42badac5cdbf9a5d4, type: 2}
+  - {fileID: 11400000, guid: c5da916a87909514f98f037fa30ea5e9, type: 2}
+  - {fileID: 11400000, guid: efe87a95995f1df4f890e39b25a50560, type: 2}
   - {fileID: 11400000, guid: 7c9926c103e003e4f866859442378f33, type: 2}
   - {fileID: 11400000, guid: 2a794bfab476eaa41a52b66a553ca6d6, type: 2}
   - {fileID: 11400000, guid: 7c3cf71e0c6fb8646b1a7d29ca974c38, type: 2}
@@ -136,6 +147,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 26a6cf7c1d6322a4f9cd3b421c020729, type: 2}
   - {fileID: 11400000, guid: cd7af093d25b90e48a8df0d52deb6308, type: 2}
   - {fileID: 11400000, guid: 189d96404ebf10140a0cd7afcb3a4a44, type: 2}
+  - {fileID: 11400000, guid: 46fe1f334c149e14895b33a800791a03, type: 2}
+  - {fileID: 11400000, guid: 2e6d356ec6050a74085532f141941a79, type: 2}
+  - {fileID: 11400000, guid: 60a63b3d768ff134ca9d390f5b956678, type: 2}
+  - {fileID: 11400000, guid: 99d7feccc63423c42935dee1baf496f6, type: 2}
+  traderModelPrefab: {fileID: 2573135521476883086, guid: cc54dbe59a66936438b539bdd63b118c, type: 3}
   maxStamina: 100
   sprintDrainPerSecond: 11
   jumpCost: 9
@@ -154,6 +170,14 @@ MonoBehaviour:
   toiletNeglectGrace: 90
   toiletNeglectSpeed: 0.88
   toiletNeglectStaminaRegen: 0.6
+  smokeStressRelief: 20
+  smokeAfterRelief: 10
+  smokeAfterHours: 2
+  smokeMaxSeconds: 12
+  smokeLightSeconds: 1.5
+  smokeStaminaRegenPenalty: 0.15
+  smokeStaminaPenaltyGameMinutes: 10
+  smokeDangerRadius: 18
   hardLimitMultiplier: 1.5
   overloadSpeedAtHardLimit: 0.6
   carryPerStrength: 0.25

@@ -15,6 +15,7 @@ namespace EndlessCombat.Combat
             if (EndlessSurvival.Survival.SurvivalUIState.AnyOwnOpen) return true;
             var vitals = EndlessSurvival.Survival.PlayerVitals.Instance;
             if (vitals != null && vitals.ToiletActive) return true;
+            if (EndlessSurvival.Survival.SmokingAction.Active) return true;
             var note = EndlessSurvival.Story.NoteReaderUI.Instance;
             if (note != null && note.IsOpen) return true;
 

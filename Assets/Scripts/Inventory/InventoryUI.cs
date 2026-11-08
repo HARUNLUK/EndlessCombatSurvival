@@ -235,13 +235,7 @@ namespace EndlessSurvival.Inventory
 
         private void TryOpen()
         {
-            if (vehicleMaintenance != null && vehicleMaintenance.vehicle != null &&
-                vehicleInteraction != null && vehicleInteraction.IsPlayerInside &&
-                vehicleMaintenance.vehicle.CurrentSpeedKmh > maxOpenSpeedKmh)
-            {
-                return;
-            }
-
+            // The screen opens while driving too (the user asked for it); maxOpenSpeedKmh is no longer used.
             Open();
         }
 

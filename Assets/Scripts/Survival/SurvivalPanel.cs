@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using EndlessSurvival.Inventory;
 using EndlessSurvival.Vehicle;
@@ -34,6 +34,8 @@ namespace EndlessSurvival.Survival
         private HubTab? _pending;
         private Vector2 _scroll;
         private string _message;
+        private string _tooltip = "";   // captured on Repaint, drawn on every event (layout must not change between events)
+        private HubTab? _clickedTab;     // tab switch waits for the next Layout event
         private Rect _lastPanelRect;
         private PlayerCampfire _nearFire;
         private float _nextFireSearch;
@@ -174,6 +176,13 @@ namespace EndlessSurvival.Survival
         {
             if (!IsHubOpen) return;
             SurvivalGUI.Init();
+            // IMGUI runs OnGUI once per event (Layout, then Repaint/mouse). Anything that adds or removes a layout
+            // element may change only at Layout, otherwise Unity logs "Mismatched LayoutGroup" and clicks are lost.
+            if (Event.current.type == EventType.Layout && _clickedTab.HasValue)
+            {
+                Select(_clickedTab.Value);
+                _clickedTab = null;
+            }
             Rect panel = PanelScreenRect();
 
             // Tab bar right above the window (inside it when there is no room)
@@ -194,7 +203,7 @@ namespace EndlessSurvival.Survival
                 if (selected) SurvivalGUI.Fill(new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4), new Color(1f, 0.75f, 0.3f, 0.9f));
                 var old = GUI.color;
                 if (selected) GUI.color = new Color(1f, 0.92f, 0.7f);
-                if (GUI.Button(r, TabName(t)) && !selected) Select(t);
+                if (GUI.Button(r, TabName(t)) && !selected) _clickedTab = t;
                 GUI.color = old;
             }
             GUI.Label(new Rect(bar.xMax - 220f, bar.y, 210f, barH), "TAB / ESC: kapat", SurvivalGUI.Small);
@@ -215,7 +224,7 @@ namespace EndlessSurvival.Survival
                 case HubTab.Stats: DrawStats(); break;
             }
             GUILayout.EndScrollView();
-            if (!string.IsNullOrEmpty(_message)) GUILayout.Label(_message, SurvivalGUI.Text);
+            GUILayout.Label(string.IsNullOrEmpty(_message) ? " " : _message, SurvivalGUI.Text); // always present, see top of OnGUI
             GUILayout.EndArea();
         }
 
@@ -244,9 +253,12 @@ namespace EndlessSurvival.Survival
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"Yapılıyor: {craft.CurrentJob.DisplayName}  %{Mathf.RoundToInt(craft.JobProgress * 100f)}", SurvivalGUI.Header);
-                if (GUILayout.Button("İptal", GUILayout.Width(80))) craft.CancelJob();
+                if (GUILayout.Button("İptal", GUILayout.Width(80))) { craft.CancelJob(); GUIUtility.ExitGUI(); }
                 GUILayout.EndHorizontal();
             }
+
+            bool free = GUILayout.Toggle(SurvivalTest.FreeResources, " TEST MODU: malzeme, alet, para ve ihtiyaç şartı yok, hiçbir şey harcanmaz");
+            if (free != SurvivalTest.FreeResources) SurvivalTest.FreeResources = free;
 
             foreach (CraftStation station in System.Enum.GetValues(typeof(CraftStation)))
             {
@@ -263,6 +275,7 @@ namespace EndlessSurvival.Survival
                     {
                         craft.StartCraft(r);
                         _message = null;
+                        GUIUtility.ExitGUI(); // the "Yapılıyor" row appears: stop this event, the next Layout redraws
                     }
                     GUI.enabled = true;
                     GUILayout.BeginVertical();
@@ -384,6 +397,12 @@ namespace EndlessSurvival.Survival
             GUILayout.EndHorizontal();
             GUILayout.Label("Araçta uyumak kamp kurmadan olur; daha az dinlendirir ama baskına karşı daha güvenlidir. Yakıt, tamir ve bagaj: Envanter sekmesi. Tamir kiti: Üretim sekmesi > Araç.", SurvivalGUI.Small);
 
+            GUILayout.Space(6);
+            bool free = GUILayout.Toggle(SurvivalTest.FreeResources, " TEST MODU: malzeme, alet, para ve ihtiyaç şartı yok, hiçbir şey harcanmaz (maliyetler yine yazılır)");
+            if (free != SurvivalTest.FreeResources) SurvivalTest.FreeResources = free;
+
+            DrawVehicleParts(near);
+
             GUILayout.Space(10);
             GUILayout.Label("Modifiyeler" + (near ? "" : "  (takmak için aracın yanına git)"), SurvivalGUI.Header);
             var mods = VehicleModifications.Instance;
@@ -414,11 +433,12 @@ namespace EndlessSurvival.Survival
                 }
                 else
                 {
-                    bool afford = mods.HasRequiredMaterials(mod, inv, stash);
+                    bool afford = SurvivalTest.FreeResources || mods.HasRequiredMaterials(mod, inv, stash);
                     GUI.enabled = near && afford;
-                    if (GUILayout.Button(afford ? "Monte et" : "Malzeme yetersiz", GUILayout.Width(150))) install = mod.type;
-                    GUI.enabled = near;
-                    if (GUILayout.Button("Test (bedava)", GUILayout.Width(110))) installFree = mod.type;
+                    if (GUILayout.Button(afford ? "Monte et" : "Malzeme yetersiz", GUILayout.Width(150)))
+                    {
+                        if (SurvivalTest.FreeResources) installFree = mod.type; else install = mod.type;
+                    }
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
@@ -428,6 +448,94 @@ namespace EndlessSurvival.Survival
             if (install.HasValue) mods.InstallModification(install.Value, freeCost: false);
             if (installFree.HasValue) mods.InstallModification(installFree.Value, freeCost: true);
             if (uninstall.HasValue) mods.UninstallModification(uninstall.Value);
+        }
+
+        // ---------------- vehicle parts (Paket 6) ----------------
+
+        private static string Pct(float v) => $"%{Mathf.RoundToInt(v)}";
+
+        private void DrawVehicleParts(bool near)
+        {
+            var parts = VehicleParts.Instance;
+            if (parts == null) return;
+            bool canWork = near && !SurvivalDirector.PlayerInVehicle && parts.CurrentJob == null;
+            GUILayout.Space(10);
+            GUILayout.Label("Parçalar ve Camlar" + (SurvivalDirector.PlayerInVehicle ? "  (çalışmak için araçtan in)" : near ? "" : "  (aracın yanına git)"), SurvivalGUI.Header);
+            GUILayout.Label("Fabrika yok: parçalar enkazlardan sökülür. Değiştirmek zaman alır ve gürültü yapar; yakındaki düşmanlar duyar.", SurvivalGUI.Small);
+
+            // Engine, battery, cabin
+            parts.StartChance(out string why);
+            Line("Motor", $"hararet {Mathf.RoundToInt(parts.EngineHeat)}" + (parts.Overheated ? " (HARARET, soğumayı bekle)" : "") + $", radyatör {Pct(parts.Radiator)}");
+            Line("Akü", $"şarj {Pct(parts.BatteryCharge)}, sıcaklık {Mathf.RoundToInt(parts.BatteryTemp)}°C" + (why != null ? $" ({why}: marş zor tutar; yanına ateş yak)" : ""));
+            Line("Kabin", $"dışarıdan +{parts.CabinBonus:0}°C, korunma {Pct(parts.ShelterFactor * 100f)}" + (parts.RainEnters ? ", yağmur giriyor" : ""));
+            Line("Farlar", $"{Pct(parts.Headlights)}" + (parts.HeadlightsOn ? ", AÇIK" : ", kapalı") + "  (araçta [H])");
+
+            GUILayout.BeginHorizontal();
+            GUI.enabled = canWork && parts.Radiator < 99f;
+            if (GUILayout.Button(new GUIContent("Radyatörü değiştir", VehicleParts.RadiatorCost), GUILayout.Width(170))) _message = parts.ReplaceRadiator();
+            GUI.enabled = canWork;
+            if (GUILayout.Button(new GUIContent("Aküyü değiştir", VehicleParts.BatteryCost), GUILayout.Width(150))) _message = parts.ReplaceBattery();
+            GUI.enabled = canWork && parts.Headlights < 99f;
+            if (GUILayout.Button(new GUIContent("Farları değiştir", VehicleParts.HeadlightCost), GUILayout.Width(150))) _message = parts.ReplaceHeadlights();
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+            GUILayout.Label($"Radyatör: {VehicleParts.RadiatorCost}.  Akü: {VehicleParts.BatteryCost}.  Far: {VehicleParts.HeadlightCost}.", SurvivalGUI.Small);
+
+            // Tyres
+            GUILayout.Space(6);
+            bool mount = VehicleHome.Has(VehicleModType.SpareTireMount);
+            GUILayout.Label("Lastikler" + (mount ? (parts.SpareFilled ? "  (askıda yedek var)" : "  (askı boş)") : ""), SurvivalGUI.Text);
+            for (int i = 0; i < 4; i++)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"{VehicleParts.TireNames[i]}: " + (parts.IsFlat(i) ? "PATLAK" : Pct(parts.Tires[i])), SurvivalGUI.Small, GUILayout.Width(170));
+                GUI.enabled = canWork && parts.Tires[i] < 99f;
+                if (GUILayout.Button(new GUIContent(parts.SpareFilled ? "Yedekle değiştir" : "Lastiği değiştir", VehicleParts.TireCost), GUILayout.Width(150))) _message = parts.ChangeTire(i);
+                GUI.enabled = true;
+                GUILayout.EndHorizontal();
+            }
+            if (mount && !parts.SpareFilled)
+            {
+                GUI.enabled = near;
+                if (GUILayout.Button(new GUIContent("Askıya yedek lastik as", VehicleParts.SpareCost), GUILayout.Width(200))) _message = parts.FillSpare();
+                GUI.enabled = true;
+            }
+            GUILayout.Label($"Lastik değişimi: {VehicleParts.TireCost}.  Askıya yedek: {VehicleParts.SpareCost}.", SurvivalGUI.Small);
+
+            // Windows
+            GUILayout.Space(6);
+            GUILayout.Label("Camlar ve açıklıklar" + (VehicleHome.Has(VehicleModType.WindowCage) ? "  (cam kafesi takılı: kırılmazlar)" : "") + $"  —  kabin korunması {Pct(parts.ShelterFactor * 100f)}", SurvivalGUI.Text);
+            GUILayout.Label("Cip açık kasa: yalnız ön camı var. Yanlar, arka ve tavan açık; naylon, tahta ya da sacla kapatırsan kabin sıcak tutar, tavan kapalıysa yağmur girmez. Cam tamir edilmez: kırık ön cam kaplanır ya da enkazdan sökülen sağlam camla değiştirilir.", SurvivalGUI.Small);
+            for (int i = 0; i < parts.Windows.Length; i++)
+            {
+                var state = parts.Windows[i];
+                GUILayout.BeginHorizontal();
+                string label = $"{VehicleParts.WindowNames[i]}: {VehicleParts.WindowLabel(state)}";
+                if (state == WindowState.Plastic) label += $" ({Pct(parts.PlasticWear[i])})";
+                GUILayout.Label(label, SurvivalGUI.Small, GUILayout.Width(210));
+                if (state != WindowState.Intact)
+                {
+                    foreach (var cover in new[] { WindowState.Plastic, WindowState.Plank, WindowState.Metal })
+                    {
+                        if (cover == state) continue;
+                        var cost = VehicleParts.CoverCost(cover, out _, out _);
+                        GUI.enabled = canWork && parts.CanAfford(cost);
+                        string name = cover == WindowState.Plastic ? "Naylon" : cover == WindowState.Plank ? "Tahta" : "Saç";
+                        if (GUILayout.Button(new GUIContent(name, VehicleParts.CostText(cost)), GUILayout.Width(70))) _message = parts.CoverWindow(i, cover);
+                    }
+                    if (VehicleParts.HasGlassFrame(i))
+                    {
+                        GUI.enabled = canWork;
+                        if (GUILayout.Button(new GUIContent("Sağlam cam tak", VehicleParts.GlassCost), GUILayout.Width(130))) _message = parts.InstallGlass(i);
+                    }
+                    GUI.enabled = true;
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.Label("Naylon: 1 naylon örtü + 1 bant (zamanla yırtılır).  Tahta: 2 tahta + 1 bant.  Saç: 3 hurda metal + alet çantası.  Sağlam cam: 1 cam + alet çantası (enkazdan sökmek 40 sn).", SurvivalGUI.Small);
+            // GUI.tooltip is filled only during Repaint; drawing the label only then broke the layout and lost clicks
+            if (Event.current.type == EventType.Repaint) _tooltip = GUI.tooltip ?? "";
+            GUILayout.Label(_tooltip.Length > 0 ? _tooltip : " ", SurvivalGUI.Small);
         }
 
         // ---------------- status ----------------

@@ -1,0 +1,1637 @@
+Breathing Idle.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Breathing Idle.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Breathing Idle.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Breathing Idle.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Breathing Idle.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Breathing Idle.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Breathing Idle.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Breathing Idle.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Breathing Idle.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Breathing Idle.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Breathing Idle.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Breathing Idle.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Breathing Idle.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Breathing Idle.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Breathing Idle.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Breathing Idle.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Breathing Idle.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Breathing Idle.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Breathing Idle.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Breathing Idle.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Breathing Idle.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Breathing Idle.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Breathing Idle.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Breathing Idle.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Breathing Idle.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Breathing Idle.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Breathing Idle.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Breathing Idle.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Breathing Idle.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Breathing Idle.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Breathing Idle.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Breathing Idle.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Breathing Idle.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Breathing Idle.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Breathing Idle.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Breathing Idle.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Breathing Idle.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Breathing Idle.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Breathing Idle.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Breathing Idle.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Breathing Idle.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Breathing Idle.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Breathing Idle.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Breathing Idle.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Breathing Idle.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Breathing Idle.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Breathing Idle.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Breathing Idle.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Breathing Idle.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Breathing Idle.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Breathing Idle.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Breathing Idle.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Breathing Idle.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Breathing Idle.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Breathing Idle.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Breathing Idle.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Breathing Idle.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Breathing Idle.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Breathing Idle.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Breathing Idle.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Breathing Idle.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Breathing Idle.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Breathing Idle.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Breathing Idle.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Breathing Idle.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Drinking (second half needed).fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Drinking (second half needed).fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Drinking (second half needed).fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Drinking (second half needed).fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Drinking (second half needed).fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Drinking (second half needed).fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Drinking (second half needed).fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Drinking (second half needed).fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Drinking (second half needed).fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Drinking (second half needed).fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Drinking (second half needed).fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Drinking (second half needed).fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Drinking (second half needed).fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Drinking (second half needed).fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Drinking (second half needed).fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Drinking (second half needed).fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Drinking (second half needed).fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Drinking (second half needed).fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Drinking (second half needed).fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Drinking (second half needed).fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Drinking (second half needed).fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Drinking (second half needed).fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Drinking (second half needed).fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Drinking (second half needed).fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Drinking (second half needed).fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Drinking (second half needed).fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Drinking (second half needed).fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Drinking (second half needed).fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Drinking (second half needed).fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Drinking (second half needed).fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Drinking (second half needed).fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Drinking (second half needed).fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Drinking (second half needed).fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Drinking (second half needed).fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Drinking (second half needed).fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Drinking (second half needed).fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Drinking (second half needed).fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Drinking (second half needed).fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Drinking (second half needed).fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Drinking (second half needed).fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Drinking (second half needed).fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Drinking (second half needed).fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Drinking (second half needed).fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Drinking (second half needed).fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Drinking (second half needed).fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Drinking (second half needed).fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Drinking (second half needed).fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Drinking (second half needed).fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Drinking (second half needed).fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Drinking (second half needed).fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Drinking (second half needed).fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Drinking (second half needed).fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Drinking (second half needed).fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Drinking (second half needed).fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Drinking (second half needed).fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Drinking (second half needed).fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Drinking (second half needed).fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Drinking (second half needed).fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Drinking (second half needed).fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Fishing Cast (second half reeling).fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Fishing Cast (second half reeling).fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Fishing Cast (second half reeling).fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Fishing Cast (second half reeling).fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Fishing Cast (second half reeling).fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Fishing Cast (second half reeling).fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Fishing Cast (second half reeling).fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Fishing Cast (second half reeling).fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Fishing Cast (second half reeling).fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Fishing Cast (second half reeling).fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Fishing Cast (second half reeling).fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Fishing Cast (second half reeling).fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Fishing Cast (second half reeling).fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Fishing Cast (second half reeling).fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Fishing Idle.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Fishing Idle.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Fishing Idle.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Fishing Idle.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Fishing Idle.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Fishing Idle.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Fishing Idle.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Fishing Idle.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Fishing Idle.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Fishing Idle.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Fishing Idle.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Fishing Idle.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Fishing Idle.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Fishing Idle.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Fishing Idle.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Fishing Idle.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Fishing Idle.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Fishing Idle.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Fishing Idle.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Fishing Idle.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Fishing Idle.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Fishing Idle.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Fishing Idle.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Fishing Idle.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Fishing Idle.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Fishing Idle.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Fishing Idle.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Fishing Idle.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Fishing Idle.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Fishing Idle.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Fishing Idle.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Fishing Idle.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Fishing Idle.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Fishing Idle.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Fishing Idle.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Fishing Idle.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Fishing Idle.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Fishing Idle.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Fishing Idle.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Fishing Idle.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Fishing Idle.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Fishing Idle.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Fishing Idle.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Fishing Idle.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Fishing Idle.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Fishing Idle.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Fishing Idle.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Fishing Idle.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Fishing Idle.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Fishing Idle.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Fishing Idle.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Fishing Idle.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Fishing Idle.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Fishing Idle.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Fishing Idle.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Fishing Idle.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Fishing Idle.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Fishing Idle.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Fishing Idle.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Fishing Idle.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Fishing Idle.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Fishing Idle.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Fishing Idle.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Fishing Idle.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Fishing Idle.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Gathering Objects.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Gathering Objects.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Gathering Objects.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Gathering Objects.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Gathering Objects.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Gathering Objects.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Gathering Objects.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Gathering Objects.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Gathering Objects.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Gathering Objects.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Gathering Objects.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Gathering Objects.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Gathering Objects.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Gathering Objects.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Gathering Objects.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Gathering Objects.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Gathering Objects.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Gathering Objects.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Gathering Objects.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Gathering Objects.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Gathering Objects.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Gathering Objects.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Gathering Objects.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Gathering Objects.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Gathering Objects.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Gathering Objects.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Gathering Objects.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Gathering Objects.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Gathering Objects.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Gathering Objects.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Gathering Objects.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Gathering Objects.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Gathering Objects.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Gathering Objects.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Gathering Objects.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Gathering Objects.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Gathering Objects.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Gathering Objects.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Gathering Objects.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Gathering Objects.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Gathering Objects.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Gathering Objects.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Gathering Objects.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Gathering Objects.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Gathering Objects.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Gathering Objects.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Gathering Objects.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Gathering Objects.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Gathering Objects.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Gathering Objects.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Gathering Objects.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Gathering Objects.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Gathering Objects.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Gathering Objects.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Gathering Objects.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Gathering Objects.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Gathering Objects.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Gathering Objects.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Gathering Objects.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Gathering Objects.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Gathering Objects.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Gathering Objects.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Gathering Objects.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Gathering Objects.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Gathering Objects.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Hit Reaction.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Hit Reaction.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Hit Reaction.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Hit Reaction.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Hit Reaction.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Hit Reaction.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Hit Reaction.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Hit Reaction.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Hit Reaction.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Hit Reaction.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Hit Reaction.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Hit Reaction.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Hit Reaction.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Hit Reaction.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Hit Reaction.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Hit Reaction.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Hit Reaction.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Hit Reaction.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Hit Reaction.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Hit Reaction.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Hit Reaction.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Hit Reaction.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Hit Reaction.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Hit Reaction.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Hit Reaction.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Hit Reaction.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Hit Reaction.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Hit Reaction.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Hit Reaction.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Hit Reaction.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Hit Reaction.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Hit Reaction.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Hit Reaction.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Hit Reaction.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Hit Reaction.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Hit Reaction.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Hit Reaction.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Hit Reaction.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Hit Reaction.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Hit Reaction.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Hit Reaction.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Hit Reaction.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Hit Reaction.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Hit Reaction.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Hit Reaction.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Hit Reaction.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Hit Reaction.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Hit Reaction.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Hit Reaction.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Hit Reaction.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Hit Reaction.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Hit Reaction.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Hit Reaction.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Hit Reaction.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Hit Reaction.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Hit Reaction.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Hit Reaction.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Hit Reaction.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Hit Reaction.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Hit Reaction.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Hit Reaction.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Hit Reaction.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Hit Reaction.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Hit Reaction.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Hit Reaction.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Holding Down for Toilet (only first second needed).fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Holding Down for Toilet (only first second needed).fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Kneel to Fire.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Kneel to Fire.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Kneel to Fire.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Kneel to Fire.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Kneel to Fire.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Kneel to Fire.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Kneel to Fire.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Kneel to Fire.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Kneel to Fire.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Kneel to Fire.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Kneel to Fire.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Kneel to Fire.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Kneel to Fire.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Kneel to Fire.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Kneel to Fire.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Kneel to Fire.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Kneel to Fire.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Kneel to Fire.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Kneel to Fire.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Kneel to Fire.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Kneel to Fire.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Kneel to Fire.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Kneel to Fire.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Kneel to Fire.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Kneel to Fire.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Kneel to Fire.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Kneel to Fire.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Kneel to Fire.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Kneel to Fire.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Kneel to Fire.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Kneel to Fire.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Kneel to Fire.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Kneel to Fire.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Kneel to Fire.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Kneel to Fire.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Kneel to Fire.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Kneel to Fire.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Kneel to Fire.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Kneel to Fire.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Kneel to Fire.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Kneel to Fire.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Kneel to Fire.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Kneel to Fire.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Kneel to Fire.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Kneel to Fire.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Kneel to Fire.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Kneel to Fire.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Kneel to Fire.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Kneel to Fire.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Kneel to Fire.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Kneel to Fire.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Kneel to Fire.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Kneel to Fire.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Kneel to Fire.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Kneel to Fire.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Kneel to Fire.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Kneel to Fire.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Kneel to Fire.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Kneel to Fire.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Kneel to Fire.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Kneel to Fire.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Kneel to Fire.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Kneel to Fire.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Kneel to Fire.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Kneel to Fire.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Laying Sleeping.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Laying Sleeping.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Laying Sleeping.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Laying Sleeping.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Laying Sleeping.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Laying Sleeping.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Laying Sleeping.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Laying Sleeping.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Laying Sleeping.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Laying Sleeping.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Laying Sleeping.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Laying Sleeping.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Laying Sleeping.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Laying Sleeping.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Laying Sleeping.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Laying Sleeping.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Laying Sleeping.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Laying Sleeping.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Laying Sleeping.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Laying Sleeping.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Laying Sleeping.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Laying Sleeping.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Laying Sleeping.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Laying Sleeping.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Laying Sleeping.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Laying Sleeping.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Laying Sleeping.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Laying Sleeping.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Laying Sleeping.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Laying Sleeping.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Laying Sleeping.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Laying Sleeping.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Laying Sleeping.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Laying Sleeping.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Laying Sleeping.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Laying Sleeping.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Laying Sleeping.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Laying Sleeping.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Laying Sleeping.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Laying Sleeping.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Laying Sleeping.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Laying Sleeping.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Laying Sleeping.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Laying Sleeping.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Laying Sleeping.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Laying Sleeping.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Laying Sleeping.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Laying Sleeping.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Laying Sleeping.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Laying Sleeping.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Laying Sleeping.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Laying Sleeping.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Laying Sleeping.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Laying Sleeping.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Laying Sleeping.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Laying Sleeping.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Laying Sleeping.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Laying Sleeping.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Laying Sleeping.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Laying Sleeping.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Laying Sleeping.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Laying Sleeping.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Laying Sleeping.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Laying Sleeping.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Laying Sleeping.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Rifle Death.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Rifle Death.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Rifle Death.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Rifle Death.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Rifle Death.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Rifle Death.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Rifle Death.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Rifle Death.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Rifle Death.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Rifle Death.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Rifle Death.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Rifle Death.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Rifle Death.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Rifle Death.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Rifle Death.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Rifle Death.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Rifle Death.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Rifle Death.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Rifle Death.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Rifle Death.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Rifle Death.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Rifle Death.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Rifle Death.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Rifle Death.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Rifle Death.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Rifle Death.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Rifle Death.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Rifle Death.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Rifle Death.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Rifle Death.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Rifle Death.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Rifle Death.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Rifle Death.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Rifle Death.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Rifle Death.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Rifle Death.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Rifle Death.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Rifle Death.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Rifle Death.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Rifle Death.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Rifle Death.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Rifle Death.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Rifle Death.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Rifle Death.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Rifle Death.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Rifle Death.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Rifle Death.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Rifle Death.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Rifle Death.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Rifle Death.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Rifle Death.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Rifle Death.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Rifle Death.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Rifle Death.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Rifle Death.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Rifle Death.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Rifle Death.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Rifle Death.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Rifle Death.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Rifle Death.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Rifle Death.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Rifle Death.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Rifle Death.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Rifle Death.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Rifle Death.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Smoking.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Smoking.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Smoking.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Smoking.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Smoking.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Smoking.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Smoking.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Smoking.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Smoking.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Smoking.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Smoking.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Smoking.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Smoking.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Smoking.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Smoking.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Smoking.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Smoking.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Smoking.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Smoking.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Smoking.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Smoking.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Smoking.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Smoking.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Smoking.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Smoking.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Smoking.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Smoking.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Smoking.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Smoking.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Smoking.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Smoking.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Smoking.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Smoking.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Smoking.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Smoking.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Smoking.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Smoking.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Smoking.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Smoking.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Smoking.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Smoking.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Smoking.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Smoking.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Smoking.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Smoking.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Smoking.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Smoking.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Smoking.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Smoking.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Smoking.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Smoking.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Smoking.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Smoking.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Smoking.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Smoking.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Smoking.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Smoking.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Smoking.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Smoking.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Smoking.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Smoking.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Smoking.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Smoking.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Smoking.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Smoking.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Standing.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Standing.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Standing.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Standing.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Standing.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Standing.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Standing.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Standing.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Standing.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Standing.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Standing.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Standing.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Standing.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Standing.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Standing.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Standing.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Standing.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Standing.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Standing.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Standing.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Standing.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Standing.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Standing.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Standing.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Standing.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Standing.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Standing.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Standing.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Standing.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Standing.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Standing.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Standing.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Standing.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Standing.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Standing.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Standing.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Standing.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Standing.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Standing.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Standing.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Standing.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Standing.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Standing.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Standing.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Standing.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Standing.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Standing.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Standing.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Standing.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Standing.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Standing.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Standing.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Standing.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Standing.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Standing.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Standing.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Standing.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Standing.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Standing.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Standing.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Standing.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Standing.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Standing.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Standing.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Standing.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Start Walking.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Start Walking.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Start Walking.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Start Walking.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Start Walking.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Start Walking.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Start Walking.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Start Walking.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Start Walking.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Start Walking.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Start Walking.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Start Walking.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Start Walking.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Start Walking.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Start Walking.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Start Walking.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Start Walking.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Start Walking.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Start Walking.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Start Walking.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Start Walking.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Start Walking.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Start Walking.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Start Walking.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Start Walking.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Start Walking.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Start Walking.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Start Walking.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Start Walking.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Start Walking.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Start Walking.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Start Walking.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Start Walking.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Start Walking.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Start Walking.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Start Walking.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Start Walking.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Start Walking.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Start Walking.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Start Walking.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Start Walking.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Start Walking.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Start Walking.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Start Walking.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Start Walking.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Start Walking.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Start Walking.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Start Walking.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Start Walking.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Start Walking.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Start Walking.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Start Walking.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Start Walking.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Start Walking.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Start Walking.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Start Walking.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Start Walking.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Start Walking.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Start Walking.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Start Walking.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Start Walking.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Start Walking.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Start Walking.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Start Walking.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Start Walking.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Talking (1).fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Talking (1).fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Talking (1).fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Talking (1).fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Talking (1).fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Talking (1).fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Talking (1).fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Talking (1).fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Talking (1).fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Talking (1).fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Talking (1).fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Talking (1).fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Talking (1).fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Talking (1).fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Talking (1).fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Talking (1).fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Talking (1).fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Talking (1).fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Talking (1).fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Talking (1).fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Talking (1).fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Talking (1).fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Talking (1).fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Talking (1).fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Talking (1).fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Talking (1).fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Talking (1).fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Talking (1).fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Talking (1).fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Talking (1).fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Talking (1).fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Talking (1).fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Talking (1).fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Talking (1).fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Talking (1).fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Talking (1).fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Talking (1).fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Talking (1).fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Talking (1).fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Talking (1).fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Talking (1).fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Talking (1).fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Talking (1).fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Talking (1).fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Talking (1).fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Talking (1).fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Talking (1).fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Talking (1).fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Talking (1).fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Talking (1).fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Talking (1).fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Talking (1).fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Talking (1).fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Talking (1).fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Talking (1).fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Talking (1).fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Talking (1).fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Talking (1).fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Talking (1).fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Talking (1).fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Talking (1).fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Talking (1).fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Talking (1).fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Talking (1).fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Talking (1).fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Talking.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Talking.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Talking.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Talking.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Talking.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Talking.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Talking.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Talking.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Talking.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Talking.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Talking.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Talking.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Talking.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Talking.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Talking.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Talking.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Talking.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Talking.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Talking.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Talking.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Talking.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Talking.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Talking.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Talking.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Talking.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Talking.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Talking.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Talking.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Talking.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Talking.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Talking.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Talking.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Talking.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Talking.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Talking.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Talking.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Talking.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Talking.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Talking.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Talking.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Talking.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Talking.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Talking.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Talking.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Talking.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Talking.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Talking.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Talking.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Talking.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Talking.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Talking.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Talking.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Talking.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Talking.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Talking.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Talking.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Talking.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Talking.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Talking.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Talking.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Talking.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Talking.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Talking.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Talking.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Talking.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Walking and carry heavy.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Walking and carry heavy.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Walking and carry heavy.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Walking and carry heavy.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Walking and carry heavy.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Walking and carry heavy.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Walking and carry heavy.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Walking and carry heavy.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Walking and carry heavy.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Walking and carry heavy.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Walking and carry heavy.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Walking and carry heavy.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Walking and carry heavy.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Walking and carry heavy.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Walking and carry heavy.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Walking and carry heavy.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Walking and carry heavy.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Walking and carry heavy.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Walking and carry heavy.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Walking and carry heavy.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Walking and carry heavy.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Walking and carry heavy.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Walking and carry heavy.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Walking and carry heavy.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Walking and carry heavy.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Walking and carry heavy.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Walking and carry heavy.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Walking and carry heavy.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Walking and carry heavy.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Walking and carry heavy.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Walking and carry heavy.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Walking and carry heavy.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Walking and carry heavy.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Walking and carry heavy.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Walking and carry heavy.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Walking and carry heavy.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Walking and carry heavy.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Walking and carry heavy.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Walking and carry heavy.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Walking and carry heavy.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Walking and carry heavy.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Walking and carry heavy.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Walking and carry heavy.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Walking and carry heavy.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Walking and carry heavy.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Walking and carry heavy.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Walking and carry heavy.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Walking and carry heavy.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Walking and carry heavy.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Walking and carry heavy.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Walking and carry heavy.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Walking and carry heavy.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Walking and carry heavy.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Walking and carry heavy.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Walking and carry heavy.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Walking and carry heavy.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Walking and carry heavy.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Walking and carry heavy.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Walking and carry heavy.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Walking.fbx|mixamorig:Hips|0.006459|-0.000000|-0.000000|0.999979|-0.000000|104.274902|0.000000
+Walking.fbx|mixamorig:Spine|-0.080155|-0.000000|-0.000000|0.996782|-0.000000|10.182401|0.000000
+Walking.fbx|mixamorig:Spine1|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|10.002703|-0.000000
+Walking.fbx|mixamorig:Spine2|0.012886|-0.000000|-0.000000|0.999917|-0.000000|9.322095|0.000000
+Walking.fbx|mixamorig:Neck|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|16.865307|-0.000002
+Walking.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.341899|2.841001
+Walking.fbx|mixamorig:HeadTop_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|20.962795|10.122902
+Walking.fbx|mixamorig:RightShoulder|0.484430|0.570964|-0.526163|0.403087|4.570000|11.195802|-0.806600
+Walking.fbx|mixamorig:RightArm|-0.024616|-0.002562|0.103499|0.994322|-0.000000|10.838199|-0.000006
+Walking.fbx|mixamorig:RightForeArm|-0.000000|0.000000|0.000000|1.000000|0.000000|27.841496|0.000006
+Walking.fbx|mixamorig:RightHand|-0.000000|-0.000004|-0.000000|1.000000|0.000000|28.328814|0.000006
+Walking.fbx|mixamorig:RightHandThumb1|0.252090|-0.060281|0.221704|0.940034|-2.681901|2.464795|1.574007
+Walking.fbx|mixamorig:RightHandThumb2|-0.000002|0.001169|-0.000000|0.999999|-0.000001|4.188996|0.000008
+Walking.fbx|mixamorig:RightHandThumb3|0.000002|0.000809|0.000000|1.000000|-0.000004|3.416305|-0.000000
+Walking.fbx|mixamorig:RightHandThumb4|0.005772|0.117509|0.048744|0.991858|0.000001|2.575006|-0.000017
+Walking.fbx|mixamorig:RightHandIndex1|-0.000000|0.000000|0.000000|1.000000|-2.259801|9.108296|0.517898
+Walking.fbx|mixamorig:RightHandIndex2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.699994|-0.000000
+Walking.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.850003|-0.000000
+Walking.fbx|mixamorig:RightHandIndex4|-0.000000|-0.001003|-0.000087|1.000000|0.000000|2.772191|-0.000000
+Walking.fbx|mixamorig:RightHandMiddle1|0.000000|0.000000|0.000000|1.000000|0.000000|9.532499|0.000000
+Walking.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000001
+Walking.fbx|mixamorig:RightHandMiddle3|-0.000000|0.000000|0.000000|1.000000|0.000000|2.949994|0.000001
+Walking.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000928|-0.000167|1.000000|0.000000|2.946592|0.000001
+Walking.fbx|mixamorig:RightHandRing1|-0.000000|0.000000|0.000000|1.000000|1.865100|9.103598|0.043095
+Walking.fbx|mixamorig:RightHandRing2|0.000000|0.000000|-0.000000|1.000000|0.000001|3.379300|0.000004
+Walking.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.889692|0.000004
+Walking.fbx|mixamorig:RightHandRing4|0.000000|-0.000146|0.000799|1.000000|0.000000|2.638799|0.000004
+Walking.fbx|mixamorig:RightHandPinky1|-0.000000|0.000000|0.000000|1.000000|3.806302|8.076696|0.486701
+Walking.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|-0.000000|1.000000|0.000000|3.600003|0.000007
+Walking.fbx|mixamorig:RightHandPinky3|-0.000000|-0.000000|0.000000|1.000000|0.000000|2.099996|0.000007
+Walking.fbx|mixamorig:RightHandPinky4|0.000000|-0.001569|0.000041|0.999999|0.000000|2.115789|0.000007
+Walking.fbx|mixamorig:LeftShoulder|0.484423|-0.570970|0.526162|0.403090|-4.570400|11.195601|-0.806601
+Walking.fbx|mixamorig:LeftArm|-0.024607|0.002562|-0.103504|0.994321|-0.000001|10.837708|0.000000
+Walking.fbx|mixamorig:LeftForeArm|-0.000000|0.000000|0.000000|1.000000|-0.000000|27.841492|0.000000
+Walking.fbx|mixamorig:LeftHand|-0.000000|-0.000001|-0.000000|1.000000|-0.000000|28.328814|0.000000
+Walking.fbx|mixamorig:LeftHandThumb1|0.252061|0.060169|-0.221736|0.940041|2.681700|2.466100|1.576194
+Walking.fbx|mixamorig:LeftHandThumb2|-0.000001|-0.001042|0.000000|0.999999|-0.000000|4.187099|0.000006
+Walking.fbx|mixamorig:LeftHandThumb3|0.000001|-0.000745|0.000000|1.000000|-0.000003|3.418406|-0.000008
+Walking.fbx|mixamorig:LeftHandThumb4|0.005152|-0.122683|-0.041652|0.991558|0.000001|2.580599|-0.000021
+Walking.fbx|mixamorig:LeftHandIndex1|0.000000|-0.000000|-0.000000|1.000000|2.259900|9.109296|0.517997
+Walking.fbx|mixamorig:LeftHandIndex2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.699994|0.000007
+Walking.fbx|mixamorig:LeftHandIndex3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.850003|0.000007
+Walking.fbx|mixamorig:LeftHandIndex4|-0.000000|0.000378|0.000013|1.000000|0.000000|2.774892|0.000007
+Walking.fbx|mixamorig:LeftHandMiddle1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|9.533399|-0.000005
+Walking.fbx|mixamorig:LeftHandMiddle2|0.000000|-0.000000|-0.000000|1.000000|-0.000000|3.699994|-0.000005
+Walking.fbx|mixamorig:LeftHandMiddle3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|2.949994|-0.000005
+Walking.fbx|mixamorig:LeftHandMiddle4|0.000000|0.001025|-0.000028|0.999999|-0.000000|2.952893|-0.000005
+Walking.fbx|mixamorig:LeftHandRing1|0.000000|-0.000000|-0.000000|1.000000|-1.865101|9.104497|0.042997
+Walking.fbx|mixamorig:LeftHandRing2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.149991|-0.000002
+Walking.fbx|mixamorig:LeftHandRing3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.950002|-0.000002
+Walking.fbx|mixamorig:LeftHandRing4|-0.000000|-0.000493|-0.000016|1.000000|0.000000|2.644300|-0.000002
+Walking.fbx|mixamorig:LeftHandPinky1|0.000000|-0.000000|-0.000000|1.000000|-3.806302|8.077802|0.486894
+Walking.fbx|mixamorig:LeftHandPinky2|0.000000|-0.000000|-0.000000|1.000000|0.000000|3.600003|0.000001
+Walking.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|0.000000|2.099996|0.000001
+Walking.fbx|mixamorig:LeftHandPinky4|-0.000000|0.000784|0.000295|1.000000|0.000000|2.125493|0.000001
+Walking.fbx|mixamorig:RightUpLeg|0.000000|0.010357|0.999946|0.000000|8.207800|-6.771798|-1.512200
+Walking.fbx|mixamorig:RightLeg|-0.038091|0.000000|0.000000|0.999274|-0.000000|44.371510|0.000000
+Walking.fbx|mixamorig:RightFoot|0.459740|0.000000|0.000000|0.888053|-0.000000|44.527798|-0.000000
+Walking.fbx|mixamorig:RightToeBase|0.335242|-0.000000|0.000000|0.942132|0.000001|13.816906|-0.000000
+Walking.fbx|mixamorig:RightToe_End|-0.000000|-0.011608|0.000000|0.999933|0.000000|9.278104|0.000000
+Walking.fbx|mixamorig:LeftUpLeg|0.000000|0.010368|0.999946|0.000000|-8.207800|-6.771798|-1.512200
+Walking.fbx|mixamorig:LeftLeg|-0.038112|0.000000|0.000000|0.999273|-0.000001|44.371395|0.000000
+Walking.fbx|mixamorig:LeftFoot|0.459749|0.000000|0.000000|0.888049|-0.000001|44.527824|0.000000
+Walking.fbx|mixamorig:LeftToeBase|0.335241|-0.000000|0.000000|0.942132|0.000001|13.816906|0.000000
+Walking.fbx|mixamorig:LeftToe_End|-0.000000|0.011869|-0.000000|0.999930|0.000000|9.278099|0.000000
+Camping Sitting Idle.fbx|mixamorig12:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|99.309593|0.000000
+Camping Sitting Idle.fbx|mixamorig12:Spine|-0.054721|-0.000000|-0.000000|0.998502|-0.000000|10.052399|-1.105100
+Camping Sitting Idle.fbx|mixamorig12:Spine1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|11.798399|-0.000001
+Camping Sitting Idle.fbx|mixamorig12:Spine2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|13.483902|-0.000001
+Camping Sitting Idle.fbx|mixamorig12:Neck|0.054721|-0.000000|-0.000000|0.998502|-0.000000|15.169392|-0.000001
+Camping Sitting Idle.fbx|mixamorig12:Head|0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.383896|2.849900
+Camping Sitting Idle.fbx|mixamorig12:HeadTop_End|0.000000|-0.000000|-0.000000|1.000000|-0.000000|18.238602|7.039299
+Camping Sitting Idle.fbx|mixamorig12:LeftShoulder|0.557866|-0.428389|0.578461|0.413098|-7.052500|13.015387|-0.256200
+Camping Sitting Idle.fbx|mixamorig12:LeftArm|-0.147469|-0.005385|-0.017535|0.988897|-0.000000|14.673097|0.000023
+Camping Sitting Idle.fbx|mixamorig12:LeftForeArm|0.000000|0.002525|0.000000|0.999997|-0.000000|25.314705|0.000005
+Camping Sitting Idle.fbx|mixamorig12:LeftHand|0.014379|-0.044262|0.051672|0.997579|0.000000|23.166304|0.000013
+Camping Sitting Idle.fbx|mixamorig12:LeftHandThumb1|0.205282|-0.081761|-0.202888|0.953945|3.017700|3.212603|1.474901
+Camping Sitting Idle.fbx|mixamorig12:LeftHandThumb2|0.000209|0.002705|-0.109683|0.993963|0.690903|3.653506|0.000017
+Camping Sitting Idle.fbx|mixamorig12:LeftHandThumb3|-0.000668|0.005221|-0.094214|0.995538|-0.108396|3.292696|0.000001
+Camping Sitting Idle.fbx|mixamorig12:LeftHandThumb4|-0.000000|0.000000|-0.000000|1.000000|-0.582489|2.585197|0.000019
+Camping Sitting Idle.fbx|mixamorig12:LeftHandIndex1|-0.016604|0.001016|-0.053478|0.998430|3.501100|9.864400|0.215998
+Camping Sitting Idle.fbx|mixamorig12:LeftHandIndex2|-0.000001|-0.000011|0.004828|0.999988|-0.016400|3.305100|-0.000011
+Camping Sitting Idle.fbx|mixamorig12:LeftHandIndex3|-0.000000|-0.000093|-0.002033|0.999998|0.014600|3.109904|0.000029
+Camping Sitting Idle.fbx|mixamorig12:LeftHandIndex4|0.000000|0.000000|0.000000|1.000000|0.001700|2.704710|0.000010
+Camping Sitting Idle.fbx|mixamorig12:LeftHandMiddle1|-0.016583|0.001442|-0.052093|0.998504|1.042600|10.180706|-0.340600
+Camping Sitting Idle.fbx|mixamorig12:LeftHandMiddle2|0.000001|0.000041|0.002787|0.999996|-0.007600|3.497100|0.000022
+Camping Sitting Idle.fbx|mixamorig12:LeftHandMiddle3|0.000001|-0.000060|-0.002303|0.999997|0.011100|3.263005|0.000003
+Camping Sitting Idle.fbx|mixamorig12:LeftHandMiddle4|0.000000|-0.000000|0.000000|1.000000|-0.003500|2.907901|-0.000018
+Camping Sitting Idle.fbx|mixamorig12:LeftHandRing1|-0.016354|0.005890|-0.050899|0.998553|-1.076700|9.905898|-0.219805
+Camping Sitting Idle.fbx|mixamorig12:LeftHandRing2|-0.000000|0.000036|0.000835|1.000000|0.001099|3.012295|0.000009
+Camping Sitting Idle.fbx|mixamorig12:LeftHandRing3|0.000001|0.000035|-0.002439|0.999997|0.005900|2.898905|0.000006
+Camping Sitting Idle.fbx|mixamorig12:LeftHandRing4|0.000000|0.000000|-0.000000|1.000000|-0.007001|2.463301|0.000004
+Camping Sitting Idle.fbx|mixamorig12:LeftHandPinky1|-0.016475|0.003587|-0.051957|0.998507|-3.467000|9.302811|0.041390
+Camping Sitting Idle.fbx|mixamorig12:LeftHandPinky2|-0.000002|0.000091|0.002906|0.999996|-0.005000|2.730500|-0.000003
+Camping Sitting Idle.fbx|mixamorig12:LeftHandPinky3|0.000003|-0.000092|-0.002950|0.999996|0.008500|2.134501|0.000030
+Camping Sitting Idle.fbx|mixamorig12:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.003500|1.824399|0.000002
+Camping Sitting Idle.fbx|mixamorig12:RightShoulder|0.559566|0.427088|-0.577067|0.414097|7.052500|13.011176|-0.217901
+Camping Sitting Idle.fbx|mixamorig12:RightArm|-0.147790|0.006621|0.014594|0.988889|0.000001|14.673088|-0.000017
+Camping Sitting Idle.fbx|mixamorig12:RightForeArm|0.000000|-0.002726|0.000000|0.999996|-0.000002|25.323515|0.000002
+Camping Sitting Idle.fbx|mixamorig12:RightHand|0.010020|0.044158|-0.052249|0.997607|0.000001|23.170712|0.000007
+Camping Sitting Idle.fbx|mixamorig12:RightHandThumb1|0.207599|0.083841|0.212805|0.951098|-2.969900|3.193494|1.365391
+Camping Sitting Idle.fbx|mixamorig12:RightHandThumb2|0.000293|-0.003830|0.095202|0.995450|-0.624699|3.602104|-0.000004
+Camping Sitting Idle.fbx|mixamorig12:RightHandThumb3|-0.000541|-0.004703|0.095511|0.995417|0.063796|3.361703|0.000006
+Camping Sitting Idle.fbx|mixamorig12:RightHandThumb4|0.000000|-0.000000|0.000000|1.000000|0.560901|2.627799|0.000002
+Camping Sitting Idle.fbx|mixamorig12:RightHandIndex1|-0.012303|-0.000335|0.055278|0.998395|-3.641702|9.956100|0.193801
+Camping Sitting Idle.fbx|mixamorig12:RightHandIndex2|0.000001|0.000112|-0.005719|0.999984|0.023100|3.278007|-0.000014
+Camping Sitting Idle.fbx|mixamorig12:RightHandIndex3|-0.000001|0.000016|0.000335|1.000000|-0.013400|3.051495|0.000026
+Camping Sitting Idle.fbx|mixamorig12:RightHandIndex4|0.000000|0.000000|0.000000|1.000000|-0.009600|2.579096|0.000001
+Camping Sitting Idle.fbx|mixamorig12:RightHandMiddle1|-0.012307|-0.000256|0.053720|0.998480|-1.038400|9.989293|-0.247213
+Camping Sitting Idle.fbx|mixamorig12:RightHandMiddle2|-0.000000|-0.000092|-0.004957|0.999988|0.013500|3.435295|-0.000014
+Camping Sitting Idle.fbx|mixamorig12:RightHandMiddle3|-0.000001|0.000131|0.004195|0.999991|-0.020800|3.475499|-0.000004
+Camping Sitting Idle.fbx|mixamorig12:RightHandMiddle4|0.000000|-0.000000|0.000000|1.000000|0.007200|2.993590|0.000018
+Camping Sitting Idle.fbx|mixamorig12:RightHandRing1|-0.012127|-0.003739|0.052169|0.998558|1.206802|10.298897|-0.178408
+Camping Sitting Idle.fbx|mixamorig12:RightHandRing2|-0.000000|-0.000140|-0.003019|0.999995|0.002099|2.845296|-0.000014
+Camping Sitting Idle.fbx|mixamorig12:RightHandRing3|0.000001|-0.000008|0.005375|0.999986|-0.014900|2.811506|-0.000015
+Camping Sitting Idle.fbx|mixamorig12:RightHandRing4|0.000000|0.000000|0.000000|1.000000|0.012801|2.348500|-0.000001
+Camping Sitting Idle.fbx|mixamorig12:RightHandPinky1|-0.012183|-0.002738|0.054099|0.998458|3.473302|9.218098|0.057691
+Camping Sitting Idle.fbx|mixamorig12:RightHandPinky2|-0.000002|-0.000068|-0.005255|0.999986|0.012699|2.744698|-0.000009
+Camping Sitting Idle.fbx|mixamorig12:RightHandPinky3|0.000001|0.000176|0.003125|0.999995|-0.013399|2.277602|0.000006
+Camping Sitting Idle.fbx|mixamorig12:RightHandPinky4|0.000000|-0.000000|-0.000000|1.000000|0.000700|1.904100|0.000000
+Camping Sitting Idle.fbx|mixamorig12:LeftUpLeg|-0.002173|0.036419|-0.999334|0.000183|-9.816000|-5.592400|-0.310700
+Camping Sitting Idle.fbx|mixamorig12:LeftLeg|-0.003060|0.000001|-0.000203|0.999995|-0.000001|42.845699|-0.000000
+Camping Sitting Idle.fbx|mixamorig12:LeftFoot|0.514280|0.032079|-0.053921|0.855324|-0.000001|39.384098|-0.000000
+Camping Sitting Idle.fbx|mixamorig12:LeftToeBase|0.293944|0.080214|-0.024764|0.952129|0.000000|19.011496|0.000000
+Camping Sitting Idle.fbx|mixamorig12:LeftToe_End|-0.000000|-0.000000|0.000000|1.000000|-0.000001|7.843946|-0.000000
+Camping Sitting Idle.fbx|mixamorig12:RightUpLeg|-0.002012|-0.033714|0.999430|0.000172|9.816000|-5.592400|-0.356000
+Camping Sitting Idle.fbx|mixamorig12:RightLeg|-0.022857|-0.000003|0.000125|0.999739|-0.000002|42.829418|-0.000000
+Camping Sitting Idle.fbx|mixamorig12:RightFoot|0.544275|-0.027061|0.052913|0.836799|-0.000000|39.513699|0.000000
+Camping Sitting Idle.fbx|mixamorig12:RightToeBase|0.277080|-0.095728|0.027755|0.955663|0.000000|20.187920|-0.000001
+Camping Sitting Idle.fbx|mixamorig12:RightToe_End|0.000000|0.000000|-0.000000|1.000000|-0.000000|7.753464|0.000000
+Firing Rifle.fbx|mixamorig:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|209.150803|0.000000
+Firing Rifle.fbx|mixamorig:Spine|-0.050026|0.000288|-0.005746|0.998731|0.194800|19.804794|-3.889700
+Firing Rifle.fbx|mixamorig:Spine1|0.028563|-0.000271|0.003782|0.999585|-0.000000|23.620108|-0.000002
+Firing Rifle.fbx|mixamorig:Spine2|0.081632|0.000434|0.011176|0.996600|-0.000000|27.833511|0.000001
+Firing Rifle.fbx|mixamorig:Neck|0.082011|0.002856|0.013901|0.996530|0.000000|31.294088|-0.000003
+Firing Rifle.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|23.188980|-0.000001
+Firing Rifle.fbx|mixamorig:HeadTop_End|0.000000|0.000000|0.000000|1.000000|1.639798|39.777531|-0.361099
+Firing Rifle.fbx|mixamorig:RightEye|0.000000|0.000000|0.000000|1.000000|6.881502|20.143030|11.252088
+Firing Rifle.fbx|mixamorig:LeftEye|0.000000|-0.000000|0.000000|1.000000|-5.295401|21.026125|11.309800
+Firing Rifle.fbx|mixamorig:LeftShoulder|0.417974|-0.515039|0.557585|0.499131|-12.603405|19.313652|0.359206
+Firing Rifle.fbx|mixamorig:LeftArm|0.014759|-0.001132|-0.076470|0.996962|-0.000001|26.583319|-0.000011
+Firing Rifle.fbx|mixamorig:LeftForeArm|0.000000|0.000000|0.000000|1.000000|-0.000000|55.127693|0.000001
+Firing Rifle.fbx|mixamorig:LeftHand|-0.000000|-0.000115|-0.000000|1.000000|0.000000|52.773335|0.000001
+Firing Rifle.fbx|mixamorig:LeftHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|27.744617|-0.000039
+Firing Rifle.fbx|mixamorig:LeftHandMiddle2|0.000000|0.000000|0.000000|1.000000|-0.000000|6.931614|-0.000039
+Firing Rifle.fbx|mixamorig:LeftHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.823582|-0.000008
+Firing Rifle.fbx|mixamorig:LeftHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.392704|-0.000008
+Firing Rifle.fbx|mixamorig:LeftHandThumb1|0.251850|0.059488|-0.221976|0.940085|6.128802|11.123113|3.291454
+Firing Rifle.fbx|mixamorig:LeftHandThumb2|-0.000006|0.000000|0.000000|1.000000|-0.000005|11.224286|0.000038
+Firing Rifle.fbx|mixamorig:LeftHandThumb3|0.000014|-0.000003|0.000000|1.000000|-0.000001|8.955579|-0.000039
+Firing Rifle.fbx|mixamorig:LeftHandThumb4|-0.000009|0.000003|-0.000000|1.000000|-0.000003|5.794509|-0.000013
+Firing Rifle.fbx|mixamorig:LeftHandIndex1|0.000006|-0.000000|-0.000000|1.000000|5.152102|28.490208|0.454674
+Firing Rifle.fbx|mixamorig:LeftHandIndex2|-0.000014|0.000000|-0.000000|1.000000|-0.000000|7.062880|-0.000018
+Firing Rifle.fbx|mixamorig:LeftHandIndex3|0.000007|-0.000000|-0.000000|1.000000|0.000000|6.495299|-0.000035
+Firing Rifle.fbx|mixamorig:LeftHandIndex4|-0.000000|-0.000000|0.000000|1.000000|-0.000000|6.593419|-0.000038
+Firing Rifle.fbx|mixamorig:LeftHandRing1|-0.000000|-0.000000|-0.000000|1.000000|-4.241002|25.484119|-0.079352
+Firing Rifle.fbx|mixamorig:LeftHandRing2|-0.000000|-0.000000|0.000000|1.000000|-0.000001|6.309833|-0.000037
+Firing Rifle.fbx|mixamorig:LeftHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.359470|-0.000006
+Firing Rifle.fbx|mixamorig:LeftHandRing4|0.000000|-0.000000|-0.000000|1.000000|0.000000|7.037815|-0.000037
+Firing Rifle.fbx|mixamorig:LeftHandPinky1|-0.000000|-0.000000|-0.000000|1.000000|-8.780900|21.905811|0.440952
+Firing Rifle.fbx|mixamorig:LeftHandPinky2|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.536716|-0.000026
+Firing Rifle.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|4.149112|-0.000026
+Firing Rifle.fbx|mixamorig:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.563510|-0.000026
+Firing Rifle.fbx|mixamorig:RightShoulder|0.419353|0.513849|-0.580335|0.472561|12.989602|19.103367|-0.116200
+Firing Rifle.fbx|mixamorig:RightArm|0.008638|0.000880|0.101348|0.994813|0.000001|26.891922|0.000005
+Firing Rifle.fbx|mixamorig:RightForeArm|-0.000000|-0.000000|0.000000|1.000000|-0.000000|55.842731|0.000003
+Firing Rifle.fbx|mixamorig:RightHand|-0.000000|0.000053|0.000000|1.000000|-0.000000|50.313698|0.000003
+Firing Rifle.fbx|mixamorig:RightHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|26.065514|0.000013
+Firing Rifle.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.159997|0.000013
+Firing Rifle.fbx|mixamorig:RightHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.279107|0.000013
+Firing Rifle.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.459970|0.000013
+Firing Rifle.fbx|mixamorig:RightHandThumb1|0.251875|-0.059476|0.221948|0.940086|-6.157103|9.502007|3.930019
+Firing Rifle.fbx|mixamorig:RightHandThumb2|-0.000001|0.000000|0.000000|1.000000|0.000005|10.349123|-0.000007
+Firing Rifle.fbx|mixamorig:RightHandThumb3|0.000009|-0.000001|-0.000001|1.000000|0.000004|8.574706|-0.000027
+Firing Rifle.fbx|mixamorig:RightHandThumb4|-0.000009|-0.000003|0.000000|1.000000|0.000010|6.138891|-0.000058
+Firing Rifle.fbx|mixamorig:RightHandIndex1|-0.000000|-0.000000|-0.000000|1.000000|-5.106702|26.603022|0.546312
+Firing Rifle.fbx|mixamorig:RightHandIndex2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.092096|-0.000014
+Firing Rifle.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.414392|-0.000014
+Firing Rifle.fbx|mixamorig:RightHandIndex4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.522470|-0.000014
+Firing Rifle.fbx|mixamorig:RightHandRing1|-0.000000|-0.000000|-0.000000|1.000000|3.983901|24.087212|-0.001392
+Firing Rifle.fbx|mixamorig:RightHandRing2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.857507|0.000012
+Firing Rifle.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.835488|0.000012
+Firing Rifle.fbx|mixamorig:RightHandRing4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.017205|0.000012
+Firing Rifle.fbx|mixamorig:RightHandPinky1|-0.000000|-0.000000|-0.000008|1.000000|8.541101|20.989418|0.497721
+Firing Rifle.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|0.000008|1.000000|-0.000100|5.939600|0.000010
+Firing Rifle.fbx|mixamorig:RightHandPinky3|-0.000007|0.000000|-0.000000|1.000000|0.000001|3.764702|0.000010
+Firing Rifle.fbx|mixamorig:RightHandPinky4|0.000007|-0.000000|0.000000|1.000000|0.000001|6.370492|0.000012
+Firing Rifle.fbx|mixamorig:LeftUpLeg|0.000019|0.008862|-0.999958|0.002514|-18.524401|-13.838501|2.662000
+Firing Rifle.fbx|mixamorig:LeftLeg|-0.021215|-0.000005|-0.005016|0.999762|0.000002|85.245590|0.000000
+Firing Rifle.fbx|mixamorig:LeftFoot|0.438524|0.019314|-0.035028|0.897829|-0.000002|85.571159|-0.000000
+Firing Rifle.fbx|mixamorig:LeftToeBase|0.359200|0.011805|0.046768|0.932013|0.000001|32.481209|-0.000002
+Firing Rifle.fbx|mixamorig:LeftToe_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|19.064793|-0.000000
+Firing Rifle.fbx|mixamorig:RightUpLeg|-0.000018|0.005911|0.999977|0.003369|18.440300|-14.411697|0.160300
+Firing Rifle.fbx|mixamorig:RightLeg|-0.036112|0.000009|0.006710|0.999325|0.000003|84.819695|0.000000
+Firing Rifle.fbx|mixamorig:RightFoot|0.442263|-0.022683|0.039923|0.895709|-0.000001|85.419426|0.000000
+Firing Rifle.fbx|mixamorig:RightToeBase|0.352265|-0.041554|0.020242|0.934758|0.000001|32.981209|0.000001
+Firing Rifle.fbx|mixamorig:RightToe_End|-0.000000|0.000000|0.000000|1.000000|-0.000000|19.702301|0.000000
+Reloading.fbx|mixamorig:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|209.150803|0.000000
+Reloading.fbx|mixamorig:Spine|-0.050026|0.000288|-0.005746|0.998731|0.194800|19.804794|-3.889700
+Reloading.fbx|mixamorig:Spine1|0.028563|-0.000271|0.003782|0.999585|-0.000000|23.620108|-0.000002
+Reloading.fbx|mixamorig:Spine2|0.081632|0.000434|0.011176|0.996600|-0.000000|27.833511|0.000001
+Reloading.fbx|mixamorig:Neck|0.082011|0.002856|0.013901|0.996530|0.000000|31.294088|-0.000003
+Reloading.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|23.188980|-0.000001
+Reloading.fbx|mixamorig:HeadTop_End|0.000000|0.000000|0.000000|1.000000|1.639798|39.777531|-0.361099
+Reloading.fbx|mixamorig:RightEye|0.000000|0.000000|0.000000|1.000000|6.881502|20.143030|11.252088
+Reloading.fbx|mixamorig:LeftEye|0.000000|-0.000000|0.000000|1.000000|-5.295401|21.026125|11.309800
+Reloading.fbx|mixamorig:LeftShoulder|0.417974|-0.515039|0.557585|0.499131|-12.603405|19.313652|0.359206
+Reloading.fbx|mixamorig:LeftArm|0.014759|-0.001132|-0.076470|0.996962|-0.000001|26.583319|-0.000011
+Reloading.fbx|mixamorig:LeftForeArm|0.000000|0.000000|0.000000|1.000000|-0.000000|55.127693|0.000001
+Reloading.fbx|mixamorig:LeftHand|-0.000000|-0.000115|-0.000000|1.000000|0.000000|52.773335|0.000001
+Reloading.fbx|mixamorig:LeftHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|27.744617|-0.000039
+Reloading.fbx|mixamorig:LeftHandMiddle2|0.000000|0.000000|0.000000|1.000000|-0.000000|6.931614|-0.000039
+Reloading.fbx|mixamorig:LeftHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.823582|-0.000008
+Reloading.fbx|mixamorig:LeftHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.392704|-0.000008
+Reloading.fbx|mixamorig:LeftHandThumb1|0.251850|0.059488|-0.221976|0.940085|6.128802|11.123113|3.291454
+Reloading.fbx|mixamorig:LeftHandThumb2|-0.000006|0.000000|0.000000|1.000000|-0.000005|11.224286|0.000038
+Reloading.fbx|mixamorig:LeftHandThumb3|0.000014|-0.000003|0.000000|1.000000|-0.000001|8.955579|-0.000039
+Reloading.fbx|mixamorig:LeftHandThumb4|-0.000009|0.000003|-0.000000|1.000000|-0.000003|5.794509|-0.000013
+Reloading.fbx|mixamorig:LeftHandIndex1|0.000006|-0.000000|-0.000000|1.000000|5.152102|28.490208|0.454674
+Reloading.fbx|mixamorig:LeftHandIndex2|-0.000014|0.000000|-0.000000|1.000000|-0.000000|7.062880|-0.000018
+Reloading.fbx|mixamorig:LeftHandIndex3|0.000007|-0.000000|-0.000000|1.000000|0.000000|6.495299|-0.000035
+Reloading.fbx|mixamorig:LeftHandIndex4|-0.000000|-0.000000|0.000000|1.000000|-0.000000|6.593419|-0.000038
+Reloading.fbx|mixamorig:LeftHandRing1|-0.000000|-0.000000|-0.000000|1.000000|-4.241002|25.484119|-0.079352
+Reloading.fbx|mixamorig:LeftHandRing2|-0.000000|-0.000000|0.000000|1.000000|-0.000001|6.309833|-0.000037
+Reloading.fbx|mixamorig:LeftHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.359470|-0.000006
+Reloading.fbx|mixamorig:LeftHandRing4|0.000000|-0.000000|-0.000000|1.000000|0.000000|7.037815|-0.000037
+Reloading.fbx|mixamorig:LeftHandPinky1|-0.000000|-0.000000|-0.000000|1.000000|-8.780900|21.905811|0.440952
+Reloading.fbx|mixamorig:LeftHandPinky2|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.536716|-0.000026
+Reloading.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|4.149112|-0.000026
+Reloading.fbx|mixamorig:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.563510|-0.000026
+Reloading.fbx|mixamorig:RightShoulder|0.419353|0.513849|-0.580335|0.472561|12.989602|19.103367|-0.116200
+Reloading.fbx|mixamorig:RightArm|0.008638|0.000880|0.101348|0.994813|0.000001|26.891922|0.000005
+Reloading.fbx|mixamorig:RightForeArm|-0.000000|-0.000000|0.000000|1.000000|-0.000000|55.842731|0.000003
+Reloading.fbx|mixamorig:RightHand|-0.000000|0.000053|0.000000|1.000000|-0.000000|50.313698|0.000003
+Reloading.fbx|mixamorig:RightHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|26.065514|0.000013
+Reloading.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.159997|0.000013
+Reloading.fbx|mixamorig:RightHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.279107|0.000013
+Reloading.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.459970|0.000013
+Reloading.fbx|mixamorig:RightHandThumb1|0.251875|-0.059476|0.221948|0.940086|-6.157103|9.502007|3.930019
+Reloading.fbx|mixamorig:RightHandThumb2|-0.000001|0.000000|0.000000|1.000000|0.000005|10.349123|-0.000007
+Reloading.fbx|mixamorig:RightHandThumb3|0.000009|-0.000001|-0.000001|1.000000|0.000004|8.574706|-0.000027
+Reloading.fbx|mixamorig:RightHandThumb4|-0.000009|-0.000003|0.000000|1.000000|0.000010|6.138891|-0.000058
+Reloading.fbx|mixamorig:RightHandIndex1|-0.000000|-0.000000|-0.000000|1.000000|-5.106702|26.603022|0.546312
+Reloading.fbx|mixamorig:RightHandIndex2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.092096|-0.000014
+Reloading.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.414392|-0.000014
+Reloading.fbx|mixamorig:RightHandIndex4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.522470|-0.000014
+Reloading.fbx|mixamorig:RightHandRing1|-0.000000|-0.000000|-0.000000|1.000000|3.983901|24.087212|-0.001392
+Reloading.fbx|mixamorig:RightHandRing2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.857507|0.000012
+Reloading.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.835488|0.000012
+Reloading.fbx|mixamorig:RightHandRing4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.017205|0.000012
+Reloading.fbx|mixamorig:RightHandPinky1|-0.000000|-0.000000|-0.000008|1.000000|8.541101|20.989418|0.497721
+Reloading.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|0.000008|1.000000|-0.000100|5.939600|0.000010
+Reloading.fbx|mixamorig:RightHandPinky3|-0.000007|0.000000|-0.000000|1.000000|0.000001|3.764702|0.000010
+Reloading.fbx|mixamorig:RightHandPinky4|0.000007|-0.000000|0.000000|1.000000|0.000001|6.370492|0.000012
+Reloading.fbx|mixamorig:LeftUpLeg|0.000019|0.008862|-0.999958|0.002514|-18.524401|-13.838501|2.662000
+Reloading.fbx|mixamorig:LeftLeg|-0.021215|-0.000005|-0.005016|0.999762|0.000002|85.245590|0.000000
+Reloading.fbx|mixamorig:LeftFoot|0.438524|0.019314|-0.035028|0.897829|-0.000002|85.571159|-0.000000
+Reloading.fbx|mixamorig:LeftToeBase|0.359200|0.011805|0.046768|0.932013|0.000001|32.481209|-0.000002
+Reloading.fbx|mixamorig:LeftToe_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|19.064793|-0.000000
+Reloading.fbx|mixamorig:RightUpLeg|-0.000018|0.005911|0.999977|0.003369|18.440300|-14.411697|0.160300
+Reloading.fbx|mixamorig:RightLeg|-0.036112|0.000009|0.006710|0.999325|0.000003|84.819695|0.000000
+Reloading.fbx|mixamorig:RightFoot|0.442263|-0.022683|0.039923|0.895709|-0.000001|85.419426|0.000000
+Reloading.fbx|mixamorig:RightToeBase|0.352265|-0.041554|0.020242|0.934758|0.000001|32.981209|0.000001
+Reloading.fbx|mixamorig:RightToe_End|-0.000000|0.000000|0.000000|1.000000|-0.000000|19.702301|0.000000
+Rifle Aiming Idle.fbx|mixamorig:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|209.150803|0.000000
+Rifle Aiming Idle.fbx|mixamorig:Spine|-0.050026|0.000288|-0.005746|0.998731|0.194800|19.804794|-3.889700
+Rifle Aiming Idle.fbx|mixamorig:Spine1|0.028563|-0.000271|0.003782|0.999585|-0.000000|23.620108|-0.000002
+Rifle Aiming Idle.fbx|mixamorig:Spine2|0.081632|0.000434|0.011176|0.996600|-0.000000|27.833511|0.000001
+Rifle Aiming Idle.fbx|mixamorig:Neck|0.082011|0.002856|0.013901|0.996530|0.000000|31.294088|-0.000003
+Rifle Aiming Idle.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|23.188980|-0.000001
+Rifle Aiming Idle.fbx|mixamorig:HeadTop_End|0.000000|0.000000|0.000000|1.000000|1.639798|39.777531|-0.361099
+Rifle Aiming Idle.fbx|mixamorig:RightEye|0.000000|0.000000|0.000000|1.000000|6.881502|20.143030|11.252088
+Rifle Aiming Idle.fbx|mixamorig:LeftEye|0.000000|-0.000000|0.000000|1.000000|-5.295401|21.026125|11.309800
+Rifle Aiming Idle.fbx|mixamorig:LeftShoulder|0.417974|-0.515039|0.557585|0.499131|-12.603405|19.313652|0.359206
+Rifle Aiming Idle.fbx|mixamorig:LeftArm|0.014759|-0.001132|-0.076470|0.996962|-0.000001|26.583319|-0.000011
+Rifle Aiming Idle.fbx|mixamorig:LeftForeArm|0.000000|0.000000|0.000000|1.000000|-0.000000|55.127693|0.000001
+Rifle Aiming Idle.fbx|mixamorig:LeftHand|-0.000000|-0.000115|-0.000000|1.000000|0.000000|52.773335|0.000001
+Rifle Aiming Idle.fbx|mixamorig:LeftHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|27.744617|-0.000039
+Rifle Aiming Idle.fbx|mixamorig:LeftHandMiddle2|0.000000|0.000000|0.000000|1.000000|-0.000000|6.931614|-0.000039
+Rifle Aiming Idle.fbx|mixamorig:LeftHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.823582|-0.000008
+Rifle Aiming Idle.fbx|mixamorig:LeftHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.392704|-0.000008
+Rifle Aiming Idle.fbx|mixamorig:LeftHandThumb1|0.251850|0.059488|-0.221976|0.940085|6.128802|11.123113|3.291454
+Rifle Aiming Idle.fbx|mixamorig:LeftHandThumb2|-0.000006|0.000000|0.000000|1.000000|-0.000005|11.224286|0.000038
+Rifle Aiming Idle.fbx|mixamorig:LeftHandThumb3|0.000014|-0.000003|0.000000|1.000000|-0.000001|8.955579|-0.000039
+Rifle Aiming Idle.fbx|mixamorig:LeftHandThumb4|-0.000009|0.000003|-0.000000|1.000000|-0.000003|5.794509|-0.000013
+Rifle Aiming Idle.fbx|mixamorig:LeftHandIndex1|0.000006|-0.000000|-0.000000|1.000000|5.152102|28.490208|0.454674
+Rifle Aiming Idle.fbx|mixamorig:LeftHandIndex2|-0.000014|0.000000|-0.000000|1.000000|-0.000000|7.062880|-0.000018
+Rifle Aiming Idle.fbx|mixamorig:LeftHandIndex3|0.000007|-0.000000|-0.000000|1.000000|0.000000|6.495299|-0.000035
+Rifle Aiming Idle.fbx|mixamorig:LeftHandIndex4|-0.000000|-0.000000|0.000000|1.000000|-0.000000|6.593419|-0.000038
+Rifle Aiming Idle.fbx|mixamorig:LeftHandRing1|-0.000000|-0.000000|-0.000000|1.000000|-4.241002|25.484119|-0.079352
+Rifle Aiming Idle.fbx|mixamorig:LeftHandRing2|-0.000000|-0.000000|0.000000|1.000000|-0.000001|6.309833|-0.000037
+Rifle Aiming Idle.fbx|mixamorig:LeftHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.359470|-0.000006
+Rifle Aiming Idle.fbx|mixamorig:LeftHandRing4|0.000000|-0.000000|-0.000000|1.000000|0.000000|7.037815|-0.000037
+Rifle Aiming Idle.fbx|mixamorig:LeftHandPinky1|-0.000000|-0.000000|-0.000000|1.000000|-8.780900|21.905811|0.440952
+Rifle Aiming Idle.fbx|mixamorig:LeftHandPinky2|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.536716|-0.000026
+Rifle Aiming Idle.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|4.149112|-0.000026
+Rifle Aiming Idle.fbx|mixamorig:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.563510|-0.000026
+Rifle Aiming Idle.fbx|mixamorig:RightShoulder|0.419353|0.513849|-0.580335|0.472561|12.989602|19.103367|-0.116200
+Rifle Aiming Idle.fbx|mixamorig:RightArm|0.008638|0.000880|0.101348|0.994813|0.000001|26.891922|0.000005
+Rifle Aiming Idle.fbx|mixamorig:RightForeArm|-0.000000|-0.000000|0.000000|1.000000|-0.000000|55.842731|0.000003
+Rifle Aiming Idle.fbx|mixamorig:RightHand|-0.000000|0.000053|0.000000|1.000000|-0.000000|50.313698|0.000003
+Rifle Aiming Idle.fbx|mixamorig:RightHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|26.065514|0.000013
+Rifle Aiming Idle.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.159997|0.000013
+Rifle Aiming Idle.fbx|mixamorig:RightHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.279107|0.000013
+Rifle Aiming Idle.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.459970|0.000013
+Rifle Aiming Idle.fbx|mixamorig:RightHandThumb1|0.251875|-0.059476|0.221948|0.940086|-6.157103|9.502007|3.930019
+Rifle Aiming Idle.fbx|mixamorig:RightHandThumb2|-0.000001|0.000000|0.000000|1.000000|0.000005|10.349123|-0.000007
+Rifle Aiming Idle.fbx|mixamorig:RightHandThumb3|0.000009|-0.000001|-0.000001|1.000000|0.000004|8.574706|-0.000027
+Rifle Aiming Idle.fbx|mixamorig:RightHandThumb4|-0.000009|-0.000003|0.000000|1.000000|0.000010|6.138891|-0.000058
+Rifle Aiming Idle.fbx|mixamorig:RightHandIndex1|-0.000000|-0.000000|-0.000000|1.000000|-5.106702|26.603022|0.546312
+Rifle Aiming Idle.fbx|mixamorig:RightHandIndex2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.092096|-0.000014
+Rifle Aiming Idle.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.414392|-0.000014
+Rifle Aiming Idle.fbx|mixamorig:RightHandIndex4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.522470|-0.000014
+Rifle Aiming Idle.fbx|mixamorig:RightHandRing1|-0.000000|-0.000000|-0.000000|1.000000|3.983901|24.087212|-0.001392
+Rifle Aiming Idle.fbx|mixamorig:RightHandRing2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.857507|0.000012
+Rifle Aiming Idle.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.835488|0.000012
+Rifle Aiming Idle.fbx|mixamorig:RightHandRing4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.017205|0.000012
+Rifle Aiming Idle.fbx|mixamorig:RightHandPinky1|-0.000000|-0.000000|-0.000008|1.000000|8.541101|20.989418|0.497721
+Rifle Aiming Idle.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|0.000008|1.000000|-0.000100|5.939600|0.000010
+Rifle Aiming Idle.fbx|mixamorig:RightHandPinky3|-0.000007|0.000000|-0.000000|1.000000|0.000001|3.764702|0.000010
+Rifle Aiming Idle.fbx|mixamorig:RightHandPinky4|0.000007|-0.000000|0.000000|1.000000|0.000001|6.370492|0.000012
+Rifle Aiming Idle.fbx|mixamorig:LeftUpLeg|0.000019|0.008862|-0.999958|0.002514|-18.524401|-13.838501|2.662000
+Rifle Aiming Idle.fbx|mixamorig:LeftLeg|-0.021215|-0.000005|-0.005016|0.999762|0.000002|85.245590|0.000000
+Rifle Aiming Idle.fbx|mixamorig:LeftFoot|0.438524|0.019314|-0.035028|0.897829|-0.000002|85.571159|-0.000000
+Rifle Aiming Idle.fbx|mixamorig:LeftToeBase|0.359200|0.011805|0.046768|0.932013|0.000001|32.481209|-0.000002
+Rifle Aiming Idle.fbx|mixamorig:LeftToe_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|19.064793|-0.000000
+Rifle Aiming Idle.fbx|mixamorig:RightUpLeg|-0.000018|0.005911|0.999977|0.003369|18.440300|-14.411697|0.160300
+Rifle Aiming Idle.fbx|mixamorig:RightLeg|-0.036112|0.000009|0.006710|0.999325|0.000003|84.819695|0.000000
+Rifle Aiming Idle.fbx|mixamorig:RightFoot|0.442263|-0.022683|0.039923|0.895709|-0.000001|85.419426|0.000000
+Rifle Aiming Idle.fbx|mixamorig:RightToeBase|0.352265|-0.041554|0.020242|0.934758|0.000001|32.981209|0.000001
+Rifle Aiming Idle.fbx|mixamorig:RightToe_End|-0.000000|0.000000|0.000000|1.000000|-0.000000|19.702301|0.000000
+Rifle Idle.fbx|mixamorig:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|209.150803|0.000000
+Rifle Idle.fbx|mixamorig:Spine|-0.050026|0.000288|-0.005746|0.998731|0.194800|19.804794|-3.889700
+Rifle Idle.fbx|mixamorig:Spine1|0.028563|-0.000271|0.003782|0.999585|-0.000000|23.620108|-0.000002
+Rifle Idle.fbx|mixamorig:Spine2|0.081632|0.000434|0.011176|0.996600|-0.000000|27.833511|0.000001
+Rifle Idle.fbx|mixamorig:Neck|0.082011|0.002856|0.013901|0.996530|0.000000|31.294088|-0.000003
+Rifle Idle.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|23.188980|-0.000001
+Rifle Idle.fbx|mixamorig:HeadTop_End|0.000000|0.000000|0.000000|1.000000|1.639798|39.777531|-0.361099
+Rifle Idle.fbx|mixamorig:RightEye|0.000000|0.000000|0.000000|1.000000|6.881502|20.143030|11.252088
+Rifle Idle.fbx|mixamorig:LeftEye|0.000000|-0.000000|0.000000|1.000000|-5.295401|21.026125|11.309800
+Rifle Idle.fbx|mixamorig:LeftShoulder|0.417974|-0.515039|0.557585|0.499131|-12.603405|19.313652|0.359206
+Rifle Idle.fbx|mixamorig:LeftArm|0.014759|-0.001132|-0.076470|0.996962|-0.000001|26.583319|-0.000011
+Rifle Idle.fbx|mixamorig:LeftForeArm|0.000000|0.000000|0.000000|1.000000|-0.000000|55.127693|0.000001
+Rifle Idle.fbx|mixamorig:LeftHand|-0.000000|-0.000115|-0.000000|1.000000|0.000000|52.773335|0.000001
+Rifle Idle.fbx|mixamorig:LeftHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|27.744617|-0.000039
+Rifle Idle.fbx|mixamorig:LeftHandMiddle2|0.000000|0.000000|0.000000|1.000000|-0.000000|6.931614|-0.000039
+Rifle Idle.fbx|mixamorig:LeftHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.823582|-0.000008
+Rifle Idle.fbx|mixamorig:LeftHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.392704|-0.000008
+Rifle Idle.fbx|mixamorig:LeftHandThumb1|0.251850|0.059488|-0.221976|0.940085|6.128802|11.123113|3.291454
+Rifle Idle.fbx|mixamorig:LeftHandThumb2|-0.000006|0.000000|0.000000|1.000000|-0.000005|11.224286|0.000038
+Rifle Idle.fbx|mixamorig:LeftHandThumb3|0.000014|-0.000003|0.000000|1.000000|-0.000001|8.955579|-0.000039
+Rifle Idle.fbx|mixamorig:LeftHandThumb4|-0.000009|0.000003|-0.000000|1.000000|-0.000003|5.794509|-0.000013
+Rifle Idle.fbx|mixamorig:LeftHandIndex1|0.000006|-0.000000|-0.000000|1.000000|5.152102|28.490208|0.454674
+Rifle Idle.fbx|mixamorig:LeftHandIndex2|-0.000014|0.000000|-0.000000|1.000000|-0.000000|7.062880|-0.000018
+Rifle Idle.fbx|mixamorig:LeftHandIndex3|0.000007|-0.000000|-0.000000|1.000000|0.000000|6.495299|-0.000035
+Rifle Idle.fbx|mixamorig:LeftHandIndex4|-0.000000|-0.000000|0.000000|1.000000|-0.000000|6.593419|-0.000038
+Rifle Idle.fbx|mixamorig:LeftHandRing1|-0.000000|-0.000000|-0.000000|1.000000|-4.241002|25.484119|-0.079352
+Rifle Idle.fbx|mixamorig:LeftHandRing2|-0.000000|-0.000000|0.000000|1.000000|-0.000001|6.309833|-0.000037
+Rifle Idle.fbx|mixamorig:LeftHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.359470|-0.000006
+Rifle Idle.fbx|mixamorig:LeftHandRing4|0.000000|-0.000000|-0.000000|1.000000|0.000000|7.037815|-0.000037
+Rifle Idle.fbx|mixamorig:LeftHandPinky1|-0.000000|-0.000000|-0.000000|1.000000|-8.780900|21.905811|0.440952
+Rifle Idle.fbx|mixamorig:LeftHandPinky2|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.536716|-0.000026
+Rifle Idle.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|4.149112|-0.000026
+Rifle Idle.fbx|mixamorig:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.563510|-0.000026
+Rifle Idle.fbx|mixamorig:RightShoulder|0.419353|0.513849|-0.580335|0.472561|12.989602|19.103367|-0.116200
+Rifle Idle.fbx|mixamorig:RightArm|0.008638|0.000880|0.101348|0.994813|0.000001|26.891922|0.000005
+Rifle Idle.fbx|mixamorig:RightForeArm|-0.000000|-0.000000|0.000000|1.000000|-0.000000|55.842731|0.000003
+Rifle Idle.fbx|mixamorig:RightHand|-0.000000|0.000053|0.000000|1.000000|-0.000000|50.313698|0.000003
+Rifle Idle.fbx|mixamorig:RightHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|26.065514|0.000013
+Rifle Idle.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.159997|0.000013
+Rifle Idle.fbx|mixamorig:RightHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.279107|0.000013
+Rifle Idle.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.459970|0.000013
+Rifle Idle.fbx|mixamorig:RightHandThumb1|0.251875|-0.059476|0.221948|0.940086|-6.157103|9.502007|3.930019
+Rifle Idle.fbx|mixamorig:RightHandThumb2|-0.000001|0.000000|0.000000|1.000000|0.000005|10.349123|-0.000007
+Rifle Idle.fbx|mixamorig:RightHandThumb3|0.000009|-0.000001|-0.000001|1.000000|0.000004|8.574706|-0.000027
+Rifle Idle.fbx|mixamorig:RightHandThumb4|-0.000009|-0.000003|0.000000|1.000000|0.000010|6.138891|-0.000058
+Rifle Idle.fbx|mixamorig:RightHandIndex1|-0.000000|-0.000000|-0.000000|1.000000|-5.106702|26.603022|0.546312
+Rifle Idle.fbx|mixamorig:RightHandIndex2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.092096|-0.000014
+Rifle Idle.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.414392|-0.000014
+Rifle Idle.fbx|mixamorig:RightHandIndex4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.522470|-0.000014
+Rifle Idle.fbx|mixamorig:RightHandRing1|-0.000000|-0.000000|-0.000000|1.000000|3.983901|24.087212|-0.001392
+Rifle Idle.fbx|mixamorig:RightHandRing2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.857507|0.000012
+Rifle Idle.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.835488|0.000012
+Rifle Idle.fbx|mixamorig:RightHandRing4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.017205|0.000012
+Rifle Idle.fbx|mixamorig:RightHandPinky1|-0.000000|-0.000000|-0.000008|1.000000|8.541101|20.989418|0.497721
+Rifle Idle.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|0.000008|1.000000|-0.000100|5.939600|0.000010
+Rifle Idle.fbx|mixamorig:RightHandPinky3|-0.000007|0.000000|-0.000000|1.000000|0.000001|3.764702|0.000010
+Rifle Idle.fbx|mixamorig:RightHandPinky4|0.000007|-0.000000|0.000000|1.000000|0.000001|6.370492|0.000012
+Rifle Idle.fbx|mixamorig:LeftUpLeg|0.000019|0.008862|-0.999958|0.002514|-18.524401|-13.838501|2.662000
+Rifle Idle.fbx|mixamorig:LeftLeg|-0.021215|-0.000005|-0.005016|0.999762|0.000002|85.245590|0.000000
+Rifle Idle.fbx|mixamorig:LeftFoot|0.438524|0.019314|-0.035028|0.897829|-0.000002|85.571159|-0.000000
+Rifle Idle.fbx|mixamorig:LeftToeBase|0.359200|0.011805|0.046768|0.932013|0.000001|32.481209|-0.000002
+Rifle Idle.fbx|mixamorig:LeftToe_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|19.064793|-0.000000
+Rifle Idle.fbx|mixamorig:RightUpLeg|-0.000018|0.005911|0.999977|0.003369|18.440300|-14.411697|0.160300
+Rifle Idle.fbx|mixamorig:RightLeg|-0.036112|0.000009|0.006710|0.999325|0.000003|84.819695|0.000000
+Rifle Idle.fbx|mixamorig:RightFoot|0.442263|-0.022683|0.039923|0.895709|-0.000001|85.419426|0.000000
+Rifle Idle.fbx|mixamorig:RightToeBase|0.352265|-0.041554|0.020242|0.934758|0.000001|32.981209|0.000001
+Rifle Idle.fbx|mixamorig:RightToe_End|-0.000000|0.000000|0.000000|1.000000|-0.000000|19.702301|0.000000
+Rifle Run.fbx|mixamorig:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|209.150803|0.000000
+Rifle Run.fbx|mixamorig:Spine|-0.050026|0.000288|-0.005746|0.998731|0.194800|19.804794|-3.889700
+Rifle Run.fbx|mixamorig:Spine1|0.028563|-0.000271|0.003782|0.999585|-0.000000|23.620108|-0.000002
+Rifle Run.fbx|mixamorig:Spine2|0.081632|0.000434|0.011176|0.996600|-0.000000|27.833511|0.000001
+Rifle Run.fbx|mixamorig:Neck|0.082011|0.002856|0.013901|0.996530|0.000000|31.294088|-0.000003
+Rifle Run.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|23.188980|-0.000001
+Rifle Run.fbx|mixamorig:HeadTop_End|0.000000|0.000000|0.000000|1.000000|1.639798|39.777531|-0.361099
+Rifle Run.fbx|mixamorig:RightEye|0.000000|0.000000|0.000000|1.000000|6.881502|20.143030|11.252088
+Rifle Run.fbx|mixamorig:LeftEye|0.000000|-0.000000|0.000000|1.000000|-5.295401|21.026125|11.309800
+Rifle Run.fbx|mixamorig:LeftShoulder|0.417974|-0.515039|0.557585|0.499131|-12.603405|19.313652|0.359206
+Rifle Run.fbx|mixamorig:LeftArm|0.014759|-0.001132|-0.076470|0.996962|-0.000001|26.583319|-0.000011
+Rifle Run.fbx|mixamorig:LeftForeArm|0.000000|0.000000|0.000000|1.000000|-0.000000|55.127693|0.000001
+Rifle Run.fbx|mixamorig:LeftHand|-0.000000|-0.000115|-0.000000|1.000000|0.000000|52.773335|0.000001
+Rifle Run.fbx|mixamorig:LeftHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|27.744617|-0.000039
+Rifle Run.fbx|mixamorig:LeftHandMiddle2|0.000000|0.000000|0.000000|1.000000|-0.000000|6.931614|-0.000039
+Rifle Run.fbx|mixamorig:LeftHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.823582|-0.000008
+Rifle Run.fbx|mixamorig:LeftHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.392704|-0.000008
+Rifle Run.fbx|mixamorig:LeftHandThumb1|0.251850|0.059488|-0.221976|0.940085|6.128802|11.123113|3.291454
+Rifle Run.fbx|mixamorig:LeftHandThumb2|-0.000006|0.000000|0.000000|1.000000|-0.000005|11.224286|0.000038
+Rifle Run.fbx|mixamorig:LeftHandThumb3|0.000014|-0.000003|0.000000|1.000000|-0.000001|8.955579|-0.000039
+Rifle Run.fbx|mixamorig:LeftHandThumb4|-0.000009|0.000003|-0.000000|1.000000|-0.000003|5.794509|-0.000013
+Rifle Run.fbx|mixamorig:LeftHandIndex1|0.000006|-0.000000|-0.000000|1.000000|5.152102|28.490208|0.454674
+Rifle Run.fbx|mixamorig:LeftHandIndex2|-0.000014|0.000000|-0.000000|1.000000|-0.000000|7.062880|-0.000018
+Rifle Run.fbx|mixamorig:LeftHandIndex3|0.000007|-0.000000|-0.000000|1.000000|0.000000|6.495299|-0.000035
+Rifle Run.fbx|mixamorig:LeftHandIndex4|-0.000000|-0.000000|0.000000|1.000000|-0.000000|6.593419|-0.000038
+Rifle Run.fbx|mixamorig:LeftHandRing1|-0.000000|-0.000000|-0.000000|1.000000|-4.241002|25.484119|-0.079352
+Rifle Run.fbx|mixamorig:LeftHandRing2|-0.000000|-0.000000|0.000000|1.000000|-0.000001|6.309833|-0.000037
+Rifle Run.fbx|mixamorig:LeftHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.359470|-0.000006
+Rifle Run.fbx|mixamorig:LeftHandRing4|0.000000|-0.000000|-0.000000|1.000000|0.000000|7.037815|-0.000037
+Rifle Run.fbx|mixamorig:LeftHandPinky1|-0.000000|-0.000000|-0.000000|1.000000|-8.780900|21.905811|0.440952
+Rifle Run.fbx|mixamorig:LeftHandPinky2|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.536716|-0.000026
+Rifle Run.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|4.149112|-0.000026
+Rifle Run.fbx|mixamorig:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.563510|-0.000026
+Rifle Run.fbx|mixamorig:RightShoulder|0.419353|0.513849|-0.580335|0.472561|12.989602|19.103367|-0.116200
+Rifle Run.fbx|mixamorig:RightArm|0.008638|0.000880|0.101348|0.994813|0.000001|26.891922|0.000005
+Rifle Run.fbx|mixamorig:RightForeArm|-0.000000|-0.000000|0.000000|1.000000|-0.000000|55.842731|0.000003
+Rifle Run.fbx|mixamorig:RightHand|-0.000000|0.000053|0.000000|1.000000|-0.000000|50.313698|0.000003
+Rifle Run.fbx|mixamorig:RightHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|26.065514|0.000013
+Rifle Run.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.159997|0.000013
+Rifle Run.fbx|mixamorig:RightHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.279107|0.000013
+Rifle Run.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.459970|0.000013
+Rifle Run.fbx|mixamorig:RightHandThumb1|0.251875|-0.059476|0.221948|0.940086|-6.157103|9.502007|3.930019
+Rifle Run.fbx|mixamorig:RightHandThumb2|-0.000001|0.000000|0.000000|1.000000|0.000005|10.349123|-0.000007
+Rifle Run.fbx|mixamorig:RightHandThumb3|0.000009|-0.000001|-0.000001|1.000000|0.000004|8.574706|-0.000027
+Rifle Run.fbx|mixamorig:RightHandThumb4|-0.000009|-0.000003|0.000000|1.000000|0.000010|6.138891|-0.000058
+Rifle Run.fbx|mixamorig:RightHandIndex1|-0.000000|-0.000000|-0.000000|1.000000|-5.106702|26.603022|0.546312
+Rifle Run.fbx|mixamorig:RightHandIndex2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.092096|-0.000014
+Rifle Run.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.414392|-0.000014
+Rifle Run.fbx|mixamorig:RightHandIndex4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.522470|-0.000014
+Rifle Run.fbx|mixamorig:RightHandRing1|-0.000000|-0.000000|-0.000000|1.000000|3.983901|24.087212|-0.001392
+Rifle Run.fbx|mixamorig:RightHandRing2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.857507|0.000012
+Rifle Run.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.835488|0.000012
+Rifle Run.fbx|mixamorig:RightHandRing4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.017205|0.000012
+Rifle Run.fbx|mixamorig:RightHandPinky1|-0.000000|-0.000000|-0.000008|1.000000|8.541101|20.989418|0.497721
+Rifle Run.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|0.000008|1.000000|-0.000100|5.939600|0.000010
+Rifle Run.fbx|mixamorig:RightHandPinky3|-0.000007|0.000000|-0.000000|1.000000|0.000001|3.764702|0.000010
+Rifle Run.fbx|mixamorig:RightHandPinky4|0.000007|-0.000000|0.000000|1.000000|0.000001|6.370492|0.000012
+Rifle Run.fbx|mixamorig:LeftUpLeg|0.000019|0.008862|-0.999958|0.002514|-18.524401|-13.838501|2.662000
+Rifle Run.fbx|mixamorig:LeftLeg|-0.021215|-0.000005|-0.005016|0.999762|0.000002|85.245590|0.000000
+Rifle Run.fbx|mixamorig:LeftFoot|0.438524|0.019314|-0.035028|0.897829|-0.000002|85.571159|-0.000000
+Rifle Run.fbx|mixamorig:LeftToeBase|0.359200|0.011805|0.046768|0.932013|0.000001|32.481209|-0.000002
+Rifle Run.fbx|mixamorig:LeftToe_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|19.064793|-0.000000
+Rifle Run.fbx|mixamorig:RightUpLeg|-0.000018|0.005911|0.999977|0.003369|18.440300|-14.411697|0.160300
+Rifle Run.fbx|mixamorig:RightLeg|-0.036112|0.000009|0.006710|0.999325|0.000003|84.819695|0.000000
+Rifle Run.fbx|mixamorig:RightFoot|0.442263|-0.022683|0.039923|0.895709|-0.000001|85.419426|0.000000
+Rifle Run.fbx|mixamorig:RightToeBase|0.352265|-0.041554|0.020242|0.934758|0.000001|32.981209|0.000001
+Rifle Run.fbx|mixamorig:RightToe_End|-0.000000|0.000000|0.000000|1.000000|-0.000000|19.702301|0.000000
+Rifle Walk.fbx|mixamorig:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|209.150803|0.000000
+Rifle Walk.fbx|mixamorig:Spine|-0.050026|0.000288|-0.005746|0.998731|0.194800|19.804794|-3.889700
+Rifle Walk.fbx|mixamorig:Spine1|0.028563|-0.000271|0.003782|0.999585|-0.000000|23.620108|-0.000002
+Rifle Walk.fbx|mixamorig:Spine2|0.081632|0.000434|0.011176|0.996600|-0.000000|27.833511|0.000001
+Rifle Walk.fbx|mixamorig:Neck|0.082011|0.002856|0.013901|0.996530|0.000000|31.294088|-0.000003
+Rifle Walk.fbx|mixamorig:Head|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|23.188980|-0.000001
+Rifle Walk.fbx|mixamorig:HeadTop_End|0.000000|0.000000|0.000000|1.000000|1.639798|39.777531|-0.361099
+Rifle Walk.fbx|mixamorig:RightEye|0.000000|0.000000|0.000000|1.000000|6.881502|20.143030|11.252088
+Rifle Walk.fbx|mixamorig:LeftEye|0.000000|-0.000000|0.000000|1.000000|-5.295401|21.026125|11.309800
+Rifle Walk.fbx|mixamorig:LeftShoulder|0.417974|-0.515039|0.557585|0.499131|-12.603405|19.313652|0.359206
+Rifle Walk.fbx|mixamorig:LeftArm|0.014759|-0.001132|-0.076470|0.996962|-0.000001|26.583319|-0.000011
+Rifle Walk.fbx|mixamorig:LeftForeArm|0.000000|0.000000|0.000000|1.000000|-0.000000|55.127693|0.000001
+Rifle Walk.fbx|mixamorig:LeftHand|-0.000000|-0.000115|-0.000000|1.000000|0.000000|52.773335|0.000001
+Rifle Walk.fbx|mixamorig:LeftHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|27.744617|-0.000039
+Rifle Walk.fbx|mixamorig:LeftHandMiddle2|0.000000|0.000000|0.000000|1.000000|-0.000000|6.931614|-0.000039
+Rifle Walk.fbx|mixamorig:LeftHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.823582|-0.000008
+Rifle Walk.fbx|mixamorig:LeftHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.392704|-0.000008
+Rifle Walk.fbx|mixamorig:LeftHandThumb1|0.251850|0.059488|-0.221976|0.940085|6.128802|11.123113|3.291454
+Rifle Walk.fbx|mixamorig:LeftHandThumb2|-0.000006|0.000000|0.000000|1.000000|-0.000005|11.224286|0.000038
+Rifle Walk.fbx|mixamorig:LeftHandThumb3|0.000014|-0.000003|0.000000|1.000000|-0.000001|8.955579|-0.000039
+Rifle Walk.fbx|mixamorig:LeftHandThumb4|-0.000009|0.000003|-0.000000|1.000000|-0.000003|5.794509|-0.000013
+Rifle Walk.fbx|mixamorig:LeftHandIndex1|0.000006|-0.000000|-0.000000|1.000000|5.152102|28.490208|0.454674
+Rifle Walk.fbx|mixamorig:LeftHandIndex2|-0.000014|0.000000|-0.000000|1.000000|-0.000000|7.062880|-0.000018
+Rifle Walk.fbx|mixamorig:LeftHandIndex3|0.000007|-0.000000|-0.000000|1.000000|0.000000|6.495299|-0.000035
+Rifle Walk.fbx|mixamorig:LeftHandIndex4|-0.000000|-0.000000|0.000000|1.000000|-0.000000|6.593419|-0.000038
+Rifle Walk.fbx|mixamorig:LeftHandRing1|-0.000000|-0.000000|-0.000000|1.000000|-4.241002|25.484119|-0.079352
+Rifle Walk.fbx|mixamorig:LeftHandRing2|-0.000000|-0.000000|0.000000|1.000000|-0.000001|6.309833|-0.000037
+Rifle Walk.fbx|mixamorig:LeftHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.359470|-0.000006
+Rifle Walk.fbx|mixamorig:LeftHandRing4|0.000000|-0.000000|-0.000000|1.000000|0.000000|7.037815|-0.000037
+Rifle Walk.fbx|mixamorig:LeftHandPinky1|-0.000000|-0.000000|-0.000000|1.000000|-8.780900|21.905811|0.440952
+Rifle Walk.fbx|mixamorig:LeftHandPinky2|-0.000000|-0.000000|-0.000000|1.000000|-0.000001|6.536716|-0.000026
+Rifle Walk.fbx|mixamorig:LeftHandPinky3|0.000000|-0.000000|-0.000000|1.000000|-0.000000|4.149112|-0.000026
+Rifle Walk.fbx|mixamorig:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.563510|-0.000026
+Rifle Walk.fbx|mixamorig:RightShoulder|0.419353|0.513849|-0.580335|0.472561|12.989602|19.103367|-0.116200
+Rifle Walk.fbx|mixamorig:RightArm|0.008638|0.000880|0.101348|0.994813|0.000001|26.891922|0.000005
+Rifle Walk.fbx|mixamorig:RightForeArm|-0.000000|-0.000000|0.000000|1.000000|-0.000000|55.842731|0.000003
+Rifle Walk.fbx|mixamorig:RightHand|-0.000000|0.000053|0.000000|1.000000|-0.000000|50.313698|0.000003
+Rifle Walk.fbx|mixamorig:RightHandMiddle1|-0.000000|-0.000000|-0.000000|1.000000|0.000001|26.065514|0.000013
+Rifle Walk.fbx|mixamorig:RightHandMiddle2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.159997|0.000013
+Rifle Walk.fbx|mixamorig:RightHandMiddle3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.279107|0.000013
+Rifle Walk.fbx|mixamorig:RightHandMiddle4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.459970|0.000013
+Rifle Walk.fbx|mixamorig:RightHandThumb1|0.251875|-0.059476|0.221948|0.940086|-6.157103|9.502007|3.930019
+Rifle Walk.fbx|mixamorig:RightHandThumb2|-0.000001|0.000000|0.000000|1.000000|0.000005|10.349123|-0.000007
+Rifle Walk.fbx|mixamorig:RightHandThumb3|0.000009|-0.000001|-0.000001|1.000000|0.000004|8.574706|-0.000027
+Rifle Walk.fbx|mixamorig:RightHandThumb4|-0.000009|-0.000003|0.000000|1.000000|0.000010|6.138891|-0.000058
+Rifle Walk.fbx|mixamorig:RightHandIndex1|-0.000000|-0.000000|-0.000000|1.000000|-5.106702|26.603022|0.546312
+Rifle Walk.fbx|mixamorig:RightHandIndex2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.092096|-0.000014
+Rifle Walk.fbx|mixamorig:RightHandIndex3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.414392|-0.000014
+Rifle Walk.fbx|mixamorig:RightHandIndex4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|5.522470|-0.000014
+Rifle Walk.fbx|mixamorig:RightHandRing1|-0.000000|-0.000000|-0.000000|1.000000|3.983901|24.087212|-0.001392
+Rifle Walk.fbx|mixamorig:RightHandRing2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.857507|0.000012
+Rifle Walk.fbx|mixamorig:RightHandRing3|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.835488|0.000012
+Rifle Walk.fbx|mixamorig:RightHandRing4|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|6.017205|0.000012
+Rifle Walk.fbx|mixamorig:RightHandPinky1|-0.000000|-0.000000|-0.000008|1.000000|8.541101|20.989418|0.497721
+Rifle Walk.fbx|mixamorig:RightHandPinky2|0.000000|0.000000|0.000008|1.000000|-0.000100|5.939600|0.000010
+Rifle Walk.fbx|mixamorig:RightHandPinky3|-0.000007|0.000000|-0.000000|1.000000|0.000001|3.764702|0.000010
+Rifle Walk.fbx|mixamorig:RightHandPinky4|0.000007|-0.000000|0.000000|1.000000|0.000001|6.370492|0.000012
+Rifle Walk.fbx|mixamorig:LeftUpLeg|0.000019|0.008862|-0.999958|0.002514|-18.524401|-13.838501|2.662000
+Rifle Walk.fbx|mixamorig:LeftLeg|-0.021215|-0.000005|-0.005016|0.999762|0.000002|85.245590|0.000000
+Rifle Walk.fbx|mixamorig:LeftFoot|0.438524|0.019314|-0.035028|0.897829|-0.000002|85.571159|-0.000000
+Rifle Walk.fbx|mixamorig:LeftToeBase|0.359200|0.011805|0.046768|0.932013|0.000001|32.481209|-0.000002
+Rifle Walk.fbx|mixamorig:LeftToe_End|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|19.064793|-0.000000
+Rifle Walk.fbx|mixamorig:RightUpLeg|-0.000018|0.005911|0.999977|0.003369|18.440300|-14.411697|0.160300
+Rifle Walk.fbx|mixamorig:RightLeg|-0.036112|0.000009|0.006710|0.999325|0.000003|84.819695|0.000000
+Rifle Walk.fbx|mixamorig:RightFoot|0.442263|-0.022683|0.039923|0.895709|-0.000001|85.419426|0.000000
+Rifle Walk.fbx|mixamorig:RightToeBase|0.352265|-0.041554|0.020242|0.934758|0.000001|32.981209|0.000001
+Rifle Walk.fbx|mixamorig:RightToe_End|-0.000000|0.000000|0.000000|1.000000|-0.000000|19.702301|0.000000
+Sitting Idle.fbx|mixamorig12:Hips|0.000000|-0.000000|-0.000000|1.000000|-0.000000|99.309593|0.000000
+Sitting Idle.fbx|mixamorig12:Spine|-0.054721|-0.000000|-0.000000|0.998502|-0.000000|10.052399|-1.105100
+Sitting Idle.fbx|mixamorig12:Spine1|0.000000|-0.000000|-0.000000|1.000000|-0.000000|11.798399|-0.000001
+Sitting Idle.fbx|mixamorig12:Spine2|-0.000000|-0.000000|-0.000000|1.000000|-0.000000|13.483902|-0.000001
+Sitting Idle.fbx|mixamorig12:Neck|0.054721|-0.000000|-0.000000|0.998502|-0.000000|15.169392|-0.000001
+Sitting Idle.fbx|mixamorig12:Head|0.000000|-0.000000|-0.000000|1.000000|-0.000000|7.383896|2.849900
+Sitting Idle.fbx|mixamorig12:HeadTop_End|0.000000|-0.000000|-0.000000|1.000000|-0.000000|18.238602|7.039299
+Sitting Idle.fbx|mixamorig12:LeftShoulder|0.557866|-0.428389|0.578461|0.413098|-7.052500|13.015387|-0.256200
+Sitting Idle.fbx|mixamorig12:LeftArm|-0.147469|-0.005385|-0.017535|0.988897|-0.000000|14.673097|0.000023
+Sitting Idle.fbx|mixamorig12:LeftForeArm|0.000000|0.002525|0.000000|0.999997|-0.000000|25.314705|0.000005
+Sitting Idle.fbx|mixamorig12:LeftHand|0.014379|-0.044262|0.051672|0.997579|0.000000|23.166304|0.000013
+Sitting Idle.fbx|mixamorig12:LeftHandThumb1|0.205282|-0.081761|-0.202888|0.953945|3.017700|3.212603|1.474901
+Sitting Idle.fbx|mixamorig12:LeftHandThumb2|0.000209|0.002705|-0.109683|0.993963|0.690903|3.653506|0.000017
+Sitting Idle.fbx|mixamorig12:LeftHandThumb3|-0.000668|0.005221|-0.094214|0.995538|-0.108396|3.292696|0.000001
+Sitting Idle.fbx|mixamorig12:LeftHandThumb4|-0.000000|0.000000|-0.000000|1.000000|-0.582489|2.585197|0.000019
+Sitting Idle.fbx|mixamorig12:LeftHandIndex1|-0.016604|0.001016|-0.053478|0.998430|3.501100|9.864400|0.215998
+Sitting Idle.fbx|mixamorig12:LeftHandIndex2|-0.000001|-0.000011|0.004828|0.999988|-0.016400|3.305100|-0.000011
+Sitting Idle.fbx|mixamorig12:LeftHandIndex3|-0.000000|-0.000093|-0.002033|0.999998|0.014600|3.109904|0.000029
+Sitting Idle.fbx|mixamorig12:LeftHandIndex4|0.000000|0.000000|0.000000|1.000000|0.001700|2.704710|0.000010
+Sitting Idle.fbx|mixamorig12:LeftHandMiddle1|-0.016583|0.001442|-0.052093|0.998504|1.042600|10.180706|-0.340600
+Sitting Idle.fbx|mixamorig12:LeftHandMiddle2|0.000001|0.000041|0.002787|0.999996|-0.007600|3.497100|0.000022
+Sitting Idle.fbx|mixamorig12:LeftHandMiddle3|0.000001|-0.000060|-0.002303|0.999997|0.011100|3.263005|0.000003
+Sitting Idle.fbx|mixamorig12:LeftHandMiddle4|0.000000|-0.000000|0.000000|1.000000|-0.003500|2.907901|-0.000018
+Sitting Idle.fbx|mixamorig12:LeftHandRing1|-0.016354|0.005890|-0.050899|0.998553|-1.076700|9.905898|-0.219805
+Sitting Idle.fbx|mixamorig12:LeftHandRing2|-0.000000|0.000036|0.000835|1.000000|0.001099|3.012295|0.000009
+Sitting Idle.fbx|mixamorig12:LeftHandRing3|0.000001|0.000035|-0.002439|0.999997|0.005900|2.898905|0.000006
+Sitting Idle.fbx|mixamorig12:LeftHandRing4|0.000000|0.000000|-0.000000|1.000000|-0.007001|2.463301|0.000004
+Sitting Idle.fbx|mixamorig12:LeftHandPinky1|-0.016475|0.003587|-0.051957|0.998507|-3.467000|9.302811|0.041390
+Sitting Idle.fbx|mixamorig12:LeftHandPinky2|-0.000002|0.000091|0.002906|0.999996|-0.005000|2.730500|-0.000003
+Sitting Idle.fbx|mixamorig12:LeftHandPinky3|0.000003|-0.000092|-0.002950|0.999996|0.008500|2.134501|0.000030
+Sitting Idle.fbx|mixamorig12:LeftHandPinky4|0.000000|-0.000000|-0.000000|1.000000|-0.003500|1.824399|0.000002
+Sitting Idle.fbx|mixamorig12:RightShoulder|0.559566|0.427088|-0.577067|0.414097|7.052500|13.011176|-0.217901
+Sitting Idle.fbx|mixamorig12:RightArm|-0.147790|0.006621|0.014594|0.988889|0.000001|14.673088|-0.000017
+Sitting Idle.fbx|mixamorig12:RightForeArm|0.000000|-0.002726|0.000000|0.999996|-0.000002|25.323515|0.000002
+Sitting Idle.fbx|mixamorig12:RightHand|0.010020|0.044158|-0.052249|0.997607|0.000001|23.170712|0.000007
+Sitting Idle.fbx|mixamorig12:RightHandThumb1|0.207599|0.083841|0.212805|0.951098|-2.969900|3.193494|1.365391
+Sitting Idle.fbx|mixamorig12:RightHandThumb2|0.000293|-0.003830|0.095202|0.995450|-0.624699|3.602104|-0.000004
+Sitting Idle.fbx|mixamorig12:RightHandThumb3|-0.000541|-0.004703|0.095511|0.995417|0.063796|3.361703|0.000006
+Sitting Idle.fbx|mixamorig12:RightHandThumb4|0.000000|-0.000000|0.000000|1.000000|0.560901|2.627799|0.000002
+Sitting Idle.fbx|mixamorig12:RightHandIndex1|-0.012303|-0.000335|0.055278|0.998395|-3.641702|9.956100|0.193801
+Sitting Idle.fbx|mixamorig12:RightHandIndex2|0.000001|0.000112|-0.005719|0.999984|0.023100|3.278007|-0.000014
+Sitting Idle.fbx|mixamorig12:RightHandIndex3|-0.000001|0.000016|0.000335|1.000000|-0.013400|3.051495|0.000026
+Sitting Idle.fbx|mixamorig12:RightHandIndex4|0.000000|0.000000|0.000000|1.000000|-0.009600|2.579096|0.000001
+Sitting Idle.fbx|mixamorig12:RightHandMiddle1|-0.012307|-0.000256|0.053720|0.998480|-1.038400|9.989293|-0.247213
+Sitting Idle.fbx|mixamorig12:RightHandMiddle2|-0.000000|-0.000092|-0.004957|0.999988|0.013500|3.435295|-0.000014
+Sitting Idle.fbx|mixamorig12:RightHandMiddle3|-0.000001|0.000131|0.004195|0.999991|-0.020800|3.475499|-0.000004
+Sitting Idle.fbx|mixamorig12:RightHandMiddle4|0.000000|-0.000000|0.000000|1.000000|0.007200|2.993590|0.000018
+Sitting Idle.fbx|mixamorig12:RightHandRing1|-0.012127|-0.003739|0.052169|0.998558|1.206802|10.298897|-0.178408
+Sitting Idle.fbx|mixamorig12:RightHandRing2|-0.000000|-0.000140|-0.003019|0.999995|0.002099|2.845296|-0.000014
+Sitting Idle.fbx|mixamorig12:RightHandRing3|0.000001|-0.000008|0.005375|0.999986|-0.014900|2.811506|-0.000015
+Sitting Idle.fbx|mixamorig12:RightHandRing4|0.000000|0.000000|0.000000|1.000000|0.012801|2.348500|-0.000001
+Sitting Idle.fbx|mixamorig12:RightHandPinky1|-0.012183|-0.002738|0.054099|0.998458|3.473302|9.218098|0.057691
+Sitting Idle.fbx|mixamorig12:RightHandPinky2|-0.000002|-0.000068|-0.005255|0.999986|0.012699|2.744698|-0.000009
+Sitting Idle.fbx|mixamorig12:RightHandPinky3|0.000001|0.000176|0.003125|0.999995|-0.013399|2.277602|0.000006
+Sitting Idle.fbx|mixamorig12:RightHandPinky4|0.000000|-0.000000|-0.000000|1.000000|0.000700|1.904100|0.000000
+Sitting Idle.fbx|mixamorig12:LeftUpLeg|-0.002173|0.036419|-0.999334|0.000183|-9.816000|-5.592400|-0.310700
+Sitting Idle.fbx|mixamorig12:LeftLeg|-0.003060|0.000001|-0.000203|0.999995|-0.000001|42.845699|-0.000000
+Sitting Idle.fbx|mixamorig12:LeftFoot|0.514280|0.032079|-0.053921|0.855324|-0.000001|39.384098|-0.000000
+Sitting Idle.fbx|mixamorig12:LeftToeBase|0.293944|0.080214|-0.024764|0.952129|0.000000|19.011496|0.000000
+Sitting Idle.fbx|mixamorig12:LeftToe_End|-0.000000|-0.000000|0.000000|1.000000|-0.000001|7.843946|-0.000000
+Sitting Idle.fbx|mixamorig12:RightUpLeg|-0.002012|-0.033714|0.999430|0.000172|9.816000|-5.592400|-0.356000
+Sitting Idle.fbx|mixamorig12:RightLeg|-0.022857|-0.000003|0.000125|0.999739|-0.000002|42.829418|-0.000000
+Sitting Idle.fbx|mixamorig12:RightFoot|0.544275|-0.027061|0.052913|0.836799|-0.000000|39.513699|0.000000
+Sitting Idle.fbx|mixamorig12:RightToeBase|0.277080|-0.095728|0.027755|0.955663|0.000000|20.187920|-0.000001
+Sitting Idle.fbx|mixamorig12:RightToe_End|0.000000|0.000000|-0.000000|1.000000|-0.000000|7.753464|0.000000

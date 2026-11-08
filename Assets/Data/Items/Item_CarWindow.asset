@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_CarWindow
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: "Sa\u011Flam Ara\xE7 Cam\u0131"
+  category: 2
+  description: "Bir enkazdan uzun u\u011Fra\u015Fla s\xF6k\xFClm\xFC\u015F, k\u0131r\u0131lmam\u0131\u015F
+    cam. Art\u0131k kimse cam \xFCretmiyor."
+  weight: 6
+  value: 15
+  useAmount: 1
+  equipSlot: 1
+  armor: 0
+  weaponPrefab: {fileID: 0}
+  worldColor: {r: 0.6, g: 0.75, b: 0.8, a: 1}
+  worldScale: {x: 0.7, y: 0.04, z: 0.45}
+  worldModel: {fileID: 0}
+  worldModelScale: 1
+  spoilHours: 0
+  spoilsInto: {fileID: 0}
+  poisonChance: 0
+  thirstPenalty: 0
+  stressRelief: 0
+  warmth: 0
+  leavesItem: {fileID: 0}
+  effects: 0
+  insulation: 0
+  waterproof: 0
+  noise: 0
+  identifiedName: 
+  natureToIdentify: 20

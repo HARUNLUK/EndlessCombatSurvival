@@ -258,11 +258,41 @@ namespace EndlessSurvival.Vehicle
 
         public float HealthRatio => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
 
-        private bool EngineRunning => isDriven && !IsBroken && currentFuel > 0f;
+        [Header("Parts (set by VehicleParts, Paket 6)")]
+        [Tooltip("Engine ignition. Starts true so the vehicle drives without the parts system; VehicleParts turns it off on exit and asks for a start")]
+        public bool engineOn = true;
+        [Tooltip("Engine power multiplier from parts (overheating, damaged radiator)")]
+        public float partsPowerFactor = 1f;
+        [Tooltip("Speed cap from parts in km/h (flat tyre). 0 = none")]
+        public float partsTopSpeedKmh = 0f;
+        [Tooltip("Grip multiplier per wheel (FL, FR, RL, RR): flat tyre, snow chains")]
+        public float[] wheelGripFactor = { 1f, 1f, 1f, 1f };
+        [Tooltip("Rolling drag torque per wheel (FL, FR, RL, RR): a flat tyre drags the car to its side")]
+        public float[] wheelDragTorque = { 0f, 0f, 0f, 0f };
+
+        /// <summary>Damage taken (amount after multipliers, is a bullet, world point, impact speed m/s).</summary>
+        public event System.Action<float, bool, Vector3, float> Damaged;
+
+        private bool EngineRunning => isDriven && engineOn && !IsBroken && currentFuel > 0f;
+        public bool IsEngineRunning => EngineRunning;
+
+        /// <summary>Wheel i (FL, FR, RL, RR) is on the ground and on terrain (not on the road).</summary>
+        public bool WheelOffRoad(int i)
+        {
+            if (i < 0 || i >= _wheels.Length || !_wheels[i].grounded) return false;
+            return _wheels[i].hit.collider is TerrainCollider;
+        }
+
+        /// <summary>World position of wheel i (FL, FR, RL, RR), or the vehicle position.</summary>
+        public Vector3 WheelPosition(int i) => i >= 0 && i < _wheels.Length ? _wheels[i].anchor.transform.position : transform.position;
+
+        public int WheelCount => _wheels.Length;
 
         public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
         {
-            ApplyDamage(damage * bulletDamageMultiplier);
+            float amount = damage * bulletDamageMultiplier;
+            ApplyDamage(amount);
+            Damaged?.Invoke(amount, true, hitPoint, 0f);
         }
 
         public void ApplyDamage(float amount)
@@ -291,15 +321,19 @@ namespace EndlessSurvival.Vehicle
         {
             float impact = collision.relativeVelocity.magnitude;
             if (impact <= collisionDamageThreshold) return;
-            ApplyDamage((impact - collisionDamageThreshold) * collisionDamageScale);
+            float amount = (impact - collisionDamageThreshold) * collisionDamageScale;
+            ApplyDamage(amount);
+            Vector3 point = collision.contactCount > 0 ? collision.GetContact(0).point : transform.position;
+            Damaged?.Invoke(amount, false, point, impact);
         }
 
         private float GetPowerFactor()
         {
             if (IsBroken) return 0f;
+            float parts = Mathf.Clamp01(partsPowerFactor);
             float ratio = HealthRatio;
-            if (weakEngineHealthRatio <= 0f || ratio >= weakEngineHealthRatio) return 1f;
-            return Mathf.Lerp(0.5f, 1f, ratio / weakEngineHealthRatio);
+            if (weakEngineHealthRatio <= 0f || ratio >= weakEngineHealthRatio) return parts;
+            return Mathf.Lerp(0.5f, 1f, ratio / weakEngineHealthRatio) * parts;
         }
 
         private void Awake()
@@ -620,6 +654,7 @@ namespace EndlessSurvival.Vehicle
                 if (_engineRpm >= maxRpm) engineTorque = 0f; // rev limiter
 
                 float limitKmh = _gear < 0 ? topReverseSpeedKmh : topSpeedKmh;
+                if (partsTopSpeedKmh > 0f) limitKmh = Mathf.Min(limitKmh, partsTopSpeedKmh);
                 float excess = speed * 3.6f - limitKmh;
                 if (excess > 0f) engineTorque *= Mathf.Clamp01(1f - excess / 5f);
 
@@ -643,8 +678,9 @@ namespace EndlessSurvival.Vehicle
             float frontShare = driveType == DriveType.FrontWheelDrive ? 1f : driveType == DriveType.RearWheelDrive ? 0f : frontTorqueShare;
             int drivenCount = Mathf.Max(1, frontDriven + rearDriven);
 
-            foreach (Wheel w in _wheels)
+            for (int i = 0; i < _wheels.Length; i++)
             {
+                Wheel w = _wheels[i];
                 float axleShare = w.front ? frontShare : 1f - frontShare;
                 int axleCount = w.front ? frontDriven : rearDriven;
                 w.driveTorque = w.driven && axleCount > 0 ? wheelTorque * axleShare / axleCount : 0f;
@@ -653,7 +689,8 @@ namespace EndlessSurvival.Vehicle
                 float hand = w.front ? 0f : _handbrake * handbrakeTorque;
                 float engine = w.driven ? engineBrake / drivenCount : 0f;
                 float hold = (!isDriven || (speed < 0.3f && _throttle < 0.05f)) ? 1500f : 0f;
-                w.brakeTorque = service + hand + engine + hold;
+                float drag = wheelDragTorque != null && i < wheelDragTorque.Length && speed > 0.5f ? wheelDragTorque[i] : 0f;
+                w.brakeTorque = service + hand + engine + hold + drag;
             }
         }
 
@@ -795,8 +832,10 @@ namespace EndlessSurvival.Vehicle
             float massPerWheel = _rb.mass / _wheels.Length;
             bool drivenSlipping = false;
 
-            foreach (Wheel w in _wheels)
+            for (int i = 0; i < _wheels.Length; i++)
             {
+                Wheel w = _wheels[i];
+                float gripFactor = wheelGripFactor != null && i < wheelGripFactor.Length ? Mathf.Max(0.05f, wheelGripFactor[i]) : 1f;
                 if (!w.grounded || w.load <= 0f)
                 {
                     // Free wheel: spins up under throttle, slowly stops otherwise.
@@ -816,8 +855,8 @@ namespace EndlessSurvival.Vehicle
                 float vLong = Vector3.Dot(velocity, forward);
                 float vLat = Vector3.Dot(velocity, side);
 
-                float muLong = forwardGrip;
-                float muLat = sidewaysGrip * (w.front ? 1f : Mathf.Lerp(1f, handbrakeGripMultiplier, _handbrake));
+                float muLong = forwardGrip * gripFactor;
+                float muLat = sidewaysGrip * gripFactor * (w.front ? 1f : Mathf.Lerp(1f, handbrakeGripMultiplier, _handbrake));
                 float maxLong = muLong * w.load;
                 float maxLat = muLat * w.load;
 

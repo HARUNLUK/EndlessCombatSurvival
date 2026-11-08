@@ -21,10 +21,26 @@ namespace EndlessSurvival.Survival
             root.position = position;
             root.rotation = rotation;
 
-            var body = SurvivalPrimitives.Part(PrimitiveType.Capsule, root, new Vector3(0f, 1f, 0f), new Vector3(0.7f, 1f, 0.7f), new Color(0.35f, 0.4f, 0.3f));
-            body.name = "TraderBody";
-            SurvivalPrimitives.Part(PrimitiveType.Sphere, root, new Vector3(0f, 1.85f, 0f), Vector3.one * 0.38f, new Color(0.85f, 0.7f, 0.55f), false);
-            SurvivalPrimitives.Part(PrimitiveType.Cylinder, root, new Vector3(0f, 2.05f, 0f), new Vector3(0.55f, 0.04f, 0.55f), new Color(0.3f, 0.22f, 0.12f), false);
+            var model = SurvivalSettings.Instance.traderModelPrefab;
+            if (model != null)
+            {
+                // Humanoid trader (user's Mixamo Standing / Talking clips), collider for [E]
+                var npc = Object.Instantiate(model, root);
+                npc.name = "TraderBody";
+                npc.transform.localPosition = Vector3.zero;
+                npc.transform.localRotation = Quaternion.identity;
+                var col = root.gameObject.AddComponent<CapsuleCollider>();
+                col.center = new Vector3(0f, 0.9f, 0f);
+                col.height = 1.8f;
+                col.radius = 0.35f;
+            }
+            else
+            {
+                var body = SurvivalPrimitives.Part(PrimitiveType.Capsule, root, new Vector3(0f, 1f, 0f), new Vector3(0.7f, 1f, 0.7f), new Color(0.35f, 0.4f, 0.3f));
+                body.name = "TraderBody";
+                SurvivalPrimitives.Part(PrimitiveType.Sphere, root, new Vector3(0f, 1.85f, 0f), Vector3.one * 0.38f, new Color(0.85f, 0.7f, 0.55f), false);
+                SurvivalPrimitives.Part(PrimitiveType.Cylinder, root, new Vector3(0f, 2.05f, 0f), new Vector3(0.55f, 0.04f, 0.55f), new Color(0.3f, 0.22f, 0.12f), false);
+            }
 
             // cart
             var cart = new GameObject("Cart").transform;
@@ -39,6 +55,7 @@ namespace EndlessSurvival.Survival
             SurvivalPrimitives.Part(PrimitiveType.Cube, cart, new Vector3(0f, 1.25f, 0f), new Vector3(1.2f, 0.4f, 1.6f), new Color(0.6f, 0.55f, 0.4f), false);
 
             var trader = root.gameObject.AddComponent<Trader>();
+            if (model != null) root.gameObject.AddComponent<TraderAnimator>().trader = trader;
             trader.RollStock(new SeededRandom(seed));
             return trader;
         }
@@ -75,9 +92,10 @@ namespace EndlessSurvival.Survival
             if (index < 0 || index >= stock.Count) return null;
             var st = stock[index];
             int price = BuyPrice(st.item);
-            if (user.Money < price) return "Paran yetmiyor";
+            bool free = SurvivalTest.FreeResources; // test mode: buying costs nothing
+            if (!free && user.Money < price) return "Paran yetmiyor";
             if (!st.item.IsDirectPickup && user.Storage.MaxAddable(st.item) <= 0) return "Çantada yer yok";
-            if (!user.SpendMoney(price)) return "Paran yetmiyor";
+            if (!free && !user.SpendMoney(price)) return "Paran yetmiyor";
             user.AddItem(st.item, 1);
             st.amount--;
             if (st.amount <= 0) stock.RemoveAt(index);
@@ -101,6 +119,9 @@ namespace EndlessSurvival.Survival
     {
         private static TradeUI _instance;
         public static bool IsOpen => _instance != null && _instance._trader != null;
+
+        /// <summary>True while the trade window is open with this trader.</summary>
+        public static bool IsTrading(Trader trader) => trader != null && _instance != null && _instance._trader == trader;
 
         private Trader _trader;
         private PlayerInventory _user;

@@ -85,7 +85,8 @@ namespace EndlessSurvival.Inventory
             float missing = isFood ? survival.maxHunger - survival.Hunger : survival.maxThirst - survival.Thirst;
 
             // Salt water and similar: drinking is allowed even when it makes things worse
-            if (missing < 0.5f && item.thirstPenalty <= 0f) return isFood ? "Not hungry" : "Not thirsty";
+            if (missing < 0.5f && item.thirstPenalty <= 0f && !EndlessSurvival.Survival.SurvivalTest.FreeResources) // test mode: eat/drink any time
+                return isFood ? "Not hungry" : "Not thirsty";
 
             Storage.Remove(item, 1);
             float restored = isFood ? survival.Eat(item.useAmount) : survival.Drink(item.useAmount);
@@ -98,6 +99,9 @@ namespace EndlessSurvival.Inventory
 
         /// <summary>Raised after a consumable was used (food, drink, medicine). Survival systems apply extra effects.</summary>
         public static event Action<ItemDefinition, PlayerInventory> ItemConsumed;
+
+        /// <summary>Survival systems with their own use action for an item (returns a message, or null when not theirs).</summary>
+        public static event Func<ItemDefinition, PlayerInventory, string> CustomUse;
 
         /// <summary>First aid stat: multiplier for health restored by medical items.</summary>
         public static Func<float> HealMultiplier = () => 1f;
@@ -112,6 +116,14 @@ namespace EndlessSurvival.Inventory
         {
             if (item == null || !item.IsConsumable || Storage.GetCount(item) <= 0) return null;
 
+            // Items with their own action (cigarette: smoking). A handler returns a message, or null when not its item.
+            if (CustomUse != null)
+                foreach (Func<ItemDefinition, PlayerInventory, string> handler in CustomUse.GetInvocationList())
+                {
+                    string custom = handler(item, this);
+                    if (custom != null) return custom;
+                }
+
             if (item.category == ItemCategory.Food || item.category == ItemCategory.Drink)
                 return UseSurvivalItem(item);
 
@@ -119,7 +131,8 @@ namespace EndlessSurvival.Inventory
             if (health == null) return "Cannot use this right now";
             if (health.IsDead) return null;
             bool hasEffect = item.effects != ConsumableEffect.None;
-            if (!hasEffect && health.CurrentHealth >= health.maxHealth - 0.5f && !health.isBleeding) return "Health is already full";
+            if (!hasEffect && health.CurrentHealth >= health.maxHealth - 0.5f && !health.isBleeding && !EndlessSurvival.Survival.SurvivalTest.FreeResources)
+                return "Health is already full";
 
             Storage.Remove(item, 1);
             float healed = item.useAmount > 0 ? health.Heal(item.useAmount * Mathf.Max(0.1f, HealMultiplier())) : 0f;

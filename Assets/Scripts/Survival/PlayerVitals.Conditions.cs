@@ -202,7 +202,8 @@ namespace EndlessSurvival.Survival
                 float d = Vector3.Distance(_nearFire.transform.position, pos);
                 felt += S.campfireWarmth * Mathf.Clamp01(1.2f - d / S.campfireRadius);
             }
-            if (inVehicle) felt += S.vehicleWarmth;
+            // Paket 6: cabin warmth depends on the heater, the windows and the insulation
+            if (inVehicle) felt += VehicleParts.Instance != null ? VehicleParts.Instance.CabinWarmth : S.vehicleWarmth;
             felt -= Wetness / 100f * S.wetChill;
             if (IsInfected) felt -= S.feverChill;
             if (_foodWarmthTimer > 0f)
@@ -271,13 +272,16 @@ namespace EndlessSurvival.Survival
             if (InWater) gain += S.waterWetPerSecond;
             var w = WeatherSystem.Instance;
             if (!inVehicle && w != null && w.RainIntensity > 0.01f) gain += S.rainWetPerSecond * w.RainIntensity * (1f - ClothingWaterproof);
+            // A broken window lets the rain in
+            bool leaking = inVehicle && w != null && w.RainIntensity > 0.01f && VehicleParts.Instance != null && VehicleParts.Instance.RainEnters;
+            if (leaking) gain += S.rainWetPerSecond * 0.35f * w.RainIntensity * (1f - ClothingWaterproof);
 
             if (gain > 0f) Wetness = Mathf.Min(100f, Wetness + gain * dt);
             else
             {
                 float dry = S.dryPerSecond;
                 if (NearFire) dry += S.dryNearFirePerSecond;
-                if (inVehicle) dry += S.dryInVehiclePerSecond;
+                if (inVehicle && !leaking) dry += S.dryInVehiclePerSecond * (VehicleParts.Instance != null ? Mathf.Lerp(0.3f, 1f, VehicleParts.Instance.ShelterFactor) : 1f);
                 Wetness = Mathf.Max(0f, Wetness - dry * dt);
             }
         }

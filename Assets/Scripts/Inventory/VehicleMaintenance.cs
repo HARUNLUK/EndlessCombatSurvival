@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using EndlessSurvival.Vehicle;
+using EndlessSurvival.Survival;
 
 namespace EndlessSurvival.Inventory
 {
@@ -92,6 +93,12 @@ namespace EndlessSurvival.Inventory
 
             int perUnit = Mathf.Max(1, fuelItem.useAmount);
             int needed = Mathf.CeilToInt(missing / perUnit);
+            if (SurvivalTest.FreeResources)
+            {
+                float free = vehicle.Refuel(missing);
+                Changed?.Invoke();
+                return $"Depo dolduruldu +{Mathf.RoundToInt(free)} (TEST: normalde {needed}x {fuelItem.DisplayName})";
+            }
             int taken = Take(fuelItem, needed);
             if (taken <= 0) return $"No {fuelItem.DisplayName} available";
 
@@ -108,6 +115,12 @@ namespace EndlessSurvival.Inventory
             if (missing < 0.5f) return "Vehicle is undamaged";
 
             int needed = Mathf.CeilToInt(missing / Mathf.Max(1f, healthPerRepairItem));
+            if (SurvivalTest.FreeResources)
+            {
+                float free = vehicle.Repair(missing);
+                Changed?.Invoke();
+                return $"Araç tamir edildi +{Mathf.RoundToInt(free)} (TEST: normalde {needed}x {repairItem.DisplayName})";
+            }
             int taken = Take(repairItem, needed);
             if (taken <= 0) return $"No {repairItem.DisplayName} available";
 
@@ -125,9 +138,11 @@ namespace EndlessSurvival.Inventory
             if (rule.level >= rule.maxLevel) return $"{rule.label} is at max level";
 
             int cost = rule.NextCost;
-            if (Available(rule.costItem) < cost) return $"Need {cost}x {rule.costItem.DisplayName}";
-
-            Take(rule.costItem, cost);
+            if (!SurvivalTest.FreeResources)
+            {
+                if (Available(rule.costItem) < cost) return $"Need {cost}x {rule.costItem.DisplayName}";
+                Take(rule.costItem, cost);
+            }
             rule.level++;
 
             switch (rule.type)
@@ -157,17 +172,21 @@ namespace EndlessSurvival.Inventory
             if (rule.level >= rule.maxLevel) return $"{rule.label} Lv{rule.level}/{rule.maxLevel} (MAX)";
 
             string costName = rule.costItem != null ? rule.costItem.DisplayName : "?";
-            return $"{rule.label} Lv{rule.level}/{rule.maxLevel}: {rule.NextCost}x {costName}";
+            return $"{rule.label} Lv{rule.level}/{rule.maxLevel}: {rule.NextCost}x {costName}" + (SurvivalTest.FreeResources ? " (TEST: bedava)" : "");
         }
 
         public string GetRefuelLabel()
         {
-            return fuelItem != null ? $"Refuel ({fuelItem.DisplayName}: {Available(fuelItem)})" : "Refuel";
+            if (fuelItem == null) return "Refuel";
+            int need = vehicle != null ? Mathf.CeilToInt(Mathf.Max(0f, vehicle.maxFuel - vehicle.currentFuel) / Mathf.Max(1, fuelItem.useAmount)) : 0;
+            return $"Refuel ({fuelItem.DisplayName}: {Available(fuelItem)}, gereken {need})" + (SurvivalTest.FreeResources ? " TEST: bedava" : "");
         }
 
         public string GetRepairLabel()
         {
-            return repairItem != null ? $"Repair ({repairItem.DisplayName}: {Available(repairItem)})" : "Repair";
+            if (repairItem == null) return "Repair";
+            int need = vehicle != null ? Mathf.CeilToInt(Mathf.Max(0f, vehicle.maxHealth - vehicle.currentHealth) / Mathf.Max(1f, healthPerRepairItem)) : 0;
+            return $"Repair ({repairItem.DisplayName}: {Available(repairItem)}, gereken {need})" + (SurvivalTest.FreeResources ? " TEST: bedava" : "");
         }
     }
 }

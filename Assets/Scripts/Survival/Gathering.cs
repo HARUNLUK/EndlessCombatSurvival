@@ -181,13 +181,16 @@ namespace EndlessSurvival.Survival
             var s = SurvivalSettings.Instance;
             var bottle = s.Item("Item_EmptyBottle");
             var water = s.Item(_kind == WaterKind.Sea ? "Item_SaltWater" : "Item_DirtyWater");
-            if (bottle == null || water == null || user.Storage.GetCount(bottle) <= 0) return "Boş şişe yok";
-            user.Storage.Remove(bottle, 1);
+            bool free = SurvivalTest.FreeResources; // test mode: no empty bottle needed
+            if (water == null || !free && (bottle == null || user.Storage.GetCount(bottle) <= 0)) return "Boş şişe yok";
+            bool usedBottle = bottle != null && user.Storage.GetCount(bottle) > 0 && !free;
+            if (usedBottle) user.Storage.Remove(bottle, 1);
             if (user.Storage.Add(water, 1) <= 0)
             {
-                user.Storage.Add(bottle, 1);
+                if (usedBottle) user.Storage.Add(bottle, 1);
                 return "Çantada yer yok";
             }
+            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.Gather);
             _nextScan = 0f;
             return $"{water.DisplayName} dolduruldu";
         }
@@ -242,6 +245,7 @@ namespace EndlessSurvival.Survival
             if (Random.value < StatSettings.Instance.natureExtraYieldChance * CharacterStats.Frac(StatType.Nature)) amount += 1;
             int added = user.AddItem(item, amount);
             if (added <= 0) return "Çantada yer yok";
+            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.Gather);
             remaining = 0;
             CharacterStats.Instance?.Train(StatType.Nature, StatSettings.Instance.naturePerGather);
             Deplete();
@@ -353,6 +357,15 @@ namespace EndlessSurvival.Survival
     /// <summary>2.12: [H] with a fishing rod at water: wait, then press [H] again when it bites.</summary>
     public class FishingController : MonoBehaviour
     {
+        public static FishingController Instance { get; private set; }
+
+        private void Awake() => Instance = this;
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
         public enum FishState
         {
             Idle,
@@ -397,6 +410,7 @@ namespace EndlessSurvival.Survival
                 if (_bobber != null) _bobber.transform.position += Vector3.up * Mathf.Sin(Time.time * 2f) * 0.0015f;
                 if (SKeys.Down(Key.H))
                 {
+                    PlayerSurvivalAnimator.PlayOneShot(SurvAnim.FishReel);
                     Stop("Olta erken çekildi");
                     return;
                 }
@@ -415,6 +429,7 @@ namespace EndlessSurvival.Survival
                     Catch();
                     return;
                 }
+                if (_timer <= 0f) PlayerSurvivalAnimator.PlayOneShot(SurvAnim.FishReel);
                 if (_timer <= 0f) Stop("Balık kaçtı");
             }
         }
@@ -424,7 +439,7 @@ namespace EndlessSurvival.Survival
             var s = SurvivalSettings.Instance;
             var rod = s.Item("Item_FishingRod");
             var inv = player.GetComponent<PlayerInventory>();
-            if (rod == null || inv == null || inv.Storage.GetCount(rod) <= 0)
+            if (inv == null || !SurvivalTest.FreeResources && (rod == null || inv.Storage.GetCount(rod) <= 0)) // test mode: no rod needed
             {
                 SurvivalNotify.Show("Balık tutmak için olta gerekli (Üretim: Olta)");
                 return;
@@ -435,6 +450,7 @@ namespace EndlessSurvival.Survival
                 return;
             }
             _startPos = player.transform.position;
+            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.FishCast);
             State = FishState.Waiting;
             _timer = Random.Range(s.fishWaitMin, s.fishWaitMax);
             StatusText = "Balık bekleniyor... (vurunca [H])";
@@ -453,6 +469,7 @@ namespace EndlessSurvival.Survival
                 CharacterStats.Instance?.Train(StatType.Nature, StatSettings.Instance.naturePerGather);
                 PlayerVitals.Instance?.AddStressRelief(3f);
             }
+            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.FishReel);
             Stop(fish != null ? $"{fish.DisplayName} yakalandı!" : "Balık tanımı yok");
         }
 

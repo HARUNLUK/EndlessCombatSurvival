@@ -129,6 +129,28 @@ namespace EndlessSurvival.Survival.Editor
             Item("BrokenFuelCan", "Delik Bidon", ItemCategory.Junk, 1f, 1, 1, new Color(0.5f, 0.3f, 0.2f), Medium,
                 "Bantla tamir edilirse işe yarar.");
 
+            // --- Paket 6: vehicle parts and covers (everything comes from wrecks and houses) ---
+            Item("Plank", "Tahta", ItemCategory.Material, 1.5f, 2, 1, new Color(0.6f, 0.45f, 0.28f), new Vector3(0.7f, 0.05f, 0.15f),
+                "Kırık camı kapatmak için. Odundan yontulur ya da evlerde bulunur.");
+            Item("PlasticSheet", "Naylon Örtü", ItemCategory.Material, 0.3f, 2, 1, new Color(0.85f, 0.9f, 0.95f), Flat,
+                "Kırık camı geçici kapatır. Rüzgârda zamanla yırtılır.");
+            Item("CarWindow", "Sağlam Araç Camı", ItemCategory.Material, 6f, 15, 1, new Color(0.6f, 0.75f, 0.8f), new Vector3(0.7f, 0.04f, 0.45f),
+                "Bir enkazdan uzun uğraşla sökülmüş, kırılmamış cam. Artık kimse cam üretmiyor.");
+            Item("Headlight", "Far Ünitesi", ItemCategory.Material, 1.5f, 6, 1, new Color(0.9f, 0.88f, 0.75f), Medium,
+                "Enkazdan sökülmüş far. Kırık farların yerine takılır.");
+            Item("Radiator", "Radyatör", ItemCategory.Material, 5f, 10, 1, new Color(0.45f, 0.45f, 0.42f), new Vector3(0.6f, 0.08f, 0.45f),
+                "Enkazdan sökülmüş radyatör. Delik radyatör motoru hararet yaptırır.");
+            Item("Rope", "Halat", ItemCategory.Material, 1.5f, 4, 1, new Color(0.62f, 0.52f, 0.33f), Medium,
+                "Çekme halatı modu için. Kumaştan da örülür.");
+            Item("Chain", "Zincir", ItemCategory.Material, 3f, 5, 1, new Color(0.55f, 0.56f, 0.58f), Medium,
+                "Kar zinciri modu için.");
+            Item("Blanket", "Battaniye", ItemCategory.Material, 1.5f, 4, 1, new Color(0.45f, 0.3f, 0.3f), Flat,
+                "Araç kabinini yalıtmak için.");
+
+            // --- Smoking (Smoking_System.md): the character always has a lighter, only cigarettes are needed ---
+            Item("Cigarette", "Sigara", ItemCategory.Consumable, 0.01f, 2, 0, new Color(0.92f, 0.9f, 0.85f), Small,
+                "Stresi hızlı düşürür ([J] ya da Kullan). İçerken hareket edemezsin; hareket, hasar ya da tehlike söndürür.");
+
             // --- water ---
             Item("DirtyWater", "Kirli Su", ItemCategory.Drink, 0.6f, 1, 35, new Color(0.45f, 0.5f, 0.4f), Small,
                 "Dereden. Kamp ateşinde kaynatılmalı; böyle içilirse hastalık riski.", i => { i.poisonChance = 0.35f; i.leavesItem = bottle; });
@@ -279,6 +301,8 @@ namespace EndlessSurvival.Survival.Editor
                 Recipe("CleanWoundWater", "Yarayı kaynamış suyla temizle", CraftStation.Hand, 2f, StatType.FirstAid, new[] { I("BoiledWater") }, new[] { I("EmptyBottle") }, null, RecipeEffect.CleanWound),
                 Recipe("CleanWoundAlcohol", "Yarayı alkolle temizle", CraftStation.Hand, 2f, StatType.FirstAid, new[] { I("Alcohol") }, new[] { I("EmptyBottle") }, null, RecipeEffect.CleanWound),
                 Recipe("RabbitTrap", "Tavşan tuzağı kur", CraftStation.Hand, 4f, N, new[] { I("Firewood", 2), I("Cloth") }, none, null, RecipeEffect.PlaceRabbitTrap),
+                Recipe("Plank", "Odundan tahta yont", CraftStation.Hand, 5f, M, new[] { I("Firewood", 3) }, new[] { I("Plank") }, new[] { "Knife" }),
+                Recipe("Rope", "Kumaştan halat ör", CraftStation.Hand, 5f, M, new[] { I("Cloth", 4) }, new[] { I("Rope") }),
 
                 // Campfire
                 Recipe("BoilDirtyWater", "Kirli suyu kaynat", CraftStation.Campfire, 4f, N, new[] { I("DirtyWater") }, new[] { I("BoiledWater") }),
@@ -367,6 +391,21 @@ namespace EndlessSurvival.Survival.Editor
             var wreck = Table("Loot_Wreck", 1, 2);
             AddLoot(wreck, ("ScrapMetal", 5f, 1, 3), ("RubberHose", 1.5f, 1, 1), ("SparkPlug", 2f, 1, 1), ("CarBattery", 0.5f, 1, 1));
 
+            // Paket 6: vehicle parts and window covers
+            AddLoot(roadside, ("Plank", 1.5f, 1, 2), ("PlasticSheet", 1f, 1, 1));
+            AddLoot(house, ("Blanket", 2.5f, 1, 1), ("PlasticSheet", 2f, 1, 1), ("Plank", 2f, 1, 2), ("Rope", 1f, 1, 1));
+            AddLoot(gas, ("Chain", 1.2f, 1, 2), ("Rope", 1.2f, 1, 1), ("PlasticSheet", 1f, 1, 1), ("Headlight", 0.6f, 1, 1));
+            AddLoot(wreck, ("Headlight", 0.8f, 1, 1), ("Chain", 0.5f, 1, 1), ("CarTire", 0.6f, 1, 1));
+
+            // Smoking: half-empty packs in cars and by the road, full packs at gas stations
+            var enemyDrop = AssetDatabase.LoadAssetAtPath<LootTable>($"{LootDir}/Loot_EnemyDrop.asset");
+            AddLoot(wreck, ("Cigarette", 2f, 2, 8));
+            AddLoot(vehicle, ("Cigarette", 1.5f, 2, 8));
+            AddLoot(roadside, ("Cigarette", 0.8f, 1, 4));
+            AddLoot(house, ("Cigarette", 1f, 1, 6));
+            AddLoot(gas, ("Cigarette", 2.5f, 12, 20));
+            AddLoot(enemyDrop, ("Cigarette", 1f, 1, 5));
+
             var pickup = AssetDatabase.LoadAssetAtPath<WorldPickup>("Assets/Prefabs/Loot/DefaultPickup.prefab");
             foreach (var t in new[] { house, gas, wreck })
             {
@@ -412,7 +451,7 @@ namespace EndlessSurvival.Survival.Editor
             var stock = new List<ItemDefinition>();
             foreach (var key in new[] { "RifleAmmo", "Bandage", "Medkit", "CannedBeans", "WaterBottle", "EmptyBottle", "FishingRod", "Cloth",
                          "Salt", "DuctTape", "ToolKit", "EmptyFuelCan", "FuelCan", "Knife", "HerbalTea", "Alcohol", "Raincoat", "WoolHat",
-                         "Gloves", "EnergyBar", "RubberHose", "VehicleRepairKit" })
+                         "Gloves", "EnergyBar", "RubberHose", "VehicleRepairKit", "PlasticSheet", "Rope", "Plank", "Cigarette" })
             {
                 var it = Items.TryGetValue(key, out var x) ? x : Existing(key);
                 if (it != null) stock.Add(it);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using EndlessSurvival.Camping;
 using EndlessSurvival.Inventory;
@@ -185,11 +185,15 @@ namespace EndlessSurvival.Survival
         public int seed;
         private bool _fuelTaken, _partsTaken, _initialized;
         private int _fuelUnits;
-        private bool _hasBattery, _hasTire;
+        private bool _hasBattery, _hasTire, _hasHeadlight, _hasRadiator;
         private int _scrap;
+        private int _glass;          // intact windows left in the wreck
+        private bool _glassWorking;
+
+        public bool Towed { get; private set; }
 
         public Vector3 InteractPosition => transform.position;
-        public bool CanInteract => !(_fuelTaken && _partsTaken);
+        public bool CanInteract => !(_fuelTaken && _partsTaken && (_glass <= 0 || _glassWorking));
 
         private void Init()
         {
@@ -201,6 +205,66 @@ namespace EndlessSurvival.Survival
             _hasBattery = rng.Chance(0.3f);
             _hasTire = rng.Chance(0.45f);
             _scrap = rng.Range(1, 4);
+            // Paket 6: more parts, and now and then a window that survived
+            _hasHeadlight = rng.Chance(0.4f);
+            _hasRadiator = rng.Chance(0.3f);
+            _glass = rng.Chance(0.45f) ? rng.Range(1, 3) : 0;
+        }
+
+        /// <summary>Tow rope: drags the wreck off the road, to the side away from the towing vehicle.</summary>
+        public bool TowAside(Transform vehicle)
+        {
+            Transform wreck = transform.parent != null && transform.parent.GetComponent<Chunk>() == null ? transform.parent : transform;
+            Vector3 away = wreck.position - vehicle.position;
+            away.y = 0f;
+            Vector3 side = Vector3.Cross(Vector3.up, vehicle.forward).normalized;
+            if (Vector3.Dot(away, side) < 0f) side = -side;
+            Vector3 target = wreck.position + side * 7f;
+            if (Physics.Raycast(target + Vector3.up * 30f, Vector3.down, out RaycastHit hit, 80f, ~0, QueryTriggerInteraction.Ignore))
+                target.y = hit.point.y + (wreck.position.y - GroundBelow(wreck.position));
+            wreck.position = target;
+            Physics.SyncTransforms();
+            Towed = true;
+            return true;
+        }
+
+        private static float GroundBelow(Vector3 p)
+        {
+            var terrain = Terrain.activeTerrain;
+            foreach (var t in Terrain.activeTerrains)
+            {
+                Vector3 local = p - t.transform.position;
+                if (local.x >= 0 && local.z >= 0 && local.x <= t.terrainData.size.x && local.z <= t.terrainData.size.z) { terrain = t; break; }
+            }
+            return terrain != null ? terrain.SampleHeight(p) + terrain.transform.position.y : p.y;
+        }
+
+        private string StartGlassJob(PlayerInventory user)
+        {
+            var parts = VehicleParts.Instance;
+            var s = SurvivalSettings.Instance;
+            var toolkit = s.Item("Item_ToolKit");
+            if (!SurvivalTest.FreeResources && (toolkit == null || user.Storage.GetCount(toolkit) <= 0)) return "Camı çıkarmak için alet çantası lazım";
+            if (parts == null) return null;
+            _glassWorking = true;
+            string msg = parts.StartJob("Sağlam cam sökülüyor (conta, klips, yavaşça)", 40f, transform.position, 12f, () =>
+            {
+                _glassWorking = false;
+                _glass--;
+                // The glass may still crack while it comes out
+                float breakChance = Mathf.Lerp(0.35f, 0.15f, CharacterStats.Frac(StatType.Mechanics));
+                if (UnityEngine.Random.value < breakChance) return "Cam çıkarken çatladı, işe yaramaz";
+                SurvivalDirector.GiveItem(s.Item("Item_CarWindow"), 1);
+                return "Sağlam cam söküldü";
+            });
+            if (parts.CurrentJob == null) _glassWorking = false;
+            return msg;
+        }
+
+        private void Update()
+        {
+            // A cancelled glass job can be started again
+            if (_glassWorking && (VehicleParts.Instance == null || VehicleParts.Instance.CurrentJob == null)) _glassWorking = false;
         }
 
         private bool CanSiphon(PlayerInventory user)
@@ -208,15 +272,17 @@ namespace EndlessSurvival.Survival
             var s = SurvivalSettings.Instance;
             var hose = s.Item("Item_RubberHose");
             var empty = s.Item("Item_EmptyFuelCan");
-            return !_fuelTaken && user != null && hose != null && empty != null &&
-                   user.Storage.GetCount(hose) > 0 && user.Storage.GetCount(empty) > 0;
+            if (_fuelTaken || user == null) return false;
+            if (SurvivalTest.FreeResources) return _fuelUnits > 0;
+            return hose != null && empty != null && user.Storage.GetCount(hose) > 0 && user.Storage.GetCount(empty) > 0;
         }
 
         public string GetPrompt()
         {
             Init();
             if (CanSiphon(SurvivalDirector.Inventory)) return "Enkaz: hortumla yakıt çek";
-            if (!_partsTaken) return "Enkaz: parça sök (akü, lastik, hurda)";
+            if (!_partsTaken) return "Enkaz: parça sök (akü, lastik, far, radyatör, hurda)";
+            if (_glass > 0 && !_glassWorking) return $"Enkaz: sağlam camı sök (uzun sürer, {_glass} cam)";
             return "Enkaz: yakıt için hortum + boş bidon lazım";
         }
 
@@ -231,12 +297,13 @@ namespace EndlessSurvival.Survival
                 _fuelTaken = true;
                 if (_fuelUnits <= 0) return "Depo kupkuru, yakıt çıkmadı";
                 int filled = 0;
-                for (int i = 0; i < _fuelUnits && user.Storage.GetCount(empty) > 0; i++)
+                bool free = SurvivalTest.FreeResources; // test: no hose or empty can needed
+                for (int i = 0; i < _fuelUnits && (free || user.Storage.GetCount(empty) > 0); i++)
                 {
-                    user.Storage.Remove(empty, 1);
+                    if (!free) user.Storage.Remove(empty, 1);
                     if (user.Storage.Add(full, 1) <= 0)
                     {
-                        user.Storage.Add(empty, 1);
+                        if (!free) user.Storage.Add(empty, 1);
                         break;
                     }
                     filled++;
@@ -249,7 +316,7 @@ namespace EndlessSurvival.Survival
             {
                 _partsTaken = true;
                 var toolkit = s.Item("Item_ToolKit");
-                bool hasTools = toolkit != null && user.Storage.GetCount(toolkit) > 0;
+                bool hasTools = SurvivalTest.FreeResources || toolkit != null && user.Storage.GetCount(toolkit) > 0;
                 int bonus = UnityEngine.Random.value < StatSettings.Instance.mechanicsSaveMaterialChance * CharacterStats.Frac(StatType.Mechanics) ? 1 : 0;
                 string got = "";
                 SurvivalDirector.GiveItem(s.Item("Item_ScrapMetal"), _scrap + bonus);
@@ -264,10 +331,24 @@ namespace EndlessSurvival.Survival
                     SurvivalDirector.GiveItem(s.Item("Item_CarTire"), 1);
                     got += ", Lastik";
                 }
-                if (!hasTools && (_hasBattery || _hasTire)) got += " (akü/lastik için alet çantası lazım)";
+                if (_hasHeadlight && hasTools)
+                {
+                    SurvivalDirector.GiveItem(s.Item("Item_Headlight"), 1);
+                    got += ", Far";
+                }
+                if (_hasRadiator && hasTools)
+                {
+                    SurvivalDirector.GiveItem(s.Item("Item_Radiator"), 1);
+                    got += ", Radyatör";
+                }
+                if (!hasTools && (_hasBattery || _hasTire || _hasHeadlight || _hasRadiator)) got += " (akü/lastik/far/radyatör için alet çantası lazım)";
+                if (_glass > 0) got += $". İçinde {_glass} sağlam cam var";
                 CharacterStats.Instance?.Train(StatType.Mechanics, 0.6f);
+                // Tools on metal: enemies nearby hear it
+                VehicleParts.MakeNoise(transform.position, 18f);
                 return "Söküldü: " + got;
             }
+            if (_glass > 0 && !_glassWorking) return StartGlassJob(user);
             if (!_fuelTaken) return "Yakıt çekmek için lastik hortum ve boş bidon lazım";
             return null;
         }

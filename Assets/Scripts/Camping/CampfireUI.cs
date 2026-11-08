@@ -29,6 +29,8 @@ namespace EndlessSurvival.Camping
 
         /// <summary>Fire the Kamp tab works on (set by [E] on a fire).</summary>
         public static PlayerCampfire BoundFire => _instance != null ? _instance._activeFire : null;
+        /// <summary>True while the player sleeps by the fire (sleeping animation).</summary>
+        public static bool IsResting { get; private set; }
         public static string LastFeedback { get; private set; }
         public static Color LastFeedbackColor { get; private set; } = Color.white;
 
@@ -49,6 +51,8 @@ namespace EndlessSurvival.Camping
             if (_instance == null) CreateUI();
             _instance._activeFire = fire;
             _instance._activeUser = user;
+            if (action == CampAction.AddFuel || action == CampAction.CookMeat || action == CampAction.CookStew || action == CampAction.BoilWater)
+                EndlessSurvival.Survival.PlayerSurvivalAnimator.PlayOneShot(EndlessSurvival.Survival.SurvAnim.KneelFire, 3f);
             switch (action)
             {
                 case CampAction.AddFuel: _instance.OnAddFuelClicked(); break;
@@ -256,7 +260,13 @@ namespace EndlessSurvival.Camping
             ItemDefinition fuelItem = FindItemNamed("Item_Firewood");
             if (fuelItem == null || _activeUser.Storage.GetCount(fuelItem) <= 0)
                 fuelItem = FindItemWithCategory(ItemCategory.Fuel) ?? FindItemNamed("Fuel", "Scrap");
-            if (fuelItem != null && _activeUser.Storage.GetCount(fuelItem) > 0)
+            bool free = EndlessSurvival.Survival.SurvivalTest.FreeResources;
+            if (free)
+            {
+                _activeFire.AddFuel(180f); // test mode: full log without using one
+                ShowFeedback("Yakacak eklendi (TEST: bedava)", Color.green);
+            }
+            else if (fuelItem != null && _activeUser.Storage.GetCount(fuelItem) > 0)
             {
                 _activeUser.Storage.Remove(fuelItem, 1);
                 _activeFire.AddFuel(180f); // 3 dakika
@@ -279,9 +289,10 @@ namespace EndlessSurvival.Camping
             }
 
             ItemDefinition rawMeat = FindItemNamed("Item_RawMeat");
-            if (rawMeat != null && _activeUser.Storage.GetCount(rawMeat) > 0)
+            bool free = EndlessSurvival.Survival.SurvivalTest.FreeResources; // test mode: no meat needed, nothing used
+            if (free || rawMeat != null && _activeUser.Storage.GetCount(rawMeat) > 0)
             {
-                _activeUser.Storage.Remove(rawMeat, 1);
+                if (!free) _activeUser.Storage.Remove(rawMeat, 1);
                 ItemDefinition cookedMeat = FindOrCreateCookedItem("Item_CookedMeat", "Pişmiş Et", ItemCategory.Food, 45, 15);
                 _activeUser.AddItem(cookedMeat, 1);
                 ShowFeedback("Et ateşte nar gibi kızartıldı! (Pişmiş Et envanterine eklendi)", Color.green);
@@ -301,9 +312,10 @@ namespace EndlessSurvival.Camping
             }
 
             ItemDefinition cannedBeans = FindItemNamed("CannedBeans", "Beans");
-            if (cannedBeans != null && _activeUser.Storage.GetCount(cannedBeans) > 0)
+            bool free = EndlessSurvival.Survival.SurvivalTest.FreeResources;
+            if (free || cannedBeans != null && _activeUser.Storage.GetCount(cannedBeans) > 0)
             {
-                _activeUser.Storage.Remove(cannedBeans, 1);
+                if (!free) _activeUser.Storage.Remove(cannedBeans, 1);
                 ItemDefinition stew = FindOrCreateCookedItem("Item_WarmStew", "Sıcak Güveç", ItemCategory.Food, 40, 10);
                 _activeUser.AddItem(stew, 1);
                 ShowFeedback("Konserve ateşte ısıtıldı: Sıcak Güveç hazırlandı!", Color.green);
@@ -324,9 +336,10 @@ namespace EndlessSurvival.Camping
 
             // Package 2.9: dirty water from creeks is boiled (salt water needs the distiller)
             ItemDefinition bottle = FindItemNamed("Item_DirtyWater");
-            if (bottle != null && _activeUser.Storage.GetCount(bottle) > 0)
+            bool free = EndlessSurvival.Survival.SurvivalTest.FreeResources;
+            if (free || bottle != null && _activeUser.Storage.GetCount(bottle) > 0)
             {
-                _activeUser.Storage.Remove(bottle, 1);
+                if (!free) _activeUser.Storage.Remove(bottle, 1);
                 ItemDefinition cleanWater = FindOrCreateCookedItem("Item_BoiledWater", "Kaynamış Temiz Su", ItemCategory.Drink, 50, 5);
                 _activeUser.AddItem(cleanWater, 1);
                 ShowFeedback("Su ateşte kaynatıldı ve sterilize edildi!", Color.green);
@@ -360,6 +373,7 @@ namespace EndlessSurvival.Camping
         private IEnumerator RestRoutine()
         {
             Close();
+            IsResting = true;
 
             // Ekran karartma (Fade to black)
             if (_fadeText != null) _fadeText.text = "Kamp ateşinin başında dinleniliyor...";
@@ -443,6 +457,8 @@ namespace EndlessSurvival.Camping
                 _fadeText.text = "";
             }
 
+            IsResting = false;
+
             // 3. Otomatik Kayıt (Auto-Save)
             EndlessSurvival.Save.SaveManager.Instance?.SaveGame(isAutoSave: true);
         }
@@ -455,9 +471,10 @@ namespace EndlessSurvival.Camping
             var health = player.GetComponent<PlayerHealth>();
             ItemDefinition bandage = FindItemNamed("Bandage", "Medkit");
 
-            if (bandage != null && _activeUser.Storage.GetCount(bandage) > 0)
+            bool free = EndlessSurvival.Survival.SurvivalTest.FreeResources;
+            if (free || bandage != null && _activeUser.Storage.GetCount(bandage) > 0)
             {
-                _activeUser.Storage.Remove(bandage, 1);
+                if (!free) _activeUser.Storage.Remove(bandage, 1);
                 if (health != null)
                 {
                     health.Heal(25f);

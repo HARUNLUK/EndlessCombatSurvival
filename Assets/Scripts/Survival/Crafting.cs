@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using EndlessSurvival.Camping;
@@ -70,6 +70,9 @@ namespace EndlessSurvival.Survival
             return false;
         }
 
+        /// <summary>Test mode: every recipe needs and uses no materials or tools.</summary>
+        public static bool IsFree(RecipeDefinition r) => r != null && SurvivalTest.FreeResources;
+
         public bool CanCraft(RecipeDefinition r, out string reason)
         {
             reason = null;
@@ -82,9 +85,10 @@ namespace EndlessSurvival.Survival
                        : r.station == CraftStation.Distiller ? "Ateşin üstündeki damıtıcının yanında olmalısın" : "İstasyon yok";
                 return false;
             }
+            bool free = IsFree(r);
             foreach (var t in r.tools)
             {
-                if (t != null && SurvivalDirector.CountItem(t) <= 0)
+                if (!free && t != null && SurvivalDirector.CountItem(t) <= 0)
                 {
                     reason = $"Gerekli alet: {t.DisplayName}";
                     return false;
@@ -92,7 +96,7 @@ namespace EndlessSurvival.Survival
             }
             foreach (var i in r.inputs)
             {
-                if (i?.item == null) continue;
+                if (free || i?.item == null) continue;
                 int have = SurvivalDirector.CountItem(i.item);
                 if (have < i.amount)
                 {
@@ -100,6 +104,7 @@ namespace EndlessSurvival.Survival
                     return false;
                 }
             }
+            if (free) goto NeedsChecked; // test mode: no "nothing to clean / repair" refusals
             if (r.effect == RecipeEffect.CleanWound && PlayerVitals.Instance != null && !PlayerVitals.Instance.WoundDirty && !PlayerVitals.Instance.IsInfected)
             {
                 reason = "Temizlenecek yara yok";
@@ -115,6 +120,7 @@ namespace EndlessSurvival.Survival
                 reason = "Kıyafetler sağlam";
                 return false;
             }
+            NeedsChecked:
             if (r.effect == RecipeEffect.PlaceRabbitTrap)
             {
                 if (SurvivalDirector.PlayerInVehicle) { reason = "Araçtan in"; return false; }
@@ -147,6 +153,7 @@ namespace EndlessSurvival.Survival
                 if (sb.Length > 0) sb.Append(", ");
                 sb.Append("[alet] ").Append(t.DisplayName);
             }
+            if (IsFree(r)) sb.Append("  (TEST: bedava)");
             return sb.ToString();
         }
 
@@ -217,10 +224,11 @@ namespace EndlessSurvival.Survival
             JobProgress = 0f;
             if (r == null) return;
 
+            bool free = IsFree(r);
             // Check again: something may have been dropped while waiting
             foreach (var i in r.inputs)
             {
-                if (i?.item != null && SurvivalDirector.CountItem(i.item) < i.amount)
+                if (!free && i?.item != null && SurvivalDirector.CountItem(i.item) < i.amount)
                 {
                     SurvivalNotify.Warn($"Malzeme eksik: {i.item.DisplayName}");
                     return;
@@ -232,7 +240,7 @@ namespace EndlessSurvival.Survival
             bool saved = false;
             foreach (var i in r.inputs)
             {
-                if (i?.item == null) continue;
+                if (free || i?.item == null) continue;
                 int amount = i.amount;
                 if (!saved && amount > 1 && Random.value < saveChance)
                 {

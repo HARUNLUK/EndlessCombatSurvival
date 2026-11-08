@@ -140,6 +140,7 @@ namespace EndlessSurvival.Survival
             PlayerActive && _inputs != null && _inputs.sprint && _inputs.move.sqrMagnitude > 0.01f &&
             (_stealth == null || !_stealth.IsCrouching) && !ToiletActive;
 
+        public bool Exhausted => _exhausted;
         public bool CanSprint => !_exhausted && !Overloaded && !ToiletActive;
 
         private void UpdateStamina(float dt)
@@ -174,6 +175,7 @@ namespace EndlessSurvival.Survival
                 if (ToiletNeglected) regen *= S.toiletNeglectStaminaRegen;
                 regen *= Mathf.Lerp(1f, 0.5f, ColdSeverity);
                 if (IsPoisoned || IsInfected) regen *= 0.7f;
+                regen *= SmokingAction.StaminaRegenMultiplier;
                 Stamina = Mathf.Min(MaxStamina, Stamina + regen * dt);
             }
             if (Stamina > MaxStamina) Stamina = MaxStamina;
@@ -262,7 +264,7 @@ namespace EndlessSurvival.Survival
             }
 
             if (!PlayerActive || SurvivalUIState.AnyOpen || !SKeys.Down(Key.P)) return;
-            if (_survival.Bladder < _survival.maxBladder * 0.2f)
+            if (!SurvivalTest.FreeResources && _survival.Bladder < _survival.maxBladder * 0.2f) // test mode: any time
             {
                 SurvivalNotify.Show("Şu an tuvalet ihtiyacın yok");
                 return;
@@ -337,7 +339,7 @@ namespace EndlessSurvival.Survival
             if (ToiletNeglected) mult *= S.toiletNeglectSpeed;
             mult *= Mathf.Lerp(1f, 0.85f, ColdSeverity);
             if (Fatigue > 85f) mult *= 0.9f;
-            if (ToiletActive) mult = 0f;
+            if (ToiletActive || PlayerSurvivalAnimator.LocksMovement) mult = 0f;
 
             float move = walk * mult;
             _tpc.MoveSpeed = move;

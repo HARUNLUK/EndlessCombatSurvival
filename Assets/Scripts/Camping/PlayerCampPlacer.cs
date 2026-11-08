@@ -155,7 +155,7 @@ namespace EndlessSurvival.Camping
             {
                 ItemDefinition wood = FindItemNamed("Item_Firewood");
                 if (wood == null) wood = FindItemNamed("ScrapMetal");
-                if (wood != null && _inventory.Storage.GetCount(wood) > 0)
+                if (!EndlessSurvival.Survival.SurvivalTest.FreeResources && wood != null && _inventory.Storage.GetCount(wood) > 0)
                 {
                     _inventory.Storage.Remove(wood, 1);
                 }
