@@ -8,7 +8,7 @@ namespace EndlessCombat.Combat.Editor
     public static class CombatAnimationSetup
     {
         private const string RifleIdleFbxPath = "Assets/Animations/Rifle Idle.fbx";
-        private const string ControllerPath = "Assets/Starter Assets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller";
+        private const string ControllerPath = "Assets/Animations/Character/CharacterAnimator.controller";
 
         static CombatAnimationSetup()
         {

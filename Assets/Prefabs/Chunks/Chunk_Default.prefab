@@ -906,7 +906,7 @@ MonoBehaviour:
   maxDetails: 300
   densityMultiplier: 3
   minRoadDistance: 15
-  maxRoadDistance: 238
+  maxRoadDistance: 490
   minTreeSpacing: 3.6
   campClearingRadius: 32
   caveClearingRadius: 38
@@ -944,8 +944,8 @@ MonoBehaviour:
     maxCliffHeight: 65
     minRampWidth: 18
     maxRampWidth: 38
-    minInnerEdge: 140
-    maxInnerEdge: 190
+    minInnerEdge: 300
+    maxInnerEdge: 400
     minRockSize: 14
     maxRockSize: 30
     rockSpacing: 22
@@ -961,8 +961,8 @@ MonoBehaviour:
   seasideRoadChance: 0.5
   shoreNearMin: 22
   shoreNearMax: 40
-  shoreFarMin: 120
-  shoreFarMax: 210
+  shoreFarMin: 250
+  shoreFarMax: 430
   minShoreSlope: 10
   maxShoreSlope: 70
   seabedDropDistance: 55
@@ -983,16 +983,16 @@ MonoBehaviour:
   mountainWallMaxRamp: 110
   hillsideMinDrop: 10
   hillsideMaxDrop: 14
-  hillsideFarStartMin: 140
-  hillsideFarStartMax: 190
+  hillsideFarStartMin: 300
+  hillsideFarStartMax: 400
   hillsideFarRise: 30
   ledgeWallMinFoot: 12
   ledgeWallMaxFoot: 20
   ledgeCliffShoulder: 1.2
   ledgeCliffDrop: 6
   canyonDepth: 60
-  ledgeFarWallMinX: 110
-  ledgeFarWallMaxX: 160
+  ledgeFarWallMinX: 220
+  ledgeFarWallMaxX: 330
   ledgeFarWallMinHeight: 40
   ledgeFarWallMaxHeight: 65
   canyonRiverChance: 0.5
@@ -1003,7 +1003,7 @@ MonoBehaviour:
   snowGroundColor: {r: 0.92, g: 0.94, b: 0.97, a: 1}
   mountainRockColor: {r: 0.42, g: 0.42, b: 0.44, a: 1}
   canyonRiverColor: {r: 0.16, g: 0.32, b: 0.38, a: 1}
-  lowlandEdgeWallDistance: 248
+  lowlandEdgeWallDistance: 498
 --- !u!114 &8740810787342245833
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1143,8 +1143,8 @@ MonoBehaviour:
   fenceCornWeight: 25
   streamWeight: 20
   ambientScale: 0.12
-  edgeWallDistance: 248
-  fenceLine: 150
+  edgeWallDistance: 498
+  fenceLine: 300
   postSpacing: 2.8
   fenceHeight: 1.4
   fenceGapChance: 0.06
@@ -1177,7 +1177,7 @@ MonoBehaviour:
   maxCornHeight: 2.9
   cornColor: {r: 0.42, g: 0.55, b: 0.18, a: 1}
   tasselColor: {r: 0.8, g: 0.7, b: 0.35, a: 1}
-  streamCenter: 175
+  streamCenter: 360
   streamMeander: 18
   streamBedHalfWidth: 3
   streamBankWidth: 6

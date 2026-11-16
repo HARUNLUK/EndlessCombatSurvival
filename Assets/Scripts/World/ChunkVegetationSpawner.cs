@@ -79,7 +79,14 @@ namespace EndlessSurvival.World
         public float minRoadDistance = 15f;
 
         [Tooltip("Maximum distance from road centerline.")]
-        public float maxRoadDistance = 238f;
+        public float maxRoadDistance = 490f;
+
+        [Tooltip("Yakın bant: ağaçların çoğu yola bu mesafeye kadar (eski 500 m chunk yoğunluğu)")]
+        public float nearBandDistance = 240f;
+        [Range(0f, 0.8f)] [Tooltip("Ağaçların yakın bandın dışına (chunk kenarına kadar, seyrek) düşen payı")]
+        public float farBandShare = 0.3f;
+        [Tooltip("Geniş chunk için ağaç ve detay sayısı çarpanı (yakın bant yoğunluğu korunsun diye)")]
+        public float wideCountScale = 1.4f;
 
         [Tooltip("Minimum spacing between spawned trees to prevent overlap")]
         public float minTreeSpacing = 3.6f;
@@ -104,6 +111,8 @@ namespace EndlessSurvival.World
         public const string CONTAINER_NAME = "Vegetation_Container";
         private ChunkBoundaryGenerator _boundary;
         private float _densityScale = 1f;
+        private Chunk _transitionChunk;                  // set while spawning a type's first chunk (tree fade)
+        private Chunk _sideRoadChunk;                    // chunk whose side roads trees keep off
         private float _foothillLowSign;                 // foothills: lowland side (-1/+1), 0 otherwise
         private FoothillLowland _foothillLowland;
         private float _foothillUphillDensity = 1f;      // share of trees kept on the mountain side
@@ -267,6 +276,7 @@ namespace EndlessSurvival.World
             Chunk chunk = GetComponent<Chunk>();
             if (chunk == null) chunk = GetComponentInParent<Chunk>();
             _boundary = chunk != null ? chunk.GetComponent<ChunkBoundaryGenerator>() : null;
+            _sideRoadChunk = chunk;
 
             // In TerrainTrees mode, completely eradicate any Vegetation_Container! Everything is on the Terrain!
             if (renderMode == VegetationRenderMode.TerrainTrees)
@@ -306,7 +316,11 @@ namespace EndlessSurvival.World
             bool alpine = chunk != null && chunk.mountainVariant == MountainVariant.Alpine;
             float mountainDensity = alpine ? alpineMountainDensity : snowyMountainDensity;
             bool mountainForest = chunk != null && chunk.IsMountain && targetBiome == ChunkBiomeType.Forest && mountainDensity > 0f;
-            if (chunk != null && chunk.biomeType != targetBiome && !coastForest && !mountainForest)
+            // Transition chunk of a desert run after a wooded run: the forest thins out into it (TreeTransitionKeep)
+            bool transitionForest = chunk != null && targetBiome == ChunkBiomeType.Forest && chunk.IsTransitionChunk
+                                    && Chunk.IsThemedBiome(chunk.biomeType) && Chunk.HasForestTrees(chunk.prevBiome);
+            _transitionChunk = chunk != null && chunk.IsTransitionChunk && targetBiome == ChunkBiomeType.Forest ? chunk : null;
+            if (chunk != null && chunk.biomeType != targetBiome && !coastForest && !mountainForest && !transitionForest)
             {
                 // Terrain trees live in TerrainData, which starts as a copy of the prefab asset (and edit-mode
                 // previews write their trees into that asset), so clear them explicitly, e.g. on Field chunks
@@ -318,7 +332,7 @@ namespace EndlessSurvival.World
                 }
                 return;
             }
-            _densityScale = coastForest ? coastDensityMultiplier : mountainForest ? mountainDensity : 1f;
+            _densityScale = coastForest ? coastDensityMultiplier : mountainForest ? mountainDensity : transitionForest ? 0.8f : 1f;
             _seaFloorY = chunk != null && chunk.HasSea
                 ? chunk.transform.position.y + WorldConstants.SeaLevel + beachClearHeight
                 : float.NegativeInfinity;
@@ -378,7 +392,7 @@ namespace EndlessSurvival.World
                 // A) TREES ON TERRAIN
                 if (treePrefabs != null && treePrefabs.Length > 0)
                 {
-                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
+                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale * wideCountScale);
                     int maxAttempts = treeCount * 5;
                     int spawned = 0;
 
@@ -414,7 +428,7 @@ namespace EndlessSurvival.World
                 // B) DETAIL PROPS (ROCKS & BUSHES) ON TERRAIN
                 if (detailPrefabs != null && detailPrefabs.Length > 0)
                 {
-                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
+                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale * wideCountScale);
                     int maxAttempts = detailCount * 4;
                     int spawned = 0;
                     int detailProtoOffset = treePrefabs != null ? treePrefabs.Length : 0;
@@ -482,7 +496,7 @@ namespace EndlessSurvival.World
 
                 if (treePrefabs != null && treePrefabs.Length > 0)
                 {
-                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
+                    int treeCount = Mathf.RoundToInt(rng.Range(minTrees, maxTrees + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale * wideCountScale);
                     int maxAttempts = treeCount * 5;
                     int spawned = 0;
 
@@ -502,7 +516,7 @@ namespace EndlessSurvival.World
 
                 if (detailPrefabs != null && detailPrefabs.Length > 0)
                 {
-                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale);
+                    int detailCount = Mathf.RoundToInt(rng.Range(minDetails, maxDetails + 1) * Mathf.Max(0.1f, densityMultiplier) * _densityScale * wideCountScale);
                     int maxAttempts = detailCount * 4;
                     int spawned = 0;
 
@@ -677,16 +691,23 @@ namespace EndlessSurvival.World
             // Choose Left or Right side of the road
             float side = rng.Value < 0.5f ? -1f : 1f;
 
-            // Lateral offset from road centerline
-            float lateralDist = rng.Range(effectiveMinRoadDist, maxRoadDistance);
+            // Lateral offset from road centerline: most trees stay in the near band (as dense as the old 500 m chunk),
+            // the rest thin out toward the wide chunk's edges
+            float nearMax = Mathf.Clamp(nearBandDistance, effectiveMinRoadDist + 1f, maxRoadDistance);
+            float lateralDist = maxRoadDistance > nearMax && rng.Value < farBandShare
+                ? rng.Range(nearMax, maxRoadDistance)
+                : rng.Range(effectiveMinRoadDist, nearMax);
             Vector3 candidatePos = roadCenter + roadRight * side * lateralDist;
 
             // Bounds check inside the 500x500 chunk area (-245 to +245 in local coords)
             Vector3 localToChunk = transform.InverseTransformPoint(candidatePos);
-            if (Mathf.Abs(localToChunk.x) > 245f || localToChunk.z < 5f || localToChunk.z > 495f)
+            if (Mathf.Abs(localToChunk.x) > Chunk.HalfWidth - 5f || localToChunk.z < 5f || localToChunk.z > 495f)
             {
                 return false;
             }
+
+            // Side roads (streets, tracks) stay clear
+            if (_sideRoadChunk != null && _sideRoadChunk.NearSideRoad(candidatePos, 2.5f)) return false;
 
             if (_boundary != null)
             {
@@ -742,6 +763,13 @@ namespace EndlessSurvival.World
             if (candidatePos.y < _seaFloorY || candidatePos.y > _treeLineY)
             {
                 return false;
+            }
+
+            // Transition from / into a treeless desert run: the forest grows or thins along the chunk
+            if (_transitionChunk != null)
+            {
+                float keep = _transitionChunk.TreeTransitionKeep(candidatePos);
+                if (keep < 0.999f && rng.Value > keep) return false;
             }
 
             if (_foothillLowSign != 0f)

@@ -26,6 +26,15 @@ namespace EndlessSurvival.World
                  "Özel chunk'ın Allowed Types listesi boşsa bu ayar belirler; listede bu tip açıkça varsa yine de gelebilir.")]
         public bool allowSpecialChunks = true;
 
+        [Header("Komşular (tip sırası)")]
+        [Tooltip("Bu tipten sonra / önce gelebilecek tipler. Boş = her tip. Kural iki yönlü: iki tip ancak ikisinin listesi de " +
+                 "(boş değilse) birbirini içeriyorsa art arda gelir. Örn. Çorak Arazi sadece Düzlük ve Dağ Eteği ile komşu olur.")]
+        public System.Collections.Generic.List<ChunkTypeProfile> neighbours = new System.Collections.Generic.List<ChunkTypeProfile>();
+
+        [Tooltip("Açıksa bu tip kendi başına bölüm olmaz; uygun bir bölümün (Ev Sahibi Tipler) ortasına 1-2 chunk'lık yerleşim " +
+                 "olarak girer. Arazi, renk ve arka plan ev sahibi bölümünkü kalır; bu profilden sadece Yerleşim ayarları alınır.")]
+        public InsetSettings inset = new InsetSettings();
+
         [Header("Yol")]
         [Tooltip("Eğim (tepe/vadi) ihtimalleri ve yükseklik sınırları")]
         public ChunkElevationConfig elevationConfig = new ChunkElevationConfig();
@@ -42,6 +51,14 @@ namespace EndlessSurvival.World
         [Tooltip("Açıksa tip Nehir Vadisi'dir: yolun yanında yolla birlikte akan geniş bir nehir, ara sıra köprüyle karşıya geçiş")]
         public RiverValleySettings riverValley = new RiverValleySettings();
 
+        [Header("Yerleşim (kasaba / mola yeri)")]
+        [Tooltip("Yol kenarına kurulan yerleşim. Düzeni sabit değil, her chunk kendi seed'inden yeniden kurar.")]
+        public SettlementSettings settlement = new SettlementSettings();
+
+        [Header("Yan Yollar (ana yoldan ayrılan sokak / toprak yol)")]
+        [Tooltip("Ana yol düz devam eder; bu tipte ana yoldan sağa sola ayrılan yollar. Sonları çoğunlukla boş, bazen bina.")]
+        public SideRoadSettings sideRoads = new SideRoadSettings();
+
         [Header("Kenar (uçurum / kayalar)")]
         public BiomeBoundarySettings boundary = new BiomeBoundarySettings();
 
@@ -57,6 +74,17 @@ namespace EndlessSurvival.World
         public bool IsMountain => biome == ChunkBiomeType.Mountain;
         public bool IsFoothill => IsMountain && mountainSettings != null && mountainSettings.foothills;
         public bool IsRiverValley => biome == ChunkBiomeType.Forest && riverValley != null && riverValley.enabled;
+        /// <summary>Inset-only type (town, rest stop): never a run of its own.</summary>
+        public bool IsInset => inset != null && inset.enabled;
+
+        /// <summary>May a run of this type be followed (or preceded) by a run of <paramref name="other"/>? Both lists must agree.</summary>
+        public bool AllowsNeighbour(ChunkTypeProfile other)
+        {
+            if (other == null) return true;
+            bool mine = neighbours == null || neighbours.Count == 0 || neighbours.Contains(other);
+            bool theirs = other.neighbours == null || other.neighbours.Count == 0 || other.neighbours.Contains(this);
+            return mine && theirs;
+        }
 
         /// <summary>Backdrop look for a mountain sub-type (alpine mountains have their own).</summary>
         public BiomeBackdropSettings BackdropFor(MountainVariant variant)

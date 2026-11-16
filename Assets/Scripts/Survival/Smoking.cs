@@ -96,7 +96,7 @@ namespace EndlessSurvival.Survival
                 if (_health != null) _health.Damaged += OnDamaged;
             }
             ShowHandModel(player);
-            SurvivalNotify.Show("Sigara yakıldı (hareket edersen söner)");
+            SurvivalNotify.Show("Sigara yakıldı (yürüyebilirsin; koşarsan söner)");
             return null;
         }
 
@@ -133,12 +133,20 @@ namespace EndlessSurvival.Survival
             var vitals = PlayerVitals.Instance;
             if (vitals != null && vitals.Panicking) { Stop("Panik! Sigara elinden düştü"); return; }
 
-            var inputs = player.GetComponent<StarterAssets.StarterAssetsInputs>();
-            if (inputs != null && !SurvivalUIState.AnyOpen && (inputs.move.sqrMagnitude > 0.04f || inputs.jump))
+            var inputs = player.GetComponent<EndlessCombat.Character.PlayerInputState>();
+            // Walking is fine (only the arms smoke); running, jumping or a fight puts it out.
+            // Without the upper body layer the clip is full body and any move still ends it.
+            bool upperOnly = PlayerSurvivalAnimator.Instance != null && PlayerSurvivalAnimator.CurrentAction != SurvAnim.Smoke;
+            if (inputs != null && !SurvivalUIState.AnyOpen)
             {
-                Stop("Hareket ettin, sigara söndü");
-                return;
+                bool moving = inputs.move.sqrMagnitude > 0.04f;
+                if (inputs.jump || (moving && (!upperOnly || inputs.sprint)))
+                {
+                    Stop(upperOnly ? "Koştun, sigara söndü" : "Hareket ettin, sigara söndü");
+                    return;
+                }
             }
+            if (EndlessCombat.Combat.CombatBody.PlayerLocked) { Stop("Sigara elinden düştü"); return; }
 
             _dangerCheck -= Time.deltaTime;
             if (_dangerCheck <= 0f)
@@ -195,12 +203,41 @@ namespace EndlessSurvival.Survival
 
             _handModel = new GameObject("Cigarette (placeholder)");
             _handModel.transform.SetParent(hand, false);
-            _handModel.transform.localPosition = new Vector3(0f, 0.02f, 0.01f);
-            _handModel.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            // Placed every frame between the index and middle finger (CigaretteHold below); the old fixed offset in
+            // the finger bone's own space sat beside the hand.
+            _handModel.AddComponent<CigaretteHold>().animator = animator;
 
             var body = Primitive(PrimitiveType.Cylinder, _handModel.transform, new Vector3(0.009f, 0.035f, 0.009f), Vector3.zero, new Color(0.95f, 0.93f, 0.88f), false);
             Primitive(PrimitiveType.Sphere, _handModel.transform, new Vector3(0.011f, 0.011f, 0.011f), new Vector3(0f, 0.036f, 0f), new Color(1f, 0.45f, 0.1f), true);
             if (body == null) HideHandModel();
+        }
+
+        /// <summary>
+        /// Keeps the cigarette between the right index and middle finger, across the fingers: filter on the palm
+        /// side (the side that goes to the mouth), ember on the back of the hand. Read from the bones after the
+        /// animation, so it works on any humanoid rig.
+        /// </summary>
+        private class CigaretteHold : MonoBehaviour
+        {
+            public Animator animator;
+
+            private void LateUpdate()
+            {
+                if (animator == null) return;
+                Transform hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+                Transform indexBase = animator.GetBoneTransform(HumanBodyBones.RightIndexProximal);
+                Transform middleBase = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
+                Transform littleBase = animator.GetBoneTransform(HumanBodyBones.RightLittleProximal);
+                Transform index = animator.GetBoneTransform(HumanBodyBones.RightIndexIntermediate) ?? indexBase;
+                Transform middle = animator.GetBoneTransform(HumanBodyBones.RightMiddleIntermediate) ?? middleBase;
+                if (hand == null || indexBase == null || middleBase == null || littleBase == null) return;
+
+                Vector3 fingers = (middleBase.position - hand.position).normalized;
+                Vector3 knuckles = (indexBase.position - littleBase.position).normalized;
+                Vector3 palm = Vector3.Cross(fingers, knuckles).normalized; // the way the right palm faces
+                Vector3 between = (index.position + middle.position) * 0.5f;
+                transform.SetPositionAndRotation(between + palm * 0.012f, Quaternion.FromToRotation(Vector3.up, -palm));
+            }
         }
 
         private static readonly System.Collections.Generic.Dictionary<Color, Material> Materials = new System.Collections.Generic.Dictionary<Color, Material>();

@@ -63,7 +63,7 @@ namespace EndlessSurvival.EditorTools
             if (walkClip == null) walkClip = idleClip;
 
             // 3. Animator Controller'ı Aç ve Entegre Et
-            string controllerPath = "Assets/Starter Assets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller";
+            string controllerPath = "Assets/Animations/Character/CharacterAnimator.controller";
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
 
             if (controller == null)

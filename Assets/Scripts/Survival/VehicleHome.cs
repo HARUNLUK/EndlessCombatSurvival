@@ -54,8 +54,20 @@ namespace EndlessSurvival.Survival
             if (w != null && w.RainIntensity > 0.05f && Has(VehicleModType.RainTarp) && Has(VehicleModType.WaterTank))
                 TankWater = Mathf.Min(TankCapacity, TankWater + w.RainIntensity * 4f * GameClock.DeltaHours);
 
+            // Dew collector: morning coolness fills the tank when it does not rain
+            var cycle = DayNightCycle.Instance;
+            if (cycle != null && Has(VehicleModType.DewCollector) && Has(VehicleModType.WaterTank)
+                && cycle.CurrentHour >= DewStartHour && cycle.CurrentHour < DewEndHour
+                && (w == null || w.RainIntensity <= 0.05f))
+                TankWater = Mathf.Min(TankCapacity, TankWater + DewLitersPerHour * GameClock.DeltaHours);
+
             ApplyGrip(w);
         }
+
+        // Dew collector settings
+        private const float DewStartHour = 5f;
+        private const float DewEndHour = 8.5f;
+        private const float DewLitersPerHour = 1.2f;
 
         private void ApplyGrip(WeatherSystem w)
         {
@@ -152,8 +164,7 @@ namespace EndlessSurvival.Survival
                 var survival = player.GetComponent<PlayerSurvival>();
                 if (survival != null)
                 {
-                    survival.Eat(-10f);
-                    survival.Drink(-12f);
+                    survival.Spend(10f, 12f); // the night costs a little food and water
                 }
             }
             return ambushed ? "Uykun bölündü: araç kuşatıldı!" : $"Araçta uyudun. {result.summary}";
@@ -315,6 +326,7 @@ namespace EndlessSurvival.Survival
             if (!_partsTaken)
             {
                 _partsTaken = true;
+                PlayerSurvivalAnimator.PlayOneShot(SurvAnim.Work, 2.5f);
                 var toolkit = s.Item("Item_ToolKit");
                 bool hasTools = SurvivalTest.FreeResources || toolkit != null && user.Storage.GetCount(toolkit) > 0;
                 int bonus = UnityEngine.Random.value < StatSettings.Instance.mechanicsSaveMaterialChance * CharacterStats.Frac(StatType.Mechanics) ? 1 : 0;

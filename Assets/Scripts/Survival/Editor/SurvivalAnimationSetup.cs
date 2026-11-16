@@ -19,7 +19,7 @@ namespace EndlessSurvival.Survival.Editor
     public static class SurvivalAnimationSetup
     {
         private const string Dir = "Assets/Animations/Survival";
-        private const string PlayerControllerPath = "Assets/Starter Assets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller";
+        private const string PlayerControllerPath = "Assets/Animations/Character/CharacterAnimator.controller";
         private const string TraderControllerPath = Dir + "/TraderNPC.controller";
         private const string TraderPrefabDir = "Assets/Prefabs/Survival";
         private const string TraderPrefabPath = TraderPrefabDir + "/TraderNPC.prefab";
@@ -51,7 +51,7 @@ namespace EndlessSurvival.Survival.Editor
             { "Fishing Cast (second half reeling)", new[] { new ClipSpec(SurvivalAnimClips.FishCast, 0f, 0.5f, false), new ClipSpec(SurvivalAnimClips.FishReel, 0.5f, 1f, false) } },
             { "Fishing Idle", new[] { new ClipSpec(SurvivalAnimClips.FishIdle, 0f, 1f, true) } },
             { "Gathering Objects", new[] { new ClipSpec(SurvivalAnimClips.Gather, 0f, 1f, false) } },
-            { "Kneel to Fire", new[] { new ClipSpec(SurvivalAnimClips.KneelFire, 0f, 1f, false, 0f, true) } },
+            { "Kneel to Fire", new[] { new ClipSpec(SurvivalAnimClips.KneelFire, 0f, 1f, false, 0f, true), new ClipSpec(SurvivalAnimClips.KneelHold, 0.32f, 0.55f, true) } },
             { "Laying Sleeping", new[] { new ClipSpec(SurvivalAnimClips.Sleep, 0f, 1f, true, 0f, true) } },
             { "Breathing Idle", new[] { new ClipSpec(SurvivalAnimClips.Breath, 0f, 1f, true) } },
             { "Walking and carry heavy", new[] { new ClipSpec(SurvivalAnimClips.HeavyWalk, 0f, 1f, true) } },
@@ -80,6 +80,9 @@ namespace EndlessSurvival.Survival.Editor
             (SurvAnim.Breath, SurvivalAnimClips.Breath),
             (SurvAnim.HeavyWalk, SurvivalAnimClips.HeavyWalk),
             (SurvAnim.Smoke, SurvivalAnimClips.Smoke),
+            (SurvAnim.KneelHold, SurvivalAnimClips.KneelHold),
+            (SurvAnim.PickUp, SurvivalAnimClips.PickUp),
+            (SurvAnim.Work, SurvivalAnimClips.Work),
             (SurvAnim.Death, SurvivalAnimClips.NpcDeath),
         };
 
@@ -101,7 +104,10 @@ namespace EndlessSurvival.Survival.Editor
         private static void Run()
         {
             Log.Clear();
-            FixOtherMixamoFiles();
+            // Not for the older clips in Assets/Animations (rifle, sitting): the rifle hold, weapon grip and aim code
+            // are tuned to Unity's own T-pose guess there. Writing the real rest pose lowered the rifle to the hips
+            // and took the left hand off the handguard (2026-11-09). Leave those imports as they are.
+            // FixOtherMixamoFiles();
             var clips = ImportClips();
             foreach (var controller in HumanoidControllers()) BuildLayer(controller, clips);
             var traderController = BuildTraderController(clips);
@@ -181,7 +187,51 @@ namespace EndlessSurvival.Survival.Editor
                     Log.Add($"Clip {spec.name}: {clip.length:0.00}s{(spec.loop ? " loop" : "")} (from '{pair.Key}', source {total / fps:0.00}s)");
                 }
             }
+            CopyPackClips(result);
             return result;
+        }
+
+        // Clips from the bought animation packs (proper rigs, no Mixamo T-pose problem). The pack FBX importers are not
+        // touched (the melee setup uses the same packs); the clip is copied into Assets/Animations/Survival under our name.
+        private static readonly (string name, string path, bool loop, bool feet)[] PackClips =
+        {
+            (SurvivalAnimClips.PickUp, "Assets/Kevin Iglesias/Human Animations/Animations/Male/Work/Gathering/HumanM@Gathering02.fbx", true, true), // squat, both hands to the ground (the VanillaLoopStudio lift clip retargeted badly: body tipped 70° forward)
+            (SurvivalAnimClips.Work, "Assets/Kevin Iglesias/Human Animations/Animations/Male/Work/Hammering/HumanM@HammeringGround01_R - Loop.fbx", true, true),
+        };
+
+        private static void CopyPackClips(Dictionary<string, AnimationClip> result)
+        {
+            foreach (var (name, path, loop, feet) in PackClips)
+            {
+                var src = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+                if (src == null) { Log.Add("Pack clip missing: " + path); continue; }
+                if (!src.humanMotion) { Log.Add($"Pack clip not humanoid, skipped: {path}"); continue; }
+                string dst = $"{Dir}/{name}.anim";
+                var copy = Object.Instantiate(src);
+                copy.name = name;
+                var settings = AnimationUtility.GetAnimationClipSettings(copy);
+                settings.loopTime = loop;
+                settings.loopBlend = loop;
+                settings.loopBlendOrientation = true;
+                settings.keepOriginalOrientation = true;
+                settings.heightFromFeet = feet; // kneeling / squatting: stay on the ground
+                settings.keepOriginalPositionY = !feet;
+                settings.loopBlendPositionY = true; // bake height into the pose (root motion is off)
+                AnimationUtility.SetAnimationClipSettings(copy, settings);
+
+                var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(dst);
+                if (existing != null)
+                {
+                    EditorUtility.CopySerialized(copy, existing); // keep the asset GUID: controller references stay valid
+                    existing.name = name;
+                    Object.DestroyImmediate(copy);
+                    copy = existing;
+                    EditorUtility.SetDirty(copy);
+                }
+                else AssetDatabase.CreateAsset(copy, dst);
+                result[name] = copy;
+                Log.Add($"Clip {name}: {copy.length:0.00}s{(loop ? " loop" : "")} (copied from pack '{Path.GetFileName(path)}')");
+            }
         }
 
         // ---------------- avatar T-pose ----------------
@@ -284,12 +334,23 @@ namespace EndlessSurvival.Survival.Editor
             if (!controller.parameters.Any(p => p.name == SurvivalAnimLayer.Param))
                 controller.AddParameter(SurvivalAnimLayer.Param, AnimatorControllerParameterType.Int);
 
+            int oldIndex = -1;
             for (int i = controller.layers.Length - 1; i >= 0; i--)
-                if (controller.layers[i].name == SurvivalAnimLayer.LayerName) controller.RemoveLayer(i);
+                if (controller.layers[i].name == SurvivalAnimLayer.LayerName) { controller.RemoveLayer(i); oldIndex = i; }
 
             controller.AddLayer(SurvivalAnimLayer.LayerName);
             var layers = controller.layers;
             int index = layers.Length - 1;
+            // Keep the old place in the layer order (the melee combat layers come after it)
+            if (oldIndex >= 0 && oldIndex < index)
+            {
+                var list = layers.ToList();
+                var mine = list[index];
+                list.RemoveAt(index);
+                list.Insert(oldIndex, mine);
+                layers = list.ToArray();
+                index = oldIndex;
+            }
             layers[index].avatarMask = null; // full body
             layers[index].defaultWeight = 0f;
             layers[index].blendingMode = AnimatorLayerBlendingMode.Override;

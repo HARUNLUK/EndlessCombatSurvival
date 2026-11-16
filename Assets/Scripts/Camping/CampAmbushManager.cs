@@ -145,6 +145,7 @@ namespace EndlessSurvival.Camping
         public void TriggerAmbush(Vector3 campPosition)
         {
             if (IsAmbushActive) return;
+            if (EndlessSurvival.Survival.SafeZone.Near(campPosition)) return; // nobody raids a camp inside a Safe Zone
 
             _currentCampPosition = campPosition;
             IsAmbushActive = true;
@@ -154,6 +155,8 @@ namespace EndlessSurvival.Camping
             Vector3 playerPos = player != null ? player.transform.position : campPosition;
 
             int count = Random.Range(minEnemies, maxEnemies + 1);
+            // Early game: a new character is never raided by more than a couple of people
+            count = EndlessSurvival.Survival.DifficultyCurve.CapHumans(count);
             float baseAngle = Random.Range(0f, 360f);
 
             for (int i = 0; i < count; i++)

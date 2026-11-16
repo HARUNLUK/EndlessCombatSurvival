@@ -17,6 +17,8 @@ namespace EndlessCombat.Combat
     {
         public const string RifleLayerName = "UpperBody ";
         public const string PistolLayerName = "PistolUpperBody";
+        /// <summary>Left arm of the pistol clips: weighted in only for the two handed grip (PistolOneHandSetup).</summary>
+        public const string PistolLeftArmLayerName = "PistolLeftArm";
         public const string MeleeLayerName = "MeleeUpperBody";
         public const string AimPitchParam = "AimPitch";
         public const string ActionLayerName = "Actions";
@@ -43,6 +45,9 @@ namespace EndlessCombat.Combat
         private int _pistolLayer = -1;
         private int _actionLayer = -1;
         private int _meleeLayer = -1;
+        private int _pistolLeftLayer = -1;
+        private float _pistolLeftWeight;
+        private bool _pistolTwoHand;
         private bool _hasAimPitch;
         private float _rifleWeight;
         private float _pistolWeight;
@@ -50,6 +55,7 @@ namespace EndlessCombat.Combat
         private float _actionWeight;
         private float _actionUntil = -1f;
         private WeaponType _type = WeaponType.Rifle;
+        private bool _pistolRaised = true; // enemies never change it: their pistol layer stays up as before
         private bool _initialized;
 
         public Animator Animator => _animator;
@@ -83,6 +89,7 @@ namespace EndlessCombat.Combat
             _pistolLayer = _animator.GetLayerIndex(PistolLayerName);
             _actionLayer = _animator.GetLayerIndex(ActionLayerName);
             _meleeLayer = _animator.GetLayerIndex(MeleeLayerName);
+            _pistolLeftLayer = _animator.GetLayerIndex(PistolLeftArmLayerName);
             foreach (var p in _animator.parameters)
             {
                 if (p.name == AimPitchParam && p.type == AnimatorControllerParameterType.Float) _hasAimPitch = true;
@@ -97,11 +104,26 @@ namespace EndlessCombat.Combat
             _type = type;
         }
 
+        /// <summary>
+        /// Pistol only: false lets the PistolUpperBody layer fade out, so the normal locomotion arms play and the
+        /// pistol just hangs in the right hand. The player raises it while aiming / firing / reloading.
+        /// </summary>
+        public void SetPistolRaised(bool raised)
+        {
+            _pistolRaised = raised;
+        }
+
+        /// <summary>Pistol grip: false (default) = fired with one hand, the left arm stays free; true = both hands on the gun.</summary>
+        public void SetPistolTwoHanded(bool twoHand) => _pistolTwoHand = twoHand;
+
+        private float PistolTarget => _type == WeaponType.Pistol && _pistolRaised ? 1f : 0f;
+
         /// <summary>Snaps the layer weights to the current weapon type (used right after spawning).</summary>
         public void SnapWeights()
         {
             _rifleWeight = _type == WeaponType.Rifle ? 1f : 0f;
-            _pistolWeight = _type == WeaponType.Pistol ? 1f : 0f;
+            _pistolWeight = PistolTarget;
+            _pistolLeftWeight = _pistolTwoHand ? _pistolWeight : 0f;
             _meleeWeight = _type == WeaponType.Melee ? 1f : 0f;
             Apply();
         }
@@ -142,7 +164,8 @@ namespace EndlessCombat.Combat
 
             float dt = Time.deltaTime;
             _rifleWeight = Mathf.MoveTowards(_rifleWeight, _type == WeaponType.Rifle ? 1f : 0f, dt * layerBlendSpeed);
-            _pistolWeight = Mathf.MoveTowards(_pistolWeight, _type == WeaponType.Pistol ? 1f : 0f, dt * layerBlendSpeed);
+            _pistolWeight = Mathf.MoveTowards(_pistolWeight, PistolTarget, dt * layerBlendSpeed);
+            _pistolLeftWeight = Mathf.MoveTowards(_pistolLeftWeight, _pistolTwoHand ? _pistolWeight : 0f, dt * layerBlendSpeed);
             _meleeWeight = Mathf.MoveTowards(_meleeWeight, _type == WeaponType.Melee ? 1f : 0f, dt * layerBlendSpeed);
             _actionWeight = Mathf.MoveTowards(_actionWeight, IsActionPlaying ? 1f : 0f, dt * actionBlendSpeed);
             Apply();
@@ -153,6 +176,7 @@ namespace EndlessCombat.Combat
             if (_animator == null) return;
             if (_rifleLayer >= 0) _animator.SetLayerWeight(_rifleLayer, _rifleWeight);
             if (_pistolLayer >= 0) _animator.SetLayerWeight(_pistolLayer, _pistolWeight);
+            if (_pistolLeftLayer >= 0) _animator.SetLayerWeight(_pistolLeftLayer, Mathf.Min(_pistolLeftWeight, _pistolWeight));
             if (_meleeLayer >= 0) _animator.SetLayerWeight(_meleeLayer, _meleeWeight);
             if (_actionLayer >= 0) _animator.SetLayerWeight(_actionLayer, _actionWeight);
         }

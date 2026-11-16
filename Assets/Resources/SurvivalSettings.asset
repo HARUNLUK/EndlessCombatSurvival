@@ -31,6 +31,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8af1b786adaf5714a97671cd785c1573, type: 2}
   - {fileID: 11400000, guid: 392fb1168ab0a064792911cc9aa76e9c, type: 2}
   - {fileID: 11400000, guid: 99d7feccc63423c42935dee1baf496f6, type: 2}
+  - {fileID: 11400000, guid: df2b4b04662cc3840943c6b5061bbd8f, type: 2}
   - {fileID: 11400000, guid: c7e2b2e21ab812e418973ae2824989f0, type: 2}
   - {fileID: 11400000, guid: 03ea9cbe1b42c9444a05bad308508d77, type: 2}
   - {fileID: 11400000, guid: f517d26bccf3ed342a5398a051871c72, type: 2}
@@ -84,6 +85,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7234b7896604d9d49b25eefb62f3cdb7, type: 2}
   - {fileID: 11400000, guid: f1521b16012f08745bf36031a3e973d9, type: 2}
   - {fileID: 11400000, guid: 9a988e12f6d7a124a8695fb75d868321, type: 2}
+  - {fileID: 11400000, guid: 6aeb4fc439dd3e042b3d3539e0a205fc, type: 2}
+  - {fileID: 11400000, guid: 2c9268ffab1afbd40ba9843e81fa5f86, type: 2}
   recipes:
   - {fileID: 11400000, guid: 34015f7e441e50e4f968fc3289f16be8, type: 2}
   - {fileID: 11400000, guid: 145443fa0958980418ddbfbf1579d4a5, type: 2}
@@ -124,6 +127,7 @@ MonoBehaviour:
   houseLoot: {fileID: 11400000, guid: 18b1d83dd669b4e4283ba86185326f71, type: 2}
   gasStationLoot: {fileID: 11400000, guid: dbbae579eaae3a34bbd34bb8bf7ca6a4, type: 2}
   wreckLoot: {fileID: 11400000, guid: bf164bd5f4d33b648b1503d49ea48367, type: 2}
+  corpseLoot: {fileID: 11400000, guid: c695a741898ba9b4b91cb9fd935f1536, type: 2}
   traderStock:
   - {fileID: 11400000, guid: c291f8490d7c5944ca33027e6dd372e0, type: 2}
   - {fileID: 11400000, guid: 37543bc3acfe8764ebcd26e5ae31cad4, type: 2}
@@ -151,6 +155,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2e6d356ec6050a74085532f141941a79, type: 2}
   - {fileID: 11400000, guid: 60a63b3d768ff134ca9d390f5b956678, type: 2}
   - {fileID: 11400000, guid: 99d7feccc63423c42935dee1baf496f6, type: 2}
+  - {fileID: 11400000, guid: df2b4b04662cc3840943c6b5061bbd8f, type: 2}
+  - {fileID: 11400000, guid: 6aeb4fc439dd3e042b3d3539e0a205fc, type: 2}
+  - {fileID: 11400000, guid: 2c9268ffab1afbd40ba9843e81fa5f86, type: 2}
   traderModelPrefab: {fileID: 2573135521476883086, guid: cc54dbe59a66936438b539bdd63b118c, type: 3}
   maxStamina: 100
   sprintDrainPerSecond: 11
@@ -178,6 +185,18 @@ MonoBehaviour:
   smokeStaminaRegenPenalty: 0.15
   smokeStaminaPenaltyGameMinutes: 10
   smokeDangerRadius: 18
+  binoZoomMin: 4
+  binoZoomMax: 8
+  binoBaseFov: 60
+  binoMoveSpeed: 0.35
+  binoSwayDegrees: 0.18
+  binoMarkSeconds: 1.5
+  binoMarkLifetime: 30
+  binoMaxRange: 450
+  binoGlintRange: 60
+  binoGlintSuspicionPerSecond: 4
+  binoGlintMaxSuspicion: 45
+  binoGlintSunAngle: 70
   hardLimitMultiplier: 1.5
   overloadSpeedAtHardLimit: 0.6
   carryPerStrength: 0.25

@@ -12,3 +12,23 @@ namespace EndlessCombat.Combat
         Melee = 3
     }
 }
+
+namespace EndlessCombat.Combat
+{
+    /// <summary>Ammunition used by a firearm (same numbers as EndlessSurvival.Inventory.AmmoType).</summary>
+    public enum AmmoKind
+    {
+        None = 0,
+        Pistol = 1,
+        Rifle = 2,
+        Shotgun = 3
+    }
+
+    /// <summary>Shared rounds of the player, one pool per ammo kind. Player firearms reload from it.</summary>
+    public interface IAmmoPool
+    {
+        int Count(AmmoKind kind);
+        int Take(AmmoKind kind, int amount);
+        void Add(AmmoKind kind, int amount);
+    }
+}

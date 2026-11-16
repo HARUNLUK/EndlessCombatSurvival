@@ -39,7 +39,21 @@ namespace EndlessSurvival.Survival
                 _effective[i] = s.startValue;
                 _reasons[i] = new List<StatCondition>();
             }
+
+            // The base values belong to the character: a new journey starts with what earlier journeys trained
+            var kept = EndlessSurvival.Save.CharacterProfiles.Current?.stats;
+            if (kept != null)
+            {
+                for (int i = 0; i < StatCount && i < kept.Length; i++)
+                {
+                    _base[i] = Mathf.Max(_base[i], kept[i]);
+                    _effective[i] = _base[i];
+                }
+            }
         }
+
+        /// <summary>Copy of the base values in StatType order (stored on the character profile).</summary>
+        public float[] BaseValues() => (float[])_base.Clone();
 
         private void OnEnable()
         {
@@ -256,8 +270,9 @@ namespace EndlessSurvival.Survival
             if (d?.values == null) return;
             for (int i = 0; i < StatCount && i < d.values.Length; i++)
             {
-                _base[i] = d.values[i];
-                _effective[i] = d.values[i];
+                // Base values never go down: the character profile may already hold more than this journey file
+                _base[i] = Mathf.Max(_base[i], d.values[i]);
+                _effective[i] = _base[i];
             }
         }
     }

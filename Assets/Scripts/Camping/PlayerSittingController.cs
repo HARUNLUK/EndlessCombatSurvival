@@ -1,5 +1,4 @@
 using UnityEngine;
-using StarterAssets;
 
 namespace EndlessSurvival.Camping
 {
@@ -10,8 +9,8 @@ namespace EndlessSurvival.Camping
         public KeyCode sitToggleKey = KeyCode.C;
 
         private Animator _animator;
-        private ThirdPersonController _controller;
-        private StarterAssetsInputs _inputs;
+        private EndlessCombat.Character.PlayerMotor _controller;
+        private EndlessCombat.Character.PlayerInputState _inputs;
         private bool _isSitting = false;
 
         public bool IsSitting => _isSitting;
@@ -19,8 +18,8 @@ namespace EndlessSurvival.Camping
         private void Start()
         {
             _animator = GetComponentInChildren<Animator>();
-            _controller = GetComponent<ThirdPersonController>();
-            _inputs = GetComponent<StarterAssetsInputs>();
+            _controller = GetComponent<EndlessCombat.Character.PlayerMotor>();
+            _inputs = GetComponent<EndlessCombat.Character.PlayerInputState>();
         }
 
         private void Update()

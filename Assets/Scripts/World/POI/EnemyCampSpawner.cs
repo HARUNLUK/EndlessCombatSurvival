@@ -19,6 +19,9 @@ namespace EndlessSurvival.World.POI
         [Range(0f, 1f)]
         public float spawnChance = 1.0f;
 
+        /// <summary>Global rarity of camps (SurvivalSettings.enemyCampFrequency); 1 when the settings are missing.</summary>
+        private static float CampFrequency => EndlessSurvival.Survival.SurvivalSettings.Instance != null ? EndlessSurvival.Survival.SurvivalSettings.Instance.enemyCampFrequency : 1f;
+
         private bool _hasSpawned = false;
 
         private void Start()
@@ -37,13 +40,16 @@ namespace EndlessSurvival.World.POI
             if (_hasSpawned || chunk == null) return;
             _hasSpawned = true;
 
+            // The start chunk is safe: no camp there
+            if (chunk.Manager != null && chunk.ChunkIndex == chunk.Manager.StartChunkIndex) return;
+
             EnsureCampPrefabs();
             if (campPrefabs == null || campPrefabs.Length == 0) return;
 
             var rng = chunk.CampRandom;
             if (rng == null) rng = new SeededRandom(0);
 
-            if (!rng.Chance(spawnChance)) return;
+            if (!rng.Chance(spawnChance * CampFrequency)) return;
 
             // Eğer chunk içinde önceden kalmış eski statik Enemy Camp varsa temizle
             Transform oldCamp = chunk.transform.Find("Enemy Camp");
@@ -73,7 +79,7 @@ namespace EndlessSurvival.World.POI
         {
             EnsureCampPrefabs();
             if (campPrefabs == null || campPrefabs.Length == 0) return;
-            if (!rng.Chance(spawnChance)) return;
+            if (!rng.Chance(spawnChance * CampFrequency)) return;
 
             GameObject selectedPrefab = rng.Pick(campPrefabs);
             if (selectedPrefab == null) return;

@@ -21,6 +21,14 @@ MonoBehaviour:
   equipSlot: 4
   armor: 4
   weaponPrefab: {fileID: 0}
+  shield:
+    absorb: 0
+    bulletAbsorb: 0
+    staminaPerDamage: 0
+    coverAngle: 0
+    guardMoveSpeed: 0
+    heavy: 0
+    bounceAttackers: 0
   worldColor: {r: 0.15, g: 0.12, b: 0.1, a: 1}
   worldScale: {x: 0.22, y: 0.2, z: 0.32}
   worldModel: {fileID: 0}

@@ -92,7 +92,7 @@ namespace EndlessSurvival.Survival
             return SurvivalPrimitives.Part(PrimitiveType.Cube, root, local, size, color);
         }
 
-        private static void Chest(Transform root, Vector3 local, LootTable table, SeededRandom rng, Vector3 worldPos)
+        public static void Chest(Transform root, Vector3 local, LootTable table, SeededRandom rng, Vector3 worldPos)
         {
             var s = SurvivalSettings.Instance;
             LootChest chest;

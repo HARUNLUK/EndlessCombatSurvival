@@ -35,7 +35,28 @@ namespace EndlessSurvival.Vehicle
         private GameObject _currentPlayer;
         private bool _isPlayerNear;
 
+        /// <summary>Camera blend between the character and the vehicle camera (s). Was the brain default 2 s.</summary>
+        public static float CameraBlendTime = 0.45f;
+        private static bool _blendRegistered;
+
+        private static void ApplyCameraBlend()
+        {
+            if (!_blendRegistered)
+            {
+                _blendRegistered = true;
+                EndlessCombat.Tuning.TuningPanel.Register("Kamera", "Biniş / iniş geçişi (sn)", () => CameraBlendTime, v => CameraBlendTime = v, 0f, 3f, 0.05f);
+            }
+            Camera main = Camera.main;
+            if (main == null) return;
+            var brain = main.GetComponent<Unity.Cinemachine.CinemachineBrain>();
+            if (brain == null) return;
+            brain.DefaultBlend = new Unity.Cinemachine.CinemachineBlendDefinition(
+                CameraBlendTime > 0.001f ? Unity.Cinemachine.CinemachineBlendDefinition.Styles.EaseInOut : Unity.Cinemachine.CinemachineBlendDefinition.Styles.Cut,
+                CameraBlendTime);
+        }
+
         public bool IsPlayerInside => vehicleController != null && vehicleController.isDriven;
+        public bool IsPlayerNear => _isPlayerNear;
 
         private void Awake()
         {
@@ -49,6 +70,7 @@ namespace EndlessSurvival.Vehicle
             }
 
             FindCamerasIfNeeded();
+            ApplyCameraBlend();
 
             if (vehicleController != null)
                 vehicleController.SetDriving(false);
@@ -77,9 +99,14 @@ namespace EndlessSurvival.Vehicle
 
         private void Update()
         {
+            // A menu, the Tab screen or the pause screen owns the buttons
+            bool uiOpen = Time.timeScale <= 0.001f || EndlessSurvival.Survival.SurvivalUIState.AnyOpen
+                          || EndlessSurvival.Survival.ActionMenu.IsOpen || EndlessCombat.Combat.GameInput.GameplayBlocked;
+
             if (IsPlayerInside)
             {
-                if (CheckInteractPressed())
+                // F / gamepad Y
+                if (!uiOpen && EndlessCombat.Combat.GameInput.VehicleExitPressed)
                 {
                     ExitVehicle();
                 }
@@ -87,22 +114,15 @@ namespace EndlessSurvival.Vehicle
             else
             {
                 CheckPlayerProximity();
+                bool canEnter = _isPlayerNear && _currentPlayer != null && _currentPlayer.activeInHierarchy;
+                if (canEnter) EndlessCombat.Combat.GameInput.MarkVehicleNear();
 
-                if (_isPlayerNear && CheckInteractPressed())
+                // F / gamepad X (X goes to a pickup or chest first when one is in reach)
+                if (canEnter && !uiOpen && !EndlessCombat.Combat.CombatBody.PlayerLocked && EndlessCombat.Combat.GameInput.VehicleEnterPressed)
                 {
                     EnterVehicle();
                 }
             }
-        }
-
-        private bool CheckInteractPressed()
-        {
-#if ENABLE_INPUT_SYSTEM
-            var keyboard = Keyboard.current;
-            return keyboard != null && keyboard.fKey.wasPressedThisFrame;
-#else
-            return Input.GetKeyDown(legacyInteractKey);
-#endif
         }
 
         private void CheckPlayerProximity()
@@ -145,6 +165,12 @@ namespace EndlessSurvival.Vehicle
             if (_currentPlayer == null || vehicleController == null) return;
 
             FindCamerasIfNeeded();
+            ApplyCameraBlend();
+
+            // The vehicle camera starts from where the character camera looked, then swings behind the vehicle
+            var motor = _currentPlayer.GetComponent<EndlessCombat.Character.PlayerMotor>();
+            var orbit = GetComponentInChildren<VehicleCameraOrbit>(true);
+            if (orbit != null) orbit.ResetView(motor != null ? motor.LookYaw : float.NaN);
 
             Debug.Log("[VehicleInteraction] Player entered vehicle.");
 
@@ -167,12 +193,6 @@ namespace EndlessSurvival.Vehicle
             if (vehicleCamera != null)
             {
                 vehicleCamera.SetActive(true);
-
-                var customCam = vehicleCamera.GetComponent<VehicleCamera>();
-                if (customCam != null)
-                {
-                    customCam.SetTarget(transform);
-                }
             }
 
             _isPlayerNear = false;
@@ -186,7 +206,7 @@ namespace EndlessSurvival.Vehicle
 
             if (vehicleController.CurrentSpeedKmh > 30f)
             {
-                Debug.LogWarning("[VehicleInteraction] Vehicle is moving too fast to safely exit.");
+                EndlessSurvival.Survival.SurvivalNotify.Warn("Araç çok hızlı, önce yavaşla");
                 return;
             }
 
@@ -195,14 +215,17 @@ namespace EndlessSurvival.Vehicle
             // 1. Disable driving
             vehicleController.SetDriving(false);
 
-            // 2. Reposition player safely at exit point and re-enable
+            // 2. Reposition player safely next to the vehicle and re-enable
             _currentPlayer.transform.SetParent(null);
-            Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - transform.right * 2.4f;
-            Quaternion spawnRot = exitPoint != null ? exitPoint.rotation : transform.rotation;
+            Vector3 spawnPos = FindExitSpot();
+            // Only the heading of the vehicle: a car parked on a slope must not tilt the character
+            Vector3 fwd = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+            Quaternion spawnRot = fwd.sqrMagnitude > 0.001f ? Quaternion.LookRotation(fwd.normalized, Vector3.up) : Quaternion.identity;
 
             var characterController = _currentPlayer.GetComponent<CharacterController>();
             if (characterController != null) characterController.enabled = false;
 
+            _currentPlayer.transform.localScale = Vector3.one;
             _currentPlayer.transform.position = spawnPos;
             _currentPlayer.transform.rotation = spawnRot;
             Physics.SyncTransforms();
@@ -210,6 +233,15 @@ namespace EndlessSurvival.Vehicle
             _currentPlayer.SetActive(true);
 
             if (characterController != null) characterController.enabled = true;
+
+            // The character camera looks where the vehicle camera looked: no random swing on getting out
+            ApplyCameraBlend();
+            var exitMotor = _currentPlayer.GetComponent<EndlessCombat.Character.PlayerMotor>();
+            if (exitMotor != null)
+            {
+                var exitOrbit = GetComponentInChildren<VehicleCameraOrbit>(true);
+                exitMotor.SetLookYaw(exitOrbit != null ? exitOrbit.CurrentYaw : spawnRot.eulerAngles.y);
+            }
 
             // 3. Restore camera back to player
             if (vehicleCamera != null)
@@ -222,7 +254,70 @@ namespace EndlessSurvival.Vehicle
                 playerCamera.SetActive(true);
             }
 
+            EndlessCombat.Combat.GameInput.BlockGameplayBriefly(0.3f);
             OnDriveStateChanged?.Invoke(false);
+        }
+
+        /// <summary>
+        /// A free spot on the ground beside the vehicle: the exit point first, then the left side, the right side,
+        /// behind and in front. The ground is found with a ray from above, so the character never appears inside
+        /// the terrain or in the air; a spot blocked by a wall, a rock or another car is skipped.
+        /// </summary>
+        private Vector3 FindExitSpot()
+        {
+            Vector3 right = Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
+            Vector3 fwd = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            Vector3 center = transform.position;
+            var candidates = new System.Collections.Generic.List<Vector3>();
+            if (exitPoint != null) candidates.Add(exitPoint.position);
+            foreach (float d in new[] { 2.4f, 3.2f })
+            {
+                candidates.Add(center - right * d);
+                candidates.Add(center + right * d);
+            }
+            candidates.Add(center - fwd * 4.2f);
+            candidates.Add(center + fwd * 4.2f);
+
+            foreach (Vector3 c in candidates)
+            {
+                if (TryGround(c, out Vector3 ground) && SpotFree(ground)) return ground;
+            }
+            // Nothing free: the first spot with ground under it, else straight beside the vehicle
+            foreach (Vector3 c in candidates)
+                if (TryGround(c, out Vector3 ground)) return ground;
+            return center - right * 2.4f + Vector3.up * 0.5f;
+        }
+
+        private bool TryGround(Vector3 around, out Vector3 ground)
+        {
+            ground = around;
+            var hits = Physics.RaycastAll(around + Vector3.up * 3f, Vector3.down, 12f, ~0, QueryTriggerInteraction.Ignore);
+            float best = float.MaxValue;
+            bool found = false;
+            foreach (var h in hits)
+            {
+                if (h.collider.transform.IsChildOf(transform)) continue; // the vehicle itself
+                if (_currentPlayer != null && h.collider.transform.IsChildOf(_currentPlayer.transform)) continue;
+                if (h.distance < best)
+                {
+                    best = h.distance;
+                    ground = h.point + Vector3.up * 0.05f;
+                    found = true;
+                }
+            }
+            return found;
+        }
+
+        private bool SpotFree(Vector3 ground)
+        {
+            Vector3 a = ground + Vector3.up * 0.45f, b = ground + Vector3.up * 1.5f;
+            foreach (var col in Physics.OverlapCapsule(a, b, 0.3f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (col is TerrainCollider) continue;
+                if (_currentPlayer != null && col.transform.IsChildOf(_currentPlayer.transform)) continue;
+                return false;
+            }
+            return true;
         }
 
 

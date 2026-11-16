@@ -36,7 +36,7 @@ namespace EndlessCombat.AI.Editor
                 selected.AddComponent<EnemyController>();
             }
 
-            // (Opsiyonel) PlayerShooter ve ThirdPersonController varsa sil
+            // (Opsiyonel) PlayerShooter ve EndlessCombat.Character.PlayerMotor varsa sil
             // Cunku bu artik bir dusman, oyuncu degil.
             var playerShooter = selected.GetComponent("PlayerShooter");
             if (playerShooter != null) DestroyImmediate(playerShooter);

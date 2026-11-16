@@ -123,7 +123,8 @@ namespace EndlessSurvival.Camping
                 return null;
             }
 
-            // UI penceresini aç
+            // [E] sits down by the fire right away, then opens the Kamp tab
+            CampfireUI.SitAt(this, user.gameObject);
             CampfireUI.Open(this, user);
             return null;
         }

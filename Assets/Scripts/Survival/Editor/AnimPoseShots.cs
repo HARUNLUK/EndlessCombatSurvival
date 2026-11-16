@@ -106,7 +106,8 @@ namespace EndlessSurvival.Survival.Editor
 
             Directory.CreateDirectory("PoseShots");
             _clips = new List<AnimationClip>();
-            foreach (var guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { "Assets/Animations" }))
+            string dirArg = System.Environment.GetCommandLineArgs().SkipWhile(a => a != "-clipDir").Skip(1).FirstOrDefault();
+            foreach (var guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { dirArg ?? "Assets/Animations" }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))

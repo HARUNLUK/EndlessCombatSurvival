@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_RiotShield
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: "\xC7evik Kuvvet Kalkan\u0131"
+  category: 7
+  description: "B\xFCy\xFCk polis kalkan\u0131. \xD6nden gelen mermileri neredeyse
+    tamamen durdurur, zay\u0131f darbeler sekip sald\u0131ran\u0131 sendeletir. A\u011F\u0131rd\u0131r:
+    kalk\u0131kken yava\u015F y\xFCr\xFCrs\xFCn, ka\xE7\u0131nma k\u0131sa ve pahal\u0131
+    olur. Tabancayla ni\u015Fan al\u0131rken de kalk\u0131kt\u0131r."
+  weight: 8
+  value: 120
+  useAmount: 1
+  equipSlot: 6
+  armor: 0
+  weaponPrefab: {fileID: 0}
+  shield:
+    absorb: 1
+    bulletAbsorb: 0.95
+    staminaPerDamage: 0.6
+    coverAngle: 80
+    guardMoveSpeed: 0.4
+    heavy: 1
+    bounceAttackers: 1
+    durability: 0
+  ammoType: 0
+  worldColor: {r: 0.22, g: 0.26, b: 0.32, a: 1}
+  worldScale: {x: 0.55, y: 1, z: 0.04}
+  worldModel: {fileID: 0}
+  worldModelScale: 1
+  heldModel: {fileID: 6691150650766112914, guid: 320b9af7154a0a941af19a60b04c4a4f, type: 3}
+  spoilHours: 0
+  spoilsInto: {fileID: 0}
+  poisonChance: 0
+  thirstPenalty: 0
+  bonusThirst: 0
+  stressRelief: 0
+  warmth: 0
+  leavesItem: {fileID: 0}
+  effects: 0
+  insulation: 0
+  waterproof: 0
+  noise: 0
+  identifiedName: 
+  natureToIdentify: 20

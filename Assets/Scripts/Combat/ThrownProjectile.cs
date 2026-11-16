@@ -104,7 +104,16 @@ namespace EndlessCombat.Combat
                     Vector3 point = col.ClosestPoint(center);
                     float falloff = 1f - Mathf.Clamp01(Vector3.Distance(center, point) / radius);
                     float dmg = content.grenadeDamage * falloff;
-                    if (dmg > 0.5f) target.TakeDamage(dmg, point, (point - center).normalized);
+                    if (dmg > 0.5f)
+                    {
+                        Vector3 away = (point - center).normalized;
+                        Damage.Deal(target, new DamageInfo(dmg, DamageType.Explosion, point, away)
+                        {
+                            SourceDirection = -away,
+                            Source = _thrower != null ? _thrower.gameObject : null,
+                            ByPlayer = _thrower != null && _thrower.GetComponent<PlayerThrower>() != null
+                        });
+                    }
                 }
 
                 Rigidbody rb = col.attachedRigidbody;

@@ -4,17 +4,32 @@ using EndlessCombat.AI;
 
 namespace EndlessCombat.Combat
 {
-    /// <summary>Overlap sphere hit check shared by the player's and the enemies' melee attacks.</summary>
+    /// <summary>Overlap sphere hit check shared by the player's and the enemies' melee strikes.</summary>
     public static class MeleeHit
     {
         private static readonly Collider[] Buffer = new Collider[64];
-        private static readonly HashSet<IDamageable> Hit = new HashSet<IDamageable>();
+        private static readonly HashSet<object> OneShot = new HashSet<object>();
+
+        /// <summary>One-off strike without an attacker body (old callers). Each target is hit once.</summary>
+        public static int Strike(Transform attacker, Vector3 forward, MeleeStats stats, float heightOffset = 1.1f)
+        {
+            OneShot.Clear();
+            return StrikeInternal(attacker, null, forward, stats, stats.staggerTime, OneShot, heightOffset);
+        }
 
         /// <summary>
-        /// Damages every IDamageable whose collider is inside a sphere in front of the attacker
-        /// (each target once). Colliders under the attacker are skipped. Returns the number of targets hit.
+        /// Strike of a CombatBody during its hit window; called every frame of the window. alreadyHit keeps each
+        /// target to one hit per strike. Targets with a CombatBody go through ReceiveMelee (shield, stagger,
+        /// stealth kill); same team is skipped; enemies only hit bodies of the other team.
         /// </summary>
-        public static int Strike(Transform attacker, Vector3 forward, MeleeStats stats, float heightOffset = 1.1f)
+        public static int Strike(CombatBody attacker, Vector3 forward, MeleeStats stats, float staggerTime, HashSet<object> alreadyHit, float heightOffset = 1.1f)
+        {
+            if (attacker == null) return 0;
+            return StrikeInternal(attacker.transform, attacker, forward, stats, staggerTime, alreadyHit, heightOffset);
+        }
+
+        private static int StrikeInternal(Transform attacker, CombatBody attackerBody, Vector3 forward, MeleeStats stats, float staggerTime,
+            HashSet<object> alreadyHit, float heightOffset)
         {
             if (attacker == null) return 0;
 
@@ -24,35 +39,52 @@ namespace EndlessCombat.Combat
 
             Vector3 center = attacker.position + Vector3.up * heightOffset + forward * Mathf.Max(0.1f, stats.range - stats.radius * 0.5f);
             int count = Physics.OverlapSphereNonAlloc(center, stats.radius, Buffer, ~0, QueryTriggerInteraction.Ignore);
+            bool playerSide = attackerBody == null || attackerBody.team == CombatTeam.Player;
 
-            Hit.Clear();
             int hits = 0;
             for (int i = 0; i < count; i++)
             {
                 Collider col = Buffer[i];
                 if (col == null || col.transform.IsChildOf(attacker)) continue;
 
-                // Non-damageable things that react to hits (trees give wood)
-                var reactive = col.GetComponentInParent<IMeleeReactive>();
-                if (reactive != null)
+                Vector3 point = col.ClosestPoint(center);
+                var target = col.GetComponentInParent<CombatBody>();
+
+                if (target != null)
                 {
-                    reactive.OnMeleeHit(attacker, stats, col.ClosestPoint(center));
-                    hits++;
+                    if (attackerBody != null && target.team == attackerBody.team) continue;
+                    if (target.IsDead || !alreadyHit.Add(target)) continue;
+                    var result = target.ReceiveMelee(attackerBody, attacker.position, stats, staggerTime, point, forward);
+                    if (result != HitResult.Ignored) hits++;
                     continue;
                 }
 
-                IDamageable target = col.GetComponentInParent<IDamageable>();
-                if (target == null || target.IsDead || !Hit.Add(target)) continue;
+                // Only the player's strikes touch the rest of the world (trees, dummies, animals)
+                if (!playerSide) continue;
 
-                Vector3 point = col.ClosestPoint(center);
-                target.TakeDamage(stats.damage, point, -forward);
+                var reactive = col.GetComponentInParent<IMeleeReactive>();
+                if (reactive != null)
+                {
+                    if (!alreadyHit.Add(reactive)) continue;
+                    reactive.OnMeleeHit(attacker, stats, point);
+                    // Not counted: hits train Melee / Strength, and punching a tree over and over must not farm them.
+                    // The tree gives its own small training per piece of firewood (ResourceNode.OnMeleeHit).
+                    continue;
+                }
+
+                IDamageable damageable = col.GetComponentInParent<IDamageable>();
+                if (damageable == null || damageable.IsDead || !alreadyHit.Add(damageable)) continue;
+
+                Damage.Deal(damageable, new DamageInfo(stats.damage, DamageType.Melee, point, -forward)
+                {
+                    SourceDirection = -forward,
+                    Source = attacker.gameObject,
+                    ByPlayer = playerSide
+                });
                 hits++;
 
-                var enemy = target as EnemyController;
-                if (enemy != null && !enemy.IsDead)
-                {
-                    enemy.Stagger(forward * stats.knockback, stats.staggerTime);
-                }
+                var enemy = damageable as EnemyController;
+                if (enemy != null && !enemy.IsDead) enemy.Stagger(forward * stats.knockback, staggerTime);
             }
             return hits;
         }

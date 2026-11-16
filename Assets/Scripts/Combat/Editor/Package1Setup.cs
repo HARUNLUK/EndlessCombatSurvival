@@ -20,7 +20,7 @@ namespace EndlessCombat.Combat.Editor
     /// </summary>
     public static class Package1Setup
     {
-        private const string ControllerPath = "Assets/Starter Assets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller";
+        private const string ControllerPath = "Assets/Animations/Character/CharacterAnimator.controller";
         private const string WeaponMaskPath = "Assets/Animations/WeaponUpperBodyMask.mask";
         private const string Ual1Path = "Assets/_AssetPacks/Universal Animation Library[Standard]/Universal Animation Library[Standard]/Unity/UAL1_Standard.fbx";
         private const string Ual2Path = "Assets/_AssetPacks/Universal Animation Library 2[Standard]/Universal Animation Library 2[Standard]/Unity/UAL2_Standard.fbx";
@@ -318,11 +318,11 @@ namespace EndlessCombat.Combat.Editor
 
             items["Pistol"].weaponPrefab = BuildPistol(frame, rifle);
             items["Knife"].weaponPrefab = BuildMelee("Knife", "Knife", frame, 0.32f, 0.018f, true, new Color(0.7f, 0.72f, 0.75f),
-                new MeleeStats { damage = 25f, range = 1.15f, radius = 0.5f, attackInterval = 0.45f, hitDelay = 0.18f, staminaCost = 8f, noiseRadius = 3f, knockback = 1f, staggerTime = 0.3f, stab = true });
+                new MeleeStats { damage = 25f, range = 1.15f, radius = 0.5f, attackInterval = 0.45f, hitDelay = 0.18f, staminaCost = 8f, noiseRadius = 3f, knockback = 1f, staggerTime = 0.3f, stab = true, category = MeleeCategory.Short });
             items["WoodenClub"].weaponPrefab = BuildMelee("WoodenClub", "Wooden Club", frame, 0.7f, 0.03f, false, new Color(0.45f, 0.3f, 0.15f),
-                new MeleeStats { damage = 20f, range = 1.5f, radius = 0.6f, attackInterval = 0.7f, hitDelay = 0.32f, staminaCost = 12f, noiseRadius = 6f, knockback = 2.5f, staggerTime = 0.5f, stab = false });
+                new MeleeStats { damage = 20f, range = 1.5f, radius = 0.6f, attackInterval = 0.7f, hitDelay = 0.32f, staminaCost = 12f, noiseRadius = 6f, knockback = 2.5f, staggerTime = 0.5f, stab = false, category = MeleeCategory.OneHand });
             items["BaseballBat"].weaponPrefab = BuildMelee("BaseballBat", "Baseball Bat", frame, 0.85f, 0.035f, false, new Color(0.75f, 0.6f, 0.4f),
-                new MeleeStats { damage = 35f, range = 1.6f, radius = 0.65f, attackInterval = 0.9f, hitDelay = 0.38f, staminaCost = 16f, noiseRadius = 7f, knockback = 3.5f, staggerTime = 0.7f, stab = false });
+                new MeleeStats { damage = 35f, range = 1.6f, radius = 0.65f, attackInterval = 0.9f, hitDelay = 0.38f, staminaCost = 16f, noiseRadius = 7f, knockback = 3.5f, staggerTime = 0.7f, stab = false, category = MeleeCategory.TwoHand });
 
             foreach (var key in new[] { "Pistol", "Knife", "WoodenClub", "BaseballBat" }) EditorUtility.SetDirty(items[key]);
             Log.Add("Weapon prefabs: Weapon_Pistol, Weapon_Knife, Weapon_WoodenClub, Weapon_BaseballBat.");

@@ -8,6 +8,8 @@ namespace EndlessCombat.Combat
         public static bool Blocked(GameObject player)
         {
             if (Time.timeScale <= 0.001f) return true;
+            if (GameInput.GameplayBlocked) return true;
+            if (EndlessSurvival.Survival.ActionMenu.IsOpen) return true;
             if (EndlessSurvival.Inventory.InventoryUI.IsOpen) return true;
             if (EndlessSurvival.Camping.CampfireUI.IsOpen) return true;
             if (EndlessSurvival.Vehicle.VehicleModificationUI.IsOpen) return true;
@@ -16,6 +18,7 @@ namespace EndlessCombat.Combat
             var vitals = EndlessSurvival.Survival.PlayerVitals.Instance;
             if (vitals != null && vitals.ToiletActive) return true;
             if (EndlessSurvival.Survival.SmokingAction.Active) return true;
+            if (EndlessSurvival.Survival.BinocularsController.Active) return true;
             var note = EndlessSurvival.Story.NoteReaderUI.Instance;
             if (note != null && note.IsOpen) return true;
 

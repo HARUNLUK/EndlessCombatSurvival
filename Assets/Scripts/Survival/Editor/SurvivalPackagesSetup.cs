@@ -40,6 +40,9 @@ namespace EndlessSurvival.Survival.Editor
             foreach (var line in Log) Debug.Log("[SurvivalPackagesSetup] " + line);
         }
 
+        /// <summary>Runs the whole setup (also used by Setup Binoculars).</summary>
+        public static List<string> RunAndLog() { Run(); return new List<string>(Log); }
+
         private static void Run()
         {
             Log.Clear();
@@ -92,7 +95,7 @@ namespace EndlessSurvival.Survival.Editor
             item.worldScale = scale;
             item.description = description;
             // reset survival fields so re-runs stay consistent
-            item.spoilHours = 0f; item.spoilsInto = null; item.poisonChance = 0f; item.thirstPenalty = 0f;
+            item.spoilHours = 0f; item.spoilsInto = null; item.poisonChance = 0f; item.thirstPenalty = 0f; item.bonusThirst = 0f;
             item.stressRelief = 0f; item.warmth = 0f; item.leavesItem = null; item.effects = ConsumableEffect.None;
             item.insulation = 0f; item.waterproof = 0f; item.noise = 0f; item.identifiedName = ""; item.natureToIdentify = 20f;
             configure?.Invoke(item);
@@ -151,6 +154,12 @@ namespace EndlessSurvival.Survival.Editor
             Item("Cigarette", "Sigara", ItemCategory.Consumable, 0.01f, 2, 0, new Color(0.92f, 0.9f, 0.85f), Small,
                 "Stresi hızlı düşürür ([J] ya da Kullan). İçerken hareket edemezsin; hareket, hasar ya da tehlike söndürür.");
 
+            // --- Binoculars (Dürbün): Gear, not used up; [Z] hold or Use. Model: two cylinders (BinocularsSetup) ---
+            var binoModel = BinocularsSetup.EnsureModel();
+            Item("Binoculars", "Dürbün", ItemCategory.Gear, 0.7f, 30, 1, new Color(0.15f, 0.15f, 0.15f), new Vector3(0.18f, 0.08f, 0.14f),
+                "Uzağı gösterir (4x-8x). [Z] basılı tut ya da Kullan. Ortadakine 1.5 sn bakınca düşmanı, kampı, sandığı, enkazı işaretler. Gündüz güneşe karşı bakarsan mercek parlar, yakındaki düşman şüphelenir.",
+                i => { i.worldModel = binoModel; i.worldModelScale = 1f; });
+
             // --- water ---
             Item("DirtyWater", "Kirli Su", ItemCategory.Drink, 0.6f, 1, 35, new Color(0.45f, 0.5f, 0.4f), Small,
                 "Dereden. Kamp ateşinde kaynatılmalı; böyle içilirse hastalık riski.", i => { i.poisonChance = 0.35f; i.leavesItem = bottle; });
@@ -172,7 +181,7 @@ namespace EndlessSurvival.Survival.Editor
             Item("SmokedMeat", "Tütsülenmiş Et", ItemCategory.Food, 0.4f, 7, 35, new Color(0.5f, 0.28f, 0.2f), Small,
                 "Ateşte tütsülendi, uzun dayanır.", i => { i.spoilHours = 200f; i.spoilsInto = rotten; i.stressRelief = 2f; });
             Item("Berries", "Böğürtlen", ItemCategory.Food, 0.1f, 1, 8, new Color(0.35f, 0.08f, 0.3f), Small,
-                "Yabani meyve. Damıtıcıda alkole dönüşür.", i => { i.spoilHours = 48f; i.spoilsInto = rotten; i.stressRelief = 1f; });
+                "Yabani meyve. Damıtıcıda alkole dönüşür.", i => { i.spoilHours = 48f; i.spoilsInto = rotten; i.stressRelief = 1f; i.bonusThirst = 8f; });
             Item("Mushroom", "Mantar", ItemCategory.Food, 0.1f, 2, 10, new Color(0.65f, 0.5f, 0.35f), Small,
                 "Yabani mantar. Hangisi olduğunu Doğa bilgisi söyler.",
                 i => { i.spoilHours = 36f; i.spoilsInto = rotten; i.identifiedName = "Yenilebilir Mantar"; i.natureToIdentify = 20f; });
@@ -380,7 +389,7 @@ namespace EndlessSurvival.Survival.Editor
             AddLoot(vehicle, ("EmptyFuelCan", 2f, 1, 1), ("RubberHose", 1.5f, 1, 1), ("VehicleRepairKit", 0.7f, 1, 1));
 
             var house = Table("Loot_House", 2, 4);
-            AddLoot(house, ("Cloth", 5f, 1, 3), ("CannedBeans", 4f, 1, 2), ("WaterBottle", 3f, 1, 2), ("EmptyBottle", 4f, 1, 2),
+            AddLoot(house, ("Cloth", 5f, 1, 3), ("CannedBeans", 4f, 1, 2), ("WaterBottle", 4f, 1, 2), ("SodaCan", 3f, 1, 2), ("EmptyBottle", 4f, 1, 2),
                 ("Bandage", 3f, 1, 2), ("Medkit", 0.8f, 1, 1), ("WorkJacket", 1.2f, 1, 1), ("WoolHat", 1.5f, 1, 1), ("Gloves", 1.5f, 1, 1),
                 ("Raincoat", 1f, 1, 1), ("Knife", 1.2f, 1, 1), ("Salt", 2f, 1, 2), ("Alcohol", 1.5f, 1, 1), ("TeddyBear", 1.5f, 1, 1),
                 ("FishingRod", 0.7f, 1, 1), ("DuctTape", 2f, 1, 1), ("Flashlight", 1f, 1, 1), ("RifleAmmo", 1f, 1, 2));
@@ -405,6 +414,13 @@ namespace EndlessSurvival.Survival.Editor
             AddLoot(house, ("Cigarette", 1f, 1, 6));
             AddLoot(gas, ("Cigarette", 2.5f, 12, 20));
             AddLoot(enemyDrop, ("Cigarette", 1f, 1, 5));
+
+            // Binoculars: soldiers and their camp chests most often, then wrecks, cars and lighthouse/camp chests
+            AddLoot(enemyDrop, ("Binoculars", 0.6f, 1, 1));
+            AddLoot(chest, ("Binoculars", 0.8f, 1, 1));
+            AddLoot(wreck, ("Binoculars", 0.5f, 1, 1));
+            AddLoot(vehicle, ("Binoculars", 0.6f, 1, 1));
+            AddLoot(house, ("Binoculars", 0.3f, 1, 1));
 
             var pickup = AssetDatabase.LoadAssetAtPath<WorldPickup>("Assets/Prefabs/Loot/DefaultPickup.prefab");
             foreach (var t in new[] { house, gas, wreck })
@@ -451,7 +467,7 @@ namespace EndlessSurvival.Survival.Editor
             var stock = new List<ItemDefinition>();
             foreach (var key in new[] { "RifleAmmo", "Bandage", "Medkit", "CannedBeans", "WaterBottle", "EmptyBottle", "FishingRod", "Cloth",
                          "Salt", "DuctTape", "ToolKit", "EmptyFuelCan", "FuelCan", "Knife", "HerbalTea", "Alcohol", "Raincoat", "WoolHat",
-                         "Gloves", "EnergyBar", "RubberHose", "VehicleRepairKit", "PlasticSheet", "Rope", "Plank", "Cigarette" })
+                         "Gloves", "EnergyBar", "RubberHose", "VehicleRepairKit", "PlasticSheet", "Rope", "Plank", "Cigarette", "Binoculars" })
             {
                 var it = Items.TryGetValue(key, out var x) ? x : Existing(key);
                 if (it != null) stock.Add(it);

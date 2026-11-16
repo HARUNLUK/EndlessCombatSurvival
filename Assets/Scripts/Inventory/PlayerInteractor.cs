@@ -59,10 +59,12 @@ namespace EndlessSurvival.Inventory
             {
                 _nextScan = Time.time + scanInterval;
                 _current = FindClosest();
-                SetPrompt(_current != null ? $"[E] {_current.GetPrompt()}" : null);
+                SetPrompt(_current != null ? $"[{(EndlessCombat.Combat.GameInput.UsingPad ? "X" : "E")}] {_current.GetPrompt()}" : null);
             }
+            if (_current != null) EndlessCombat.Combat.GameInput.MarkInteractAvailable();
 
-            if (_current != null && InteractPressed())
+            if (_current != null && EndlessCombat.Combat.GameInput.InteractPressed && !EndlessCombat.Combat.CombatBody.PlayerLocked && !EndlessSurvival.Survival.SurvivalUIState.AnyOpen && !EndlessSurvival.Survival.ActionMenu.IsOpen && Time.timeScale > 0.001f
+                && (EndlessSurvival.Survival.FishingController.Instance == null || EndlessSurvival.Survival.FishingController.Instance.State == EndlessSurvival.Survival.FishingController.FishState.Idle))
             {
                 if (Time.unscaledTime - EndlessSurvival.Camping.CampfireUI.LastCloseTime < 0.25f)
                 {

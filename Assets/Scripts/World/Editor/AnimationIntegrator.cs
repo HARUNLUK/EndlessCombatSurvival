@@ -28,7 +28,7 @@ public class AnimationIntegrator
         }
 
         // 3. StarterAssetsThirdPerson Controller'ı Güncelle
-        string controllerPath = "Assets/Starter Assets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller";
+        string controllerPath = "Assets/Animations/Character/CharacterAnimator.controller";
         AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
         
         if (controller == null)

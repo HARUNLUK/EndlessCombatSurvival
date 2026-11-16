@@ -41,6 +41,8 @@ namespace EndlessSurvival.Survival
         public bool HeadlightsOn { get; private set; }
         public readonly WindowState[] Windows = { WindowState.Intact, WindowState.Open, WindowState.Open, WindowState.Open, WindowState.Open };
         public readonly float[] PlasticWear = { 100f, 100f, 100f, 100f, 100f };
+        /// <summary>True when a steel plate covers a sound glass (armour); taking the plate off gives the glass back.</summary>
+        public readonly bool[] GlassUnder = new bool[5];
 
         /// <summary>Only the windshield has a glass frame; the other openings are closed with covers only.</summary>
         public static bool HasGlassFrame(int slot) => slot == (int)WindowSlot.Front;
@@ -192,13 +194,14 @@ namespace EndlessSurvival.Survival
         private void HandleKeys()
         {
             if (!_vehicle.isDriven || SurvivalUIState.AnyOpen) return;
-            if (SKeys.Down(Key.R) && !_vehicle.engineOn) TryStart(false);
-            if (SKeys.Down(Key.H))
+            var dpad = EndlessCombat.Combat.GameInput.PadDpadPressed;
+            if ((SKeys.Down(Key.R) || EndlessCombat.Combat.GameInput.PadPressed(2)) && !_vehicle.engineOn) TryStart(false); // R / gamepad X
+            if (SKeys.Down(Key.H) || dpad.y > 0) // H / D-pad up
             {
                 HeadlightsOn = !HeadlightsOn;
                 if (HeadlightsOn && Headlights < 20f) SurvivalNotify.Warn("Farlar kırık, yanmıyor");
             }
-            if (SKeys.Down(Key.T)) UseTowRope();
+            if (SKeys.Down(Key.T) || dpad.x > 0) UseTowRope(); // T / D-pad right
         }
 
         // ================================================================== starting
@@ -237,7 +240,7 @@ namespace EndlessSurvival.Survival
             }
             SurvivalNotify.Warn(BatteryCharge < 15f
                 ? "Marş basmıyor: akü bitik. Yokuş aşağı it ya da enkazdan akü bul"
-                : $"Marş tutmadı ({why}). [R] tekrar dene. Aracın yanında ateş yakmak aküyü ısıtır");
+                : $"Marş tutmadı ({why}). {EndlessCombat.Combat.GameInput.Hint("[R]", "X")} tekrar dene. Aracın yanında ateş yakmak aküyü ısıtır");
             return false;
         }
 
@@ -774,7 +777,7 @@ namespace EndlessSurvival.Survival
         private Vector3 WorkSpot => _vehicle != null ? _vehicle.transform.position : SurvivalDirector.PlayerPosition;
 
         private static ItemDefinition It(string name) => S.Item(name);
-        private static bool HasTools => SurvivalTest.FreeResources || SurvivalDirector.CountItem(It("Item_ToolKit")) > 0;
+        public static bool HasTools => SurvivalTest.FreeResources || SurvivalDirector.CountItem(It("Item_ToolKit")) > 0;
         /// <summary>Has the item (always true in test mode).</summary>
         private static bool HasItem(string item, int n = 1) => SurvivalTest.FreeResources || SurvivalDirector.CountItem(It(item)) >= n;
         /// <summary>Uses the item up (nothing is taken in test mode).</summary>
@@ -882,19 +885,38 @@ namespace EndlessSurvival.Survival
 
         public string CoverWindow(int slot, WindowState cover)
         {
-            if (Windows[slot] == WindowState.Intact) return "Cam sağlam";
+            // A sound glass takes only a steel plate (armour); the glass stays under it
+            bool overGlass = Windows[slot] == WindowState.Intact;
+            if (overGlass && cover != WindowState.Metal) return "Sağlam cam sadece sacla zırhlanır";
+            if (GlassUnder[slot]) return "Altında sağlam cam var: önce saçı sök";
             if (Windows[slot] == cover) return "Zaten bu şekilde kapalı";
             var cost = CoverCost(cover, out float seconds, out bool tools);
             if (tools && !HasTools) return "Saç perçinlemek için alet çantası lazım";
             if (!CanAfford(cost)) return "Malzeme yetersiz: " + CostText(cost);
             string verb = cover == WindowState.Plastic ? "naylonla" : cover == WindowState.Plank ? "tahtayla" : "sacla";
-            return StartJob($"{WindowNames[slot]} {verb} kapatılıyor", seconds, WorkSpot, cover == WindowState.Plastic ? 0f : 16f, () =>
+            return StartJob($"{WindowNames[slot]} {verb} {(overGlass ? "zırhlanıyor" : "kapatılıyor")}", seconds, WorkSpot, cover == WindowState.Plastic ? 0f : 16f, () =>
             {
                 if (!CanAfford(cost)) return "Malzeme yetersiz";
+                bool glass = Windows[slot] == WindowState.Intact;
                 foreach (var c in cost) TakeItem(c.item, c.amount);
                 Windows[slot] = cover;
+                GlassUnder[slot] = glass;
                 PlasticWear[slot] = 100f;
-                return $"{WindowNames[slot]} {verb} kapatıldı";
+                return glass ? $"{WindowNames[slot]} sacla zırhlandı (cam altında sağlam)" : $"{WindowNames[slot]} {verb} kapatıldı";
+            });
+        }
+
+        /// <summary>Takes a steel plate off a sound glass: the glass is back, 2 of the 3 scrap come back.</summary>
+        public string RemoveArmour(int slot)
+        {
+            if (!GlassUnder[slot] || Windows[slot] != WindowState.Metal) return "Bu açıklıkta sökülecek zırh yok";
+            if (!HasTools) return "Saçı sökmek için alet çantası lazım";
+            return StartJob($"{WindowNames[slot]} saçı sökülüyor", 10f, WorkSpot, 12f, () =>
+            {
+                Windows[slot] = WindowState.Intact;
+                GlassUnder[slot] = false;
+                if (!SurvivalTest.FreeResources) SurvivalDirector.GiveItem(It("Item_ScrapMetal"), 2);
+                return $"{WindowNames[slot]} saçı söküldü, cam açıkta (2 hurda metal geri)";
             });
         }
 
@@ -967,14 +989,14 @@ namespace EndlessSurvival.Survival
             var lines = new System.Collections.Generic.List<(string, Color)>();
             Color ok = new Color(0.85f, 0.85f, 0.85f), warn = new Color(1f, 0.75f, 0.35f), bad = new Color(1f, 0.4f, 0.35f);
 
-            if (!_vehicle.engineOn) lines.Add(("Motor kapalı: [R] marş", warn));
+            if (!_vehicle.engineOn) lines.Add(("Motor kapalı: " + EndlessCombat.Combat.GameInput.Hint("[R]", "X") + " marş", warn));
             Color heatC = EngineHeat > 90f ? bad : EngineHeat > 80f ? warn : ok;
             lines.Add(($"Hararet {Mathf.RoundToInt(EngineHeat)}   Akü %{Mathf.RoundToInt(BatteryCharge)} ({Mathf.RoundToInt(BatteryTemp)}°C)", heatC));
             string flats = "";
             for (int i = 0; i < 4; i++) if (IsFlat(i)) flats += (flats.Length > 0 ? ", " : "") + TireNames[i];
             if (flats.Length > 0) lines.Add(("Patlak lastik: " + flats, bad));
-            lines.Add(($"Kabin +{CabinBonus:0}°C   Far [H] {(LampsLit ? "açık" : "kapalı")}" + (Has(VehicleModType.TowRope) ? "   Halat [T]" : ""), ok));
-            if (RainEnters) lines.Add(("Kırık camdan yağmur giriyor", warn));
+            lines.Add(($"Kabin +{CabinBonus:0}°C   Far {EndlessCombat.Combat.GameInput.Hint("[H]", "↑")} {(LampsLit ? "açık" : "kapalı")}" + (Has(VehicleModType.TowRope) ? "   Halat " + EndlessCombat.Combat.GameInput.Hint("[T]", "→") : ""), ok));
+            if (RainEnters) lines.Add((WeatherSystem.Instance != null && WeatherSystem.Instance.Current == WeatherType.Snow ? "Kırık camdan kar giriyor" : "Kırık camdan yağmur giriyor", warn));
 
             SurvivalGUI.Fill(new Rect(x - 6, y - 4, w + 12, lines.Count * 18 + 8), new Color(0f, 0f, 0f, 0.45f));
             var old = GUI.color;
@@ -1014,6 +1036,7 @@ namespace EndlessSurvival.Survival
             public bool lamps;
             public int[] windows;
             public float[] plastic;
+            public bool[] glassUnder;
             public float cabin;
         }
 
@@ -1025,7 +1048,7 @@ namespace EndlessSurvival.Survival
             {
                 tires = (float[])Tires.Clone(), spare = SpareFilled, battery = BatteryCharge, batteryTemp = BatteryTemp,
                 radiator = Radiator, heat = EngineHeat, headlights = Headlights, lamps = HeadlightsOn,
-                windows = w, plastic = (float[])PlasticWear.Clone(), cabin = CabinBonus
+                windows = w, plastic = (float[])PlasticWear.Clone(), glassUnder = (bool[])GlassUnder.Clone(), cabin = CabinBonus
             });
         }
 
@@ -1044,6 +1067,8 @@ namespace EndlessSurvival.Survival
             HeadlightsOn = d.lamps;
             if (d.windows != null) for (int i = 0; i < Windows.Length && i < d.windows.Length; i++) Windows[i] = (WindowState)d.windows[i];
             if (d.plastic != null) for (int i = 0; i < PlasticWear.Length && i < d.plastic.Length; i++) PlasticWear[i] = d.plastic[i];
+            for (int i = 0; i < GlassUnder.Length; i++)
+                GlassUnder[i] = d.glassUnder != null && i < d.glassUnder.Length && d.glassUnder[i] && Windows[i] == WindowState.Metal;
             CabinBonus = d.cabin;
         }
     }

@@ -15,7 +15,10 @@ namespace EndlessSurvival.Save
     /// Core Save and Load Manager for Endless Survival.
     /// Handles deterministic seed restoration, world progress, player health/survival/inventory,
     /// vehicle status, stash/trunk contents, read lore notes, and camp placements.
-    /// Supports Quick Save (F5), Quick Load (F9), and Auto-save during camping.
+    /// One journey file per character slot (CharacterProfiles), written automatically: when sleeping, at a new zone,
+    /// every few minutes while it is calm, when leaving to the menu and when the game closes. There is no manual
+    /// quick save or quick load. Dying ends the journey: the file is removed, the character's profile (stats,
+    /// read notes, records) is kept.
     /// </summary>
     public class SaveManager : MonoBehaviour
     {
@@ -26,8 +29,19 @@ namespace EndlessSurvival.Save
         /// <summary>Raised while a save is applied, after the player and vehicle state.</summary>
         public static event Action<SaveData> ApplyingLoad;
 
-        private const string SaveFileName = "survival_save.json";
-        private string SaveFilePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+        // Journey file of the active character slot (a separate test folder while no character is selected)
+        private string SaveFilePath => CharacterProfiles.ActiveRunPath;
+
+        [Header("Auto save")]
+        [Tooltip("Seconds between the silent automatic saves while no enemy is near")]
+        public float autoSaveSeconds = 300f;
+
+        private float _autoTimer;
+        private bool _runEnded;
+
+        /// <summary>False on the main menu, after death and once the journey has been closed.</summary>
+        // Test scenes (Assets/Scenes/Test) never save: they would overwrite the real journey
+        public bool CanSave => !_runEnded && !GameOverUI.IsGameOver && !EndlessSurvival.Survival.SurvivalUIState.MenuOpen && !EndlessSurvival.Testing.TestArena.Active;
 
         [Header("Read Notes Lore Tracking")]
         private readonly HashSet<string> _readNoteIds = new HashSet<string>();
@@ -63,24 +77,52 @@ namespace EndlessSurvival.Save
             }
             Instance = this;
             CreateNotificationUI();
+            CharacterProfiles.Changed += OnCharacterChanged;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance != this) return;
+            CharacterProfiles.Changed -= OnCharacterChanged;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            _runEnded = false;
+            _autoTimer = 0f;
+        }
+
+        /// <summary>The read notes belong to the character, not to one journey.</summary>
+        private void OnCharacterChanged()
+        {
+            _readNoteIds.Clear();
+            var p = CharacterProfiles.Current;
+            if (p?.readNoteIds == null) return;
+            foreach (var id in p.readNoteIds) _readNoteIds.Add(id);
+        }
+
+        private void OnApplicationQuit()
+        {
+            // Closing the game is "save and quit" (also when play mode stops in the editor)
+            if (CharacterProfiles.Active >= 0 && CanSave && EndlessSurvival.Survival.SurvivalDirector.Player != null)
+                SaveGame(isAutoSave: true, silent: true);
         }
 
         private void Update()
         {
-            var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            if (keyboard != null)
+            // Silent safety save every few minutes, only for a selected character and only while it is calm
+            if (CharacterProfiles.Active < 0 || !CanSave || Time.timeScale < 0.01f) return;
+            if (EndlessSurvival.Survival.SurvivalDirector.Player == null) return;
+            _autoTimer += Time.unscaledDeltaTime;
+            if (_autoTimer < autoSaveSeconds) return;
+            if (EndlessSurvival.Survival.SurvivalDirector.DangerNearby(EndlessSurvival.Survival.SurvivalDirector.PlayerPosition, 60f))
             {
-                // F5: Hızlı Kayıt (Quick Save)
-                if (keyboard.f5Key.wasPressedThisFrame)
-                {
-                    SaveGame(isAutoSave: false);
-                }
-                // F9: Hızlı Yükleme (Quick Load)
-                else if (keyboard.f9Key.wasPressedThisFrame)
-                {
-                    LoadGame();
-                }
+                _autoTimer = autoSaveSeconds - 20f; // try again shortly
+                return;
             }
+            SaveGame(isAutoSave: true, silent: true);
         }
 
         // ==========================================
@@ -93,6 +135,12 @@ namespace EndlessSurvival.Save
             if (!_readNoteIds.Contains(noteId))
             {
                 _readNoteIds.Add(noteId);
+                var profile = CharacterProfiles.Current;
+                if (profile != null && !profile.readNoteIds.Contains(noteId))
+                {
+                    profile.readNoteIds.Add(noteId);
+                    CharacterProfiles.SaveCurrent();
+                }
                 Debug.Log($"<color=cyan>[SaveManager] Not okundu olarak işaretlendi: {noteId}</color>");
             }
         }
@@ -124,6 +172,7 @@ namespace EndlessSurvival.Save
 
         public void DeleteSave()
         {
+            if (EndlessSurvival.Testing.TestArena.Active) return;
             if (File.Exists(SaveFilePath))
             {
                 File.Delete(SaveFilePath);
@@ -131,12 +180,55 @@ namespace EndlessSurvival.Save
             }
         }
 
+        /// <summary>
+        /// Closes the journey: the character keeps what it learned (stats, read notes, records), the journey file
+        /// is removed. death = the character died (counted on the profile); false = the journey was given up or
+        /// finished and a new one starts.
+        /// </summary>
+        public void EndRun(bool death)
+        {
+            if (_runEnded) return;
+            BankProfile(death);
+            _runEnded = true;
+            CharacterProfiles.DeleteRun(CharacterProfiles.Active);
+            Debug.Log($"[SaveManager] Journey closed (death={death}); the character profile is kept.");
+        }
+
+        /// <summary>Writes what the character keeps for good into its profile.</summary>
+        private void BankProfile(bool death)
+        {
+            var p = CharacterProfiles.Current;
+            if (p == null) return;
+
+            var stats = EndlessSurvival.Survival.CharacterStats.Instance;
+            if (stats != null) p.stats = stats.BaseValues();
+            p.readNoteIds = new List<string>(_readNoteIds);
+
+            var journey = EndlessSurvival.Survival.Journey.Instance;
+            if (journey != null)
+            {
+                p.bestKm = Mathf.Max(p.bestKm, journey.MaxKm);
+                p.runKm = journey.MaxKm;
+                p.runDay = EndlessSurvival.Survival.Journey.Day;
+            }
+            var tracker = GameStatsTracker.Instance;
+            if (tracker != null) p.bestScore = Mathf.Max(p.bestScore, tracker.CalculateSurvivalScore());
+            if (death) p.deaths++;
+            CharacterProfiles.SaveCurrent();
+        }
+
         // ==========================================
         // OYUN KAYDETME (SAVE)
         // ==========================================
 
-        public bool SaveGame(bool isAutoSave = false)
+        public bool SaveGame(bool isAutoSave = false, bool silent = false)
         {
+            if (!CanSave)
+            {
+                Debug.LogWarning("[SaveManager] Save skipped: no journey is running (menu, death or journey closed).");
+                return false;
+            }
+            _autoTimer = 0f;
             try
             {
                 SaveData data = new SaveData();
@@ -196,6 +288,9 @@ namespace EndlessSurvival.Save
                     {
                         data.playerMoney = inv.Money;
                         data.playerLooseAmmo = inv.LooseAmmo;
+                        data.playerPistolAmmo = inv.Count(EndlessCombat.Combat.AmmoKind.Pistol);
+                        data.playerRifleAmmo = inv.Count(EndlessCombat.Combat.AmmoKind.Rifle);
+                        data.playerShotgunAmmo = inv.Count(EndlessCombat.Combat.AmmoKind.Shotgun);
 
                         if (inv.Storage != null)
                         {
@@ -208,6 +303,10 @@ namespace EndlessSurvival.Save
                             }
                         }
                     }
+
+                    // Worn clothes, weapons on the body, shield
+                    var equipment = player.GetComponent<PlayerEquipment>();
+                    if (equipment != null) equipment.CaptureSave(data);
                 }
 
                 // 4. Araç Durumu
@@ -259,10 +358,11 @@ namespace EndlessSurvival.Save
 
                 // JSON'a Çevir ve Kaydet
                 string json = JsonUtility.ToJson(data, true);
+                Directory.CreateDirectory(Path.GetDirectoryName(SaveFilePath));
                 File.WriteAllText(SaveFilePath, json);
+                BankProfile(false);
 
-                string msg = isAutoSave ? "OTOMATİK KAYIT ALINDI (Kamp)" : "OYUN KAYDEDİLDİ [F5]";
-                ShowNotification(msg, new Color(0.15f, 0.55f, 0.25f, 0.95f));
+                if (!silent) ShowNotification("OYUN KAYDEDİLDİ", new Color(0.15f, 0.55f, 0.25f, 0.95f));
                 Debug.Log($"<color=green>[SaveManager] Oyun başarıyla kaydedildi: {SaveFilePath}</color>");
                 return true;
             }
@@ -329,6 +429,12 @@ namespace EndlessSurvival.Save
             if (data.readNoteIds != null)
             {
                 foreach (var id in data.readNoteIds) _readNoteIds.Add(id);
+            }
+            // Notes the character read on earlier journeys stay read
+            var charProfile = CharacterProfiles.Current;
+            if (charProfile?.readNoteIds != null)
+            {
+                foreach (var id in charProfile.readNoteIds) _readNoteIds.Add(id);
             }
 
             // 4. Araç ve Oyuncu Konumları
@@ -409,6 +515,17 @@ namespace EndlessSurvival.Save
                             if (def != null) inv.Storage.Add(def, slot.amount);
                         }
                     }
+
+                    // Equipment first (swapping a weapon returns its magazine to the pool), then money and the ammo pools
+                    var equipment = player.GetComponent<PlayerEquipment>();
+                    if (equipment != null) equipment.RestoreSave(data, FindItemDefinition);
+
+                    inv.SetMoney(data.playerMoney);
+                    int pistol = data.playerPistolAmmo, rifle = data.playerRifleAmmo, shells = data.playerShotgunAmmo;
+                    if (pistol + rifle + shells == 0 && data.playerLooseAmmo > 0) rifle = data.playerLooseAmmo; // save from before the ammo kinds
+                    inv.SetAmmo(EndlessCombat.Combat.AmmoKind.Pistol, pistol);
+                    inv.SetAmmo(EndlessCombat.Combat.AmmoKind.Rifle, rifle);
+                    inv.SetAmmo(EndlessCombat.Combat.AmmoKind.Shotgun, shells);
                 }
             }
 
@@ -423,7 +540,7 @@ namespace EndlessSurvival.Save
 
             yield return null;
 
-            ShowNotification("OYUN BAŞARIYLA YÜKLENDİ [F9]", new Color(0.12f, 0.45f, 0.75f, 0.95f));
+            ShowNotification("YOLCULUK YÜKLENDİ", new Color(0.12f, 0.45f, 0.75f, 0.95f));
             Debug.Log("<color=green>[SaveManager] Kayıt başarıyla yüklendi ve sahne güncellendi!</color>");
         }
 

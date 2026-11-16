@@ -28,6 +28,7 @@ namespace EndlessSurvival.Survival
             get
             {
                 if (SmokingAction.Active) return true;
+                if (BinocularsController.Active) return true;
                 var vitals = PlayerVitals.Instance;
                 if (vitals != null && vitals.ToiletActive) return true;
                 if (CampfireUI.IsResting) return true;
@@ -37,7 +38,7 @@ namespace EndlessSurvival.Survival
                 if (parts != null && parts.CurrentJob != null) return true;
                 var fishing = FishingController.Instance;
                 if (fishing != null && fishing.State != FishingController.FishState.Idle) return true;
-                var a = PlayerSurvivalAnimator.CurrentAction;
+                var a = PlayerSurvivalAnimator.ShownAction; // full body or upper body (drinking)
                 if (a != SurvAnim.None && a != SurvAnim.Breath && a != SurvAnim.HeavyWalk && a != SurvAnim.Death) return true;
                 var player = SurvivalDirector.Player;
                 if (player != null)

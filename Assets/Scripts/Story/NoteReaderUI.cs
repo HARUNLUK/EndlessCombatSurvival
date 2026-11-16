@@ -21,7 +21,7 @@ namespace EndlessSurvival.Story
         public TextMeshProUGUI bodyText;
 
         [Header("Player Input (To disable look)")]
-        [Tooltip("Optional reference to StarterAssetsInputs to disable mouse look while reading")]
+        [Tooltip("Optional reference to EndlessCombat.Character.PlayerInputState to disable mouse look while reading")]
         public MonoBehaviour playerInputs;
 
         private bool _isOpen;
@@ -42,7 +42,8 @@ namespace EndlessSurvival.Story
 
         private void Update()
         {
-            if (_isOpen && ClosePressed())
+            // Esc / E, gamepad B / A / X
+            if (_isOpen && (ClosePressed() || EndlessCombat.Combat.GameInput.BackPressed || EndlessCombat.Combat.GameInput.PadPressed(0)))
             {
                 Close();
             }
@@ -79,7 +80,7 @@ namespace EndlessSurvival.Story
             _previousTimeScale = Time.timeScale;
             Time.timeScale = 0f; // Pause the game while reading
 
-            // Optional: Disable player look if using StarterAssetsInputs
+            // Optional: Disable player look if using EndlessCombat.Character.PlayerInputState
             if (playerInputs != null)
             {
                 var cursorProp = playerInputs.GetType().GetField("cursorInputForLook");

@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 263fec52b5e4b144f88a7b6bda4d6760, type: 3}
+  m_Name: Item_Binoculars
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Inventory.ItemDefinition
+  displayName: "D\xFCrb\xFCn"
+  category: 3
+  description: "Uza\u011F\u0131 g\xF6sterir (4x-8x). [Z] bas\u0131l\u0131 tut ya
+    da Kullan. Ortadakine 1.5 sn bak\u0131nca d\xFC\u015Fman\u0131, kamp\u0131, sand\u0131\u011F\u0131,
+    enkaz\u0131 i\u015Faretler. G\xFCnd\xFCz g\xFCne\u015Fe kar\u015F\u0131 bakarsan
+    mercek parlar, yak\u0131ndaki d\xFC\u015Fman \u015F\xFCphelenir."
+  weight: 0.7
+  value: 30
+  useAmount: 1
+  equipSlot: 1
+  armor: 0
+  weaponPrefab: {fileID: 0}
+  shield:
+    absorb: 0
+    bulletAbsorb: 0
+    staminaPerDamage: 0
+    coverAngle: 0
+    guardMoveSpeed: 0
+    heavy: 0
+    bounceAttackers: 0
+  worldColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
+  worldScale: {x: 0.18, y: 0.08, z: 0.14}
+  worldModel: {fileID: 3500630311926173898, guid: a628d91268076694ba78aeea954a4deb, type: 3}
+  worldModelScale: 1
+  spoilHours: 0
+  spoilsInto: {fileID: 0}
+  poisonChance: 0
+  thirstPenalty: 0
+  stressRelief: 0
+  warmth: 0
+  leavesItem: {fileID: 0}
+  effects: 0
+  insulation: 0
+  waterproof: 0
+  noise: 0
+  identifiedName: 
+  natureToIdentify: 20

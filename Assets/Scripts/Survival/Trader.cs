@@ -147,6 +147,7 @@ namespace EndlessSurvival.Survival
         {
             if (_instance == null || _instance._trader == null) return;
             _instance._trader = null;
+            EndlessCombat.Combat.GameInput.BlockGameplayBriefly();
             SurvivalUIState.TradeOpen = false;
             SurvivalUIState.ReleaseCursor();
         }
@@ -154,7 +155,7 @@ namespace EndlessSurvival.Survival
         private void Update()
         {
             if (_trader == null) return;
-            if (SKeys.Down(Key.Escape) || _user == null ||
+            if (EndlessCombat.Combat.GameInput.BackPressed || _user == null ||
                 Vector3.Distance(_user.transform.position, _trader.transform.position) > 5f)
                 Close();
         }
@@ -172,6 +173,7 @@ namespace EndlessSurvival.Survival
         {
             if (_trader == null || _user == null) return;
             SurvivalGUI.Init();
+            if (!PadGUI.Begin(this)) return;
             float w = 720f, h = 460f;
             var rect = new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
             GUI.Box(rect, GUIContent.none, SurvivalGUI.Panel);
@@ -188,7 +190,7 @@ namespace EndlessSurvival.Survival
                 var st = _trader.stock[i];
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{st.item.DisplayName} x{st.amount}", SurvivalGUI.Text, GUILayout.Width(200));
-                if (GUILayout.Button($"Al ({Trader.BuyPrice(st.item)})", GUILayout.Width(100))) buy = i;
+                if (PadGUI.Button($"Al ({Trader.BuyPrice(st.item)})", GUILayout.Width(100))) buy = i;
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();
@@ -206,7 +208,7 @@ namespace EndlessSurvival.Survival
                 GUILayout.Label($"{pair.Key.DisplayName} x{pair.Value}", SurvivalGUI.Text, GUILayout.Width(200));
                 int price = Trader.SellPrice(pair.Key);
                 GUI.enabled = price > 0;
-                if (GUILayout.Button($"Sat ({price})", GUILayout.Width(100))) _message = _trader.Sell(pair.Key, _user);
+                if (PadGUI.Button($"Sat ({price})", GUILayout.Width(100))) _message = _trader.Sell(pair.Key, _user);
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
             }
@@ -215,8 +217,9 @@ namespace EndlessSurvival.Survival
 
             GUILayout.EndHorizontal();
             if (!string.IsNullOrEmpty(_message)) GUILayout.Label(_message, SurvivalGUI.Text);
-            if (GUILayout.Button("Kapat [Esc]", GUILayout.Width(140))) Close();
+            if (PadGUI.Button(PadGUI.Show ? "Kapat (B)" : "Kapat [Esc]", GUILayout.Width(140))) Close();
             GUILayout.EndArea();
+            PadGUI.End();
         }
     }
 }

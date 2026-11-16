@@ -189,7 +189,7 @@ namespace EndlessSurvival.World.Editor
                 spawner.minDetails = 60;
                 spawner.maxDetails = 120;
                 spawner.minRoadDistance = 15f;
-                spawner.maxRoadDistance = 238f;
+                spawner.maxRoadDistance = 490f;
                 spawner.minTreeSpacing = 3.6f;
                 spawner.minScale = 1.8f;
                 spawner.maxScale = 3.2f;

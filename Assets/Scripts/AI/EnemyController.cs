@@ -6,11 +6,18 @@ using EndlessSurvival.Inventory;
 
 namespace EndlessCombat.AI
 {
+    /// <summary>
+    /// An enemy soldier. Perception (sight, hearing, suspicion) and the non combat states live here. In combat the
+    /// decisions come from EnemyBrain (roles, distance bands, cover, attack tokens: Core_Feel_Plan stage 4), the
+    /// walking from EnemyMover (route, steering, stuck handling), sight checks from EnemyPerception, the shared memory
+    /// and tokens from EnemySquad, the strikes / hit reactions / shield from CombatBody (the player's simple melee,
+    /// stage 2: one strike per press, no combos, rolls or heavy attacks).
+    /// </summary>
     [RequireComponent(typeof(NavMeshAgent))]
     public class EnemyController : MonoBehaviour, IDamageable
     {
         public enum EnemyState { Idle, Sitting, Patrolling, Suspicious, Combat }
-        
+
         [Header("Behavior")]
         public EnemyState initialState = EnemyState.Idle;
         private EnemyState currentState;
@@ -20,14 +27,26 @@ namespace EndlessCombat.AI
         /// <summary>Enemies currently enabled in the scene (used by survival systems: toilet safety, stress).</summary>
         public static readonly System.Collections.Generic.List<EnemyController> Active = new System.Collections.Generic.List<EnemyController>();
 
+        private bool _started;
+
         private void OnEnable()
         {
             if (!Active.Contains(this)) Active.Add(this);
+            if (_started && !IsDead && _squad == null) _squad = EnemySquad.Join(this);
         }
 
         private void OnDisable()
         {
             Active.Remove(this);
+            LeaveSquad();
+        }
+
+        private void LeaveSquad()
+        {
+            if (_squad != null) _squad.Leave(this);
+            else EnemySquad.ReleaseToken(this);
+            _squad = null;
+            _brain?.Reset();
         }
 
         [Header("Stealth & Perception")]
@@ -43,6 +62,12 @@ namespace EndlessCombat.AI
         public float investigateDuration = 5f;
         private Vector3 _investigatePoint;
         private float _investigateTimer = 0f;
+        [Tooltip("How many enemies walk to a noise; the others only turn to look and stay alert")]
+        public int maxNoiseInvestigators = 2;
+        [Tooltip("After seeing or hearing the player itself, noises elsewhere (a thrown rock) are ignored for this long (s)")]
+        public float distractionIgnoreSeconds = 10f;
+        private bool _investigateLookOnly;
+        private float _playerEvidenceTime = -999f;
         private TextMesh _stealthIndicator;
 
         [Header("Stats")]
@@ -70,17 +95,8 @@ namespace EndlessCombat.AI
         public float repathInterval = 0.3f;
         [Tooltip("Recalculate early when the destination moves more than this (m)")]
         public float repathDestinationDelta = 1.5f;
-        [Tooltip("A path corner counts as reached within this horizontal distance (m)")]
-        public float cornerReachDistance = 0.6f;
         [Tooltip("How far from the NavMesh the enemy or destination may be and still get a path (m)")]
         public float navMeshSampleDistance = 4f;
-        private NavMeshPath _path;
-        private readonly Vector3[] _pathCorners = new Vector3[64];
-        private int _pathCornerCount;
-        private int _pathCornerIndex;
-        private float _lastRepathTime = -999f;
-        private Vector3 _pathDestination;
-        private bool _hasPath;
 
         [Header("Loot")]
         [Tooltip("Loot rolled and dropped as pickups when this enemy dies")]
@@ -92,22 +108,61 @@ namespace EndlessCombat.AI
         [Tooltip("On spawn, replace the weapon in the hand with Held Weapon Item's weapon prefab (pistol / melee variants)")]
         public bool equipHeldWeaponOnSpawn = false;
 
-        [Header("Melee (melee weapon or no weapon)")]
-        [Tooltip("Distance at which a melee fighter stops running and swings (m)")]
-        public float meleeRange = 1.5f;
-        [Tooltip("Run speed multiplier while a melee fighter charges the player")]
-        public float meleeChargeSpeedMultiplier = 1.6f;
-        private float _pendingMeleeHitTime = -1f;
-        private MeleeStats _meleeStats;
+        [Header("Ammo (firearms)")]
+        [Tooltip("Total rounds a rifle enemy carries (random between x and y). When they are gone it fights hand to hand")]
+        public Vector2Int rifleRounds = new Vector2Int(14, 24);
+        [Tooltip("Total rounds a pistol enemy carries (random between x and y)")]
+        public Vector2Int pistolRounds = new Vector2Int(7, 13);
+        [Tooltip("Rounds per magazine: rifle / pistol. The enemy stops to reload between magazines")]
+        public Vector2Int magazineRounds = new Vector2Int(8, 6);
+        [Tooltip("Chance that an enemy out of ammo draws a knife instead of using its fists")]
+        [Range(0f, 1f)] public float backupKnifeChance = 0.5f;
 
-        // Hit reaction (melee hits)
-        private float _staggerUntil = -1f;
-        private Vector3 _knockbackVelocity;
+        [Header("Damage dealt (the same weapons are much deadlier in the player's hands)")]
+        [Tooltip("Multiplier for this enemy's bullets")]
+        public float firearmDamageMultiplier = 0.55f;
+        [Tooltip("Multiplier for this enemy's melee hits")]
+        public float meleeDamageMultiplier = 0.6f;
+        [Tooltip("A melee enemy closer than this steps back to keep some room (m)")]
+        public float meleeMinDistance = 1.05f;
+
+        private bool _outOfAmmo;
+        private WeaponController _stowedGun;
+
+        /// <summary>The gun is empty and put away: this enemy now fights hand to hand.</summary>
+        public bool OutOfAmmo => _outOfAmmo;
+
+        [Header("Melee (melee weapon or no weapon)")]
+        [Tooltip("Distance at which a melee fighter stops running and strikes (m)")]
+        public float meleeRange = 1.5f;
+        [Tooltip("Run speed multiplier while a melee fighter charges the player (with an attack token)")]
+        public float meleeChargeSpeedMultiplier = 1.6f;
+        [Tooltip("Shield carried on the left arm (on the back with a rifle or two handed weapon). Dropped on death, breaks when worn out")]
+        public ItemDefinition heldShieldItem;
+
+        private CombatBody _body;
+        private MeleeCategory _meleeCategory = MeleeCategory.Fists;
+        private float _nextMeleeTime;
+        private MeleeStats _meleeStats;
         private CombatAnimator _combatAnim;
         private WeaponType _weaponType = WeaponType.Rifle;
+        private EnemyMover _mover;
+        private EnemyBrain _brain;
+        private EnemySquad _squad;
 
         public WeaponType WeaponKind => _weaponType;
         private bool IsMeleeFighter => _weaponType == WeaponType.Melee || _weaponType == WeaponType.Unarmed;
+        /// <summary>Fights hand to hand (melee weapon, fists, or out of ammo).</summary>
+        public bool IsMeleeRole => IsMeleeFighter;
+        /// <summary>A shield on the arm (not on the back), not broken.</summary>
+        public bool HasUsableShield => _body != null && _body.UsingShield;
+        /// <summary>Shield on the arm and raised: counts as cover for the squad's gunners.</summary>
+        public bool HasRaisedShield => !IsDead && _body != null && _body.IsGuarding;
+        public float Health01 => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 1f;
+        public EnemySquad Squad => _squad;
+        public bool IsReloading => weapon != null && weapon.IsFirearm && weapon.IsReloading;
+        public EnemyMover Mover => _mover;
+        public EnemyBrain Brain => _brain;
 
         [Header("References")]
         public Transform target;
@@ -134,6 +189,7 @@ namespace EndlessCombat.AI
             if (equipHeldWeaponOnSpawn) EquipHeldWeaponItem();
             weapon = GetComponentInChildren<WeaponController>();
             SetupWeaponType();
+            SetupAmmo();
             if (animator != null && animator.GetComponent<FootstepEmitter>() == null)
             {
                 animator.gameObject.AddComponent<FootstepEmitter>();
@@ -153,7 +209,6 @@ namespace EndlessCombat.AI
 
             // Movement stays on the CharacterController (gravity, collisions); the NavMesh only supplies the route
             if (agent != null) agent.enabled = false;
-            _path = new NavMeshPath();
 
             if (target == null)
             {
@@ -170,9 +225,74 @@ namespace EndlessCombat.AI
                 }
             }
 
+            _mover = new EnemyMover(this);
+            _brain = new EnemyBrain(this);
             SetupRagdoll();
             DisableRagdoll();
             SetupStealthIndicator();
+            SetupCombatBody();
+            _squad = EnemySquad.Join(this);
+            _started = true;
+            RegisterTuning();
+        }
+
+        /// <summary>Combat body: the same simple melee rules as the player (one strike, short hit reaction, shield).</summary>
+        private void SetupCombatBody()
+        {
+            if (heldShieldItem != null)
+            {
+                var holder = ShieldHolder.GetOrAdd(gameObject);
+                holder.Set(heldShieldItem);
+                holder.SetOnBack(_weaponType == WeaponType.Rifle || _meleeCategory == MeleeCategory.TwoHand);
+                holder.Broken -= OnShieldBroken;
+                holder.Broken += OnShieldBroken;
+            }
+
+            _body = CombatBody.GetOrAdd(gameObject, CombatTeam.Enemy);
+            _body.team = CombatTeam.Enemy;
+            _body.RefreshShield();
+            _body.AimDirection = () =>
+            {
+                if (target == null) return Vector3.zero;
+                Vector3 d = target.position - transform.position;
+                d.y = 0f;
+                return d;
+            };
+            // Stealth kill (knife from behind) only works on an enemy that is not fighting
+            _body.Unaware = () => currentState != EnemyState.Combat;
+            _body.HitReceived -= OnHitReceived;
+            _body.HitReceived += OnHitReceived;
+            _body.SwingFinished -= OnSwingFinished;
+            _body.SwingFinished += OnSwingFinished;
+        }
+
+        private void OnHitReceived(HitResult result, CombatBody attacker)
+        {
+            if (IsDead) return;
+            suspicionMeter = 100f;
+            if (currentState != EnemyState.Combat)
+            {
+                SetState(EnemyState.Combat);
+                AlertNearbyTeammates(transform.position, 25f);
+            }
+        }
+
+        /// <summary>One strike is over (hit, missed or cut by a hit reaction): the token goes to the next one, a short wait.</summary>
+        private void OnSwingFinished(int hits)
+        {
+            _brain?.StrikeDone();
+            _nextMeleeTime = Time.time + attackCooldown * Random.Range(0.7f, 1.3f);
+        }
+
+        /// <summary>The shield broke (the pieces fall off in ShieldHolder): nothing is dropped on death any more.</summary>
+        private void OnShieldBroken(ItemDefinition item)
+        {
+            heldShieldItem = null;
+            if (_body != null)
+            {
+                _body.SetGuard(false);
+                _body.RefreshShield();
+            }
         }
 
         /// <summary>Swaps the weapon in the hand for heldWeaponItem's prefab (keeps the hand socket).</summary>
@@ -199,8 +319,7 @@ namespace EndlessCombat.AI
 
             if (heldWeaponItem.weaponPrefab != null && socket != null)
             {
-                WeaponController spawned = Instantiate(heldWeaponItem.weaponPrefab, socket);
-                spawned.MakeInfiniteAmmo();
+                Instantiate(heldWeaponItem.weaponPrefab, socket);
             }
         }
 
@@ -210,6 +329,8 @@ namespace EndlessCombat.AI
 
             var melee = weapon != null ? weapon.GetComponent<MeleeWeapon>() : null;
             _meleeStats = melee != null ? melee.stats : CombatContent.Instance.fists;
+            _meleeStats.damage *= Mathf.Max(0f, meleeDamageMultiplier);
+            _meleeCategory = melee != null ? melee.stats.ResolveCategory(false) : MeleeCategory.Fists;
 
             // Rifles are held twisted 45 degrees; pistols are held straight in front
             if (_weaponType == WeaponType.Pistol) aimRotationOffset = -weapon.AimYawOffset;
@@ -222,30 +343,82 @@ namespace EndlessCombat.AI
             }
         }
 
+        /// <summary>Firearm enemies carry only a few rounds (one or two short magazines).</summary>
+        private void SetupAmmo()
+        {
+            if (weapon == null || !weapon.IsFirearm) return;
+            bool pistol = weapon.Type == WeaponType.Pistol;
+            Vector2Int range = pistol ? pistolRounds : rifleRounds;
+            int total = Random.Range(Mathf.Min(range.x, range.y), Mathf.Max(range.x, range.y) + 1);
+            int mag = Mathf.Clamp(pistol ? magazineRounds.y : magazineRounds.x, 1, Mathf.Max(1, total));
+            weapon.MakeLimitedAmmo(mag, Mathf.Max(0, total - mag));
+            weapon.DamageMultiplier = firearmDamageMultiplier;
+        }
+
+        /// <summary>
+        /// Out of rounds: the gun goes on the back and the enemy fights with a knife or its fists. From here on it
+        /// has the melee role (circles, charges with an attack token, one strike).
+        /// </summary>
+        private void SwitchToMelee()
+        {
+            if (_outOfAmmo) return;
+            _outOfAmmo = true;
+            animator.SetBool("IsAiming", false);
+
+            // Gun on the back (it still drops on death)
+            _stowedGun = weapon;
+            Transform socket = weapon != null ? weapon.transform.parent : null;
+            if (weapon != null)
+            {
+                weapon.CancelReload();
+                Transform chest = animator != null ? animator.GetBoneTransform(HumanBodyBones.Chest) : null;
+                if (chest == null && animator != null) chest = animator.GetBoneTransform(HumanBodyBones.Spine);
+                if (chest != null)
+                {
+                    weapon.transform.SetParent(chest, false);
+                    weapon.transform.localPosition = new Vector3(0.18f, 0.02f, -0.15f);
+                    weapon.transform.localRotation = Quaternion.Euler(25f, 155f, -35f);
+                }
+                else weapon.gameObject.SetActive(false);
+            }
+
+            // Backup knife for some, fists for the rest
+            WeaponController melee = null;
+            if (socket != null && Random.value < backupKnifeChance)
+            {
+                var settings = EndlessSurvival.Survival.SurvivalSettings.Instance;
+                var knife = settings != null ? settings.Item("Item_Knife") : null;
+                if (knife != null && knife.weaponPrefab != null) melee = Instantiate(knife.weaponPrefab, socket);
+            }
+            weapon = melee;
+            SetupWeaponType();
+
+            var holder = GetComponent<ShieldHolder>();
+            if (holder != null && holder.HasShield) holder.SetOnBack(false);
+            _body?.RefreshShield();
+            _nextMeleeTime = Time.time + 0.4f;
+        }
+
         /// <summary>Melee hit reaction: short push back, no attacking or walking for the given time.</summary>
         public void Stagger(Vector3 push, float duration)
         {
             if (IsDead || duration <= 0f) return;
-            _staggerUntil = Time.time + duration;
-            _knockbackVelocity = push;
-            _pendingMeleeHitTime = -1f;
-            if (_combatAnim != null) _combatAnim.PlayAction(CombatAnimator.HitReact, duration + 0.15f);
+            _body?.Stagger(duration, push);
         }
 
         private void Update()
         {
             if (IsDead) return;
+            UpdateDebug();
 
-            // Staggered by a melee hit: only the push back moves the enemy
-            if (Time.time < _staggerUntil && controller != null)
+            // Own strike or hit reaction: the CombatBody moves the body
+            if (_body != null && _body.IsLocked && controller != null)
             {
                 verticalVelocity = controller.isGrounded ? -2f : verticalVelocity + gravity * Time.deltaTime;
-                Vector3 v = _knockbackVelocity;
-                v.y = verticalVelocity;
-                controller.Move(v * Time.deltaTime);
-                _knockbackVelocity = Vector3.MoveTowards(_knockbackVelocity, Vector3.zero, 8f * Time.deltaTime);
+                controller.Move(new Vector3(0f, verticalVelocity, 0f) * Time.deltaTime);
                 animator.SetBool("IsAiming", false);
                 animator.SetFloat("Speed", 0f);
+                _mover.TrackProgress(false);
                 UpdateStealthIndicator();
                 return;
             }
@@ -265,7 +438,6 @@ namespace EndlessCombat.AI
 
             bool isMoving = false;
             float animSpeed = moveSpeed;
-            float stopDist = 3f;
             Vector3 direction = (target.position - transform.position).normalized;
             direction.y = 0;
 
@@ -283,67 +455,15 @@ namespace EndlessCombat.AI
 
             // 1. Algılama ve Görüş Kontrolü
             bool canSee = CanSeePlayer(out float sightClarity);
+            if (canSee) _playerEvidenceTime = Time.time;
 
             // Ayak sesi / gürültü duyma kontrolü
             CheckPlayerNoise();
 
-            if (currentState == EnemyState.Combat && IsMeleeFighter)
+            if (currentState == EnemyState.Combat)
             {
-                // Yakın dövüşçü: koşarak gelir, menzile girince vurur
                 suspicionMeter = 100f;
-                animator.SetBool("IsAiming", false);
-                UpdateMeleeCombat(distanceToTarget, direction, ref moveVelocity, ref isMoving, ref animSpeed);
-            }
-            else if (currentState == EnemyState.Combat)
-            {
-                // Savaş Durumu
-                suspicionMeter = 100f;
-
-                if (canSee) _lastSeenTime = Time.time;
-                // Kısa süreli görüş kaybı (animasyon/kemik titremesi) silahı indirmesin
-                bool hasSight = canSee || Time.time - _lastSeenTime < lostSightGrace;
-
-                if (distanceToTarget <= attackRange && hasSight)
-                {
-                    animator.SetBool("IsAiming", true);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
-
-                    if (canSee && Time.time >= lastAttackTime + attackCooldown)
-                    {
-                        Attack();
-                    }
-
-                    if (distanceToTarget > stopDist)
-                    {
-                        moveVelocity = GetPathDirection(target.position) * (moveSpeed * 0.7f);
-                        isMoving = true;
-                    }
-                }
-                else if (distanceToTarget <= detectionRange * 1.3f)
-                {
-                    animator.SetBool("IsAiming", false);
-
-                    if (distanceToTarget > stopDist)
-                    {
-                        // Face the walking direction so going around an obstacle looks natural
-                        Vector3 pathDir = GetPathDirection(target.position);
-                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(pathDir), Time.deltaTime * 10f);
-                        moveVelocity = pathDir * moveSpeed;
-                        isMoving = true;
-                    }
-                    else
-                    {
-                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
-                    }
-                }
-                else
-                {
-                    // Oyuncu çok uzaklaştı veya tamamen kaçtı
-                    animator.SetBool("IsAiming", false);
-                    SetState(EnemyState.Suspicious);
-                    _investigatePoint = target.position;
-                    _investigateTimer = investigateDuration;
-                }
+                UpdateCombat(canSee, distanceToTarget, direction, ref moveVelocity, ref isMoving, ref animSpeed);
             }
             else if (currentState == EnemyState.Suspicious)
             {
@@ -365,13 +485,19 @@ namespace EndlessCombat.AI
                 else
                 {
                     // Görüş alanı dışındaysa şüphe barı yavaşça söner
-                    suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * Time.deltaTime);
+                    if (Time.time >= _glintHoldUntil) suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * Time.deltaTime);
 
                     Vector3 toInvestigate = (_investigatePoint - transform.position);
                     toInvestigate.y = 0;
-                    if (toInvestigate.magnitude > 1.5f && _investigateTimer > 0f)
+                    if (_investigateLookOnly)
                     {
-                        Vector3 pathDir = GetPathDirection(_investigatePoint);
+                        // Others went to check: this one only turns toward the noise and watches
+                        if (toInvestigate.sqrMagnitude > 0.05f)
+                            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(toInvestigate.normalized), Time.deltaTime * 4f);
+                    }
+                    else if (toInvestigate.magnitude > 1.5f && _investigateTimer > 0f)
+                    {
+                        Vector3 pathDir = _mover.DirectionTo(_investigatePoint);
                         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(pathDir), Time.deltaTime * 6f);
                         moveVelocity = pathDir * (moveSpeed * 0.5f);
                         isMoving = true;
@@ -395,13 +521,14 @@ namespace EndlessCombat.AI
                     if (suspicionMeter > 25f)
                     {
                         _investigatePoint = target.position;
+                        _investigateLookOnly = false;
                         _investigateTimer = investigateDuration;
                         SetState(EnemyState.Suspicious);
                     }
                 }
                 else
                 {
-                    suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * Time.deltaTime);
+                    if (Time.time >= _glintHoldUntil) suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * Time.deltaTime);
                 }
             }
 
@@ -418,6 +545,18 @@ namespace EndlessCombat.AI
                 animator.SetBool("IsSitting", false);
             }
 
+            // A raised shield slows the walk
+            if (_body != null)
+            {
+                if (currentState != EnemyState.Combat) _body.SetGuard(false);
+                moveVelocity.x *= _body.MoveSpeedMultiplier;
+                moveVelocity.z *= _body.MoveSpeedMultiplier;
+                if (_body.MoveSpeedMultiplier < 0.99f) animSpeed *= _body.MoveSpeedMultiplier;
+            }
+
+            // Stuck check (route rebuild, then a short detour); the steering is inside the mover
+            _mover.TrackProgress(isMoving);
+
             // Hareketi ve yerçekimini uygula
             moveVelocity.y = verticalVelocity;
             controller.Move(moveVelocity * Time.deltaTime);
@@ -427,63 +566,110 @@ namespace EndlessCombat.AI
             UpdateStealthIndicator();
         }
 
-        private void UpdateMeleeCombat(float distanceToTarget, Vector3 direction, ref Vector3 moveVelocity, ref bool isMoving, ref float animSpeed)
+        /// <summary>
+        /// Carries out EnemyBrain's decision this frame: walk to its goal, face the player or the way, aim and shoot
+        /// (gunners with an attack token), strike (melee with a token), shield up (shield role).
+        /// </summary>
+        private void UpdateCombat(bool canSee, float dist, Vector3 toPlayer, ref Vector3 moveVelocity, ref bool isMoving, ref float animSpeed)
         {
-            // Swing in progress: the hit lands after hitDelay if the player is still in reach and in front
-            if (_pendingMeleeHitTime > 0f && Time.time >= _pendingMeleeHitTime)
-            {
-                _pendingMeleeHitTime = -1f;
-                Vector3 to = target.position - transform.position;
-                to.y = 0f;
-                bool inReach = to.magnitude <= _meleeStats.range + 0.6f;
-                bool inFront = to.sqrMagnitude < 0.01f || Vector3.Angle(transform.forward, to) < 75f;
-                if (inReach && inFront)
-                {
-                    var victim = target.GetComponentInParent<IDamageable>();
-                    if (victim != null && !victim.IsDead)
-                    {
-                        victim.TakeDamage(_meleeStats.damage, target.position + Vector3.up * 1.1f, -transform.forward);
-                    }
-                }
-            }
+            if (canSee) _lastSeenTime = Time.time;
+            // Kısa süreli görüş kaybı (animasyon/kemik titremesi) silahı indirmesin
+            bool hasSight = canSee || Time.time - _lastSeenTime < lostSightGrace;
+            float sinceSeen = Time.time - _lastSeenTime;
 
-            if (distanceToTarget > detectionRange * 1.3f)
+            if (dist > detectionRange * 1.3f && !canSee)
             {
-                // Lost the player
+                // Oyuncu çok uzaklaştı veya tamamen kaçtı
+                animator.SetBool("IsAiming", false);
                 SetState(EnemyState.Suspicious);
                 _investigatePoint = target.position;
+                _investigateLookOnly = false;
                 _investigateTimer = investigateDuration;
                 return;
             }
 
-            bool swinging = _pendingMeleeHitTime > 0f || Time.time < lastAttackTime + _meleeStats.hitDelay + 0.25f;
-
-            if (distanceToTarget > meleeRange && !swinging)
+            // Limited ammo: reload between magazines (a pause the player can use), then hand to hand
+            bool reloading = false;
+            if (weapon != null && weapon.IsFirearm)
             {
-                Vector3 pathDir = GetPathDirection(target.position);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(pathDir), Time.deltaTime * 10f);
-                animSpeed = moveSpeed * meleeChargeSpeedMultiplier;
-                moveVelocity = pathDir * animSpeed;
+                if (weapon.OutOfAmmo)
+                {
+                    SwitchToMelee();
+                    return;
+                }
+                if (weapon.NeedsReload && !weapon.IsReloading) weapon.TryReload();
+                reloading = weapon.IsReloading;
+            }
+
+            _brain.Tick(target, canSee, sinceSeen);
+            EnemyBrain.Act act = _brain.Action;
+            bool melee = IsMeleeFighter;
+            bool gunner = !melee && weapon != null && weapon.IsFirearm;
+            if (_body != null) _body.SetGuard(_brain.Guard && _body.UsingShield);
+
+            // Walk to the brain's goal (a charge stops at striking distance)
+            bool charge = act == EnemyBrain.Act.Charge;
+            Vector3 toGoal = _brain.Goal - transform.position;
+            toGoal.y = 0f;
+            float goalDist = charge ? dist : toGoal.magnitude;
+            float stopAt = charge ? meleeRange + 0.3f : 0.5f;
+            Vector3 moveDir = Vector3.zero;
+            if (_brain.Moving && goalDist > stopAt)
+            {
+                moveDir = _mover.DirectionTo(charge ? target.position : _brain.Goal);
+                float speed = _brain.Speed;
+                // The last steps of a charge are walked (spacing), the run is from further away
+                if (charge && dist < 4f) speed = Mathf.Min(speed, moveSpeed * 0.8f);
+                moveVelocity = moveDir * speed;
+                animSpeed = speed;
                 isMoving = true;
-                return;
             }
 
-            if (direction.sqrMagnitude > 0.001f)
+            // Too close (pushed in by the strikes): step back so the two do not stand inside each other
+            if (melee && dist < meleeMinDistance)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 12f);
+                float back = moveSpeed * 0.55f;
+                moveDir = Vector3.zero;
+                moveVelocity = -toPlayer * back;
+                animSpeed = back;
+                isMoving = true;
             }
 
-            float cooldown = Mathf.Max(attackCooldown, _meleeStats.attackInterval);
-            if (!swinging && distanceToTarget <= meleeRange + 0.2f && Time.time >= lastAttackTime + cooldown)
+            // Facing: the player while shooting / backing off / close, else the walking direction
+            bool shootPose = gunner && !reloading && _brain.HasToken && hasSight && dist <= attackRange
+                             && act != EnemyBrain.Act.Flee && act != EnemyBrain.Act.ToCover && act != EnemyBrain.Act.Flank;
+            bool facePlayer = shootPose || _brain.FacePlayer || (melee && dist <= meleeRange + 1f) || (!isMoving && hasSight)
+                              || moveDir.sqrMagnitude < 0.01f;
+            Turn(facePlayer ? toPlayer : moveDir, _brain.TurnSpeed);
+
+            // Only token holders shoot; the gun is raised once it points roughly at the player
+            bool facing = Vector3.Angle(transform.forward, toPlayer) < 35f;
+            animator.SetBool("IsAiming", shootPose);
+            if (shootPose && isMoving)
             {
-                lastAttackTime = Time.time;
-                _pendingMeleeHitTime = Time.time + _meleeStats.hitDelay;
-
-                string trigger;
-                if (_weaponType == WeaponType.Unarmed) trigger = Random.value < 0.5f ? CombatAnimator.PunchJab : CombatAnimator.PunchCross;
-                else trigger = _meleeStats.stab ? CombatAnimator.MeleeStab : CombatAnimator.MeleeSwing;
-                if (_combatAnim != null) _combatAnim.PlayAction(trigger, Mathf.Max(0.5f, _meleeStats.attackInterval));
+                moveVelocity *= 0.7f;
+                animSpeed *= 0.7f;
             }
+            if (shootPose && canSee && facing && Time.time >= lastAttackTime + attackCooldown) Attack();
+
+            // Only token holders strike
+            if (melee && _body != null && _brain.HasToken && dist <= meleeRange + 0.3f && Time.time >= _nextMeleeTime
+                && Vector3.Angle(transform.forward, toPlayer) < 45f)
+            {
+                if (_body.TryAttack(_meleeStats, _meleeCategory)) lastAttackTime = Time.time;
+            }
+        }
+
+        /// <summary>Turns toward dir; slow turners (shield) use a fixed rate so the player can get around them.</summary>
+        private void Turn(Vector3 dir, float degreesPerSecond)
+        {
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) return;
+            Quaternion want = Quaternion.LookRotation(dir.normalized);
+            if (degreesPerSecond < 300f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, want, degreesPerSecond * Time.deltaTime);
+            else
+                transform.rotation = Quaternion.Slerp(transform.rotation, want, Time.deltaTime * 10f);
         }
 
         private void LateUpdate()
@@ -501,51 +687,170 @@ namespace EndlessCombat.AI
             }
         }
 
-        /// <summary>
-        /// Horizontal unit direction to walk in to reach the destination, following the NavMesh route
-        /// around walls and rocks. Falls back to a straight line when there is no NavMesh or no path.
-        /// </summary>
-        private Vector3 GetPathDirection(Vector3 destination)
+        // ------------------------------------------------------------------ tuning panel, page "Düşman"
+
+        /// <summary>Draws the route of the enemy nearest to the player (panel toggle).</summary>
+        public static bool DebugDraw;
+        private static bool s_tuningRegistered;
+        private static EnemyController s_debugNearest;
+        private static int s_debugFrame = -1;
+        private static LineRenderer s_debugLine;
+
+        private static void RegisterTuning()
         {
-            Vector3 straight = destination - transform.position;
-            straight.y = 0f;
-            straight = straight.sqrMagnitude > 0.0001f ? straight.normalized : transform.forward;
-
-            bool destinationMoved = (destination - _pathDestination).sqrMagnitude > repathDestinationDelta * repathDestinationDelta;
-            if (Time.time - _lastRepathTime >= repathInterval || (destinationMoved && Time.time - _lastRepathTime >= 0.1f))
+            if (s_tuningRegistered) return;
+            s_tuningRegistered = true;
+            const string P = "Düşman";
+            Tuning.TuningPanel.Register(P, "Aynı anda saldıran (jeton)", () => EnemySquad.MaxAttackers, v => EnemySquad.MaxAttackers = Mathf.RoundToInt(v), 1f, 6f, 1f);
+            Tuning.TuningPanel.Register(P, "Jeton tutma süresi (sn)", () => EnemySquad.HoldTime, v => EnemySquad.HoldTime = v, 1f, 15f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Jeton bekleme (sn)", () => EnemySquad.RequestCooldown, v => EnemySquad.RequestCooldown = v, 0f, 5f, 0.1f);
+            Tuning.TuningPanel.Register(P, "Tüfek mesafe alt (m)", () => EnemyBrain.RifleBand.x, v => EnemyBrain.RifleBand.x = v, 3f, 30f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Tüfek mesafe üst (m)", () => EnemyBrain.RifleBand.y, v => EnemyBrain.RifleBand.y = v, 5f, 40f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Tabanca mesafe alt (m)", () => EnemyBrain.PistolBand.x, v => EnemyBrain.PistolBand.x = v, 2f, 20f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Tabanca mesafe üst (m)", () => EnemyBrain.PistolBand.y, v => EnemyBrain.PistolBand.y = v, 3f, 30f, 0.5f);
+            Tuning.TuningPanel.RegisterToggle(P, "Siper kullan", () => EnemyBrain.UseCover, v => EnemyBrain.UseCover = v);
+            Tuning.TuningPanel.Register(P, "Siper arama yarıçapı (m)", () => EnemyBrain.CoverRadius, v => EnemyBrain.CoverRadius = v, 3f, 30f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Siperden ateş en az (sn)", () => EnemyBrain.PeekTime.x, v => EnemyBrain.PeekTime.x = v, 0.3f, 5f, 0.1f);
+            Tuning.TuningPanel.Register(P, "Siperden ateş en çok (sn)", () => EnemyBrain.PeekTime.y, v => EnemyBrain.PeekTime.y = v, 0.3f, 6f, 0.1f);
+            Tuning.TuningPanel.Register(P, "Siperde bekleme (sn)", () => EnemyBrain.HideTime.x, v => { EnemyBrain.HideTime.x = v; EnemyBrain.HideTime.y = v + 1f; }, 0.3f, 6f, 0.1f);
+            Tuning.TuningPanel.Register(P, "Kanattan dolanma gecikmesi (sn)", () => EnemyBrain.FlankDelay.x, v => { EnemyBrain.FlankDelay.x = v; EnemyBrain.FlankDelay.y = v + 2f; }, 1f, 20f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Yakın dövüş çember (m)", () => EnemyBrain.CircleRadius.x, v => { EnemyBrain.CircleRadius.x = v; EnemyBrain.CircleRadius.y = v + 2f; }, 2f, 12f, 0.5f);
+            Tuning.TuningPanel.Register(P, "Kalkanlı dönüş hızı (°/sn)", () => EnemyBrain.ShieldTurnSpeed, v => EnemyBrain.ShieldTurnSpeed = v, 20f, 300f, 5f);
+            Tuning.TuningPanel.Register(P, "Kaçma canı (oran)", () => EnemyBrain.WoundedFraction, v => EnemyBrain.WoundedFraction = v, 0f, 0.8f, 0.05f);
+            Tuning.TuningPanel.Register(P, "Karar aralığı (sn)", () => EnemyBrain.DecideInterval.x, v => { EnemyBrain.DecideInterval.x = v; EnemyBrain.DecideInterval.y = v * 2f; }, 0.05f, 1.5f, 0.05f);
+            Tuning.TuningPanel.Register(P, "Takılma: ilerleme (m)", () => EnemyMover.StuckDistance, v => EnemyMover.StuckDistance = v, 0.05f, 1.5f, 0.05f);
+            Tuning.TuningPanel.RegisterToggle(P, "Yakın düşmanın rotasını çiz", () => DebugDraw, v =>
             {
-                RecalculatePath(destination);
-            }
-
-            if (!_hasPath) return straight;
-
-            while (_pathCornerIndex < _pathCornerCount)
+                DebugDraw = v;
+                if (!v && s_debugLine != null) s_debugLine.enabled = false;
+            });
+            Tuning.TuningPanel.RegisterReadout(P, "NavMesh kurulu", () =>
+                LocalNavMeshBuilder.Instance != null && LocalNavMeshBuilder.Instance.HasNavMesh ? "evet" : "hayır");
+            Tuning.TuningPanel.RegisterReadout(P, "Saldırı jetonu dolu", () => EnemySquad.TokenCount + " / " + EnemySquad.MaxAttackers);
+            Tuning.TuningPanel.RegisterReadout(P, "Yakın düşman: rol", () =>
             {
-                Vector3 toCorner = _pathCorners[_pathCornerIndex] - transform.position;
-                toCorner.y = 0f;
-                if (toCorner.magnitude > cornerReachDistance) return toCorner.normalized;
-                _pathCornerIndex++;
-            }
-
-            return straight;
+                var e = DebugNearest();
+                return e == null || e._brain == null ? "-" : RoleText(e._brain.CurrentRole) + (e._brain.HasToken ? " (jetonlu)" : "");
+            });
+            Tuning.TuningPanel.RegisterReadout(P, "Yakın düşman: davranış", () =>
+            {
+                var e = DebugNearest();
+                if (e == null || e._brain == null) return "-";
+                return e.currentState != EnemyState.Combat ? StateText(e.currentState) : ActText(e._brain.Action);
+            });
+            Tuning.TuningPanel.RegisterReadout(P, "Yakın düşman: rota", () =>
+            {
+                var e = DebugNearest();
+                if (e == null || e._mover == null) return "-";
+                return RouteText(e._mover.Route) + ", köşe " + e._mover.CornerCount + (e._mover.Detouring ? ", dolanıyor" : "");
+            });
+            Tuning.TuningPanel.RegisterReadout(P, "Yakın düşman: takılma", () =>
+            {
+                var e = DebugNearest();
+                return e == null || e._mover == null ? "-" : e._mover.StuckCount.ToString();
+            });
+            Tuning.TuningPanel.RegisterReadout(P, "Yakın düşman: can", () =>
+            {
+                var e = DebugNearest();
+                return e == null ? "-" : Mathf.RoundToInt(e.Health01 * 100f) + "%";
+            });
         }
 
-        private void RecalculatePath(Vector3 destination)
+        private static EnemyController DebugNearest()
         {
-            _lastRepathTime = Time.time;
-            _pathDestination = destination;
-            _hasPath = false;
+            if (s_debugFrame == Time.frameCount) return s_debugNearest;
+            s_debugFrame = Time.frameCount;
+            s_debugNearest = null;
+            Transform p = CombatBody.Player != null ? CombatBody.Player.transform : null;
+            if (p == null) return null;
+            float best = float.MaxValue;
+            foreach (var e in Active)
+            {
+                if (e == null || e.IsDead) continue;
+                float d = (e.transform.position - p.position).sqrMagnitude;
+                if (d < best)
+                {
+                    best = d;
+                    s_debugNearest = e;
+                }
+            }
+            return s_debugNearest;
+        }
 
-            if (LocalNavMeshBuilder.Instance == null || !LocalNavMeshBuilder.Instance.HasNavMesh) return;
-            if (!NavMesh.SamplePosition(transform.position, out NavMeshHit fromHit, navMeshSampleDistance, NavMesh.AllAreas)) return;
-            if (!NavMesh.SamplePosition(destination, out NavMeshHit toHit, navMeshSampleDistance, NavMesh.AllAreas)) return;
-            if (!NavMesh.CalculatePath(fromHit.position, toHit.position, NavMesh.AllAreas, _path)) return;
-            if (_path.status == NavMeshPathStatus.PathInvalid) return;
+        private void UpdateDebug()
+        {
+            if (!DebugDraw || DebugNearest() != this || _mover == null || _brain == null) return;
+            if (s_debugLine == null)
+            {
+                var go = new GameObject("EnemyDebugPath");
+                DontDestroyOnLoad(go);
+                s_debugLine = go.AddComponent<LineRenderer>();
+                s_debugLine.widthMultiplier = 0.06f;
+                Shader sh = Shader.Find("Sprites/Default");
+                if (sh == null) sh = Shader.Find("Universal Render Pipeline/Unlit");
+                if (sh != null) s_debugLine.material = new Material(sh);
+                s_debugLine.startColor = s_debugLine.endColor = Color.cyan;
+                s_debugLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                s_debugLine.receiveShadows = false;
+            }
+            s_debugLine.enabled = true;
+            Vector3 up = Vector3.up * 0.25f;
+            int n = _mover.CornerCount;
+            s_debugLine.positionCount = n + 2;
+            s_debugLine.SetPosition(0, transform.position + up);
+            for (int i = 0; i < n; i++) s_debugLine.SetPosition(i + 1, _mover.Corner(i) + up);
+            s_debugLine.SetPosition(n + 1, (currentState == EnemyState.Combat ? _brain.Goal : _mover.Goal) + up);
+        }
 
-            _pathCornerCount = _path.GetCornersNonAlloc(_pathCorners);
-            // Corner 0 is the start point itself
-            _pathCornerIndex = _pathCornerCount > 1 ? 1 : 0;
-            _hasPath = _pathCornerCount > 0;
+        private static string RoleText(EnemyBrain.Role r)
+        {
+            switch (r)
+            {
+                case EnemyBrain.Role.Rifle: return "tüfekli";
+                case EnemyBrain.Role.Pistol: return "tabancalı";
+                case EnemyBrain.Role.Shield: return "kalkanlı";
+                default: return "yakın dövüş";
+            }
+        }
+
+        private static string ActText(EnemyBrain.Act a)
+        {
+            switch (a)
+            {
+                case EnemyBrain.Act.Advance: return "yaklaşıyor";
+                case EnemyBrain.Act.Retreat: return "geri çekiliyor";
+                case EnemyBrain.Act.Flank: return "kanattan dolanıyor";
+                case EnemyBrain.Act.ToCover: return "sipere gidiyor";
+                case EnemyBrain.Act.InCover: return "siperde";
+                case EnemyBrain.Act.Peek: return "siperden ateş";
+                case EnemyBrain.Act.Circle: return "çevrede dolanıyor";
+                case EnemyBrain.Act.Charge: return "saldırıyor";
+                case EnemyBrain.Act.Flee: return "kaçıyor";
+                default: return "bekliyor";
+            }
+        }
+
+        private static string StateText(EnemyState s)
+        {
+            switch (s)
+            {
+                case EnemyState.Suspicious: return "şüpheli";
+                case EnemyState.Sitting: return "oturuyor";
+                case EnemyState.Patrolling: return "devriye";
+                default: return "boşta";
+            }
+        }
+
+        private static string RouteText(EnemyMover.RouteState r)
+        {
+            switch (r)
+            {
+                case EnemyMover.RouteState.Full: return "tam";
+                case EnemyMover.RouteState.Partial: return "yarım (hedefe varmıyor)";
+                case EnemyMover.RouteState.NoNavMesh: return "NavMesh yok (düz yürüyor)";
+                case EnemyMover.RouteState.NoPath: return "rota yok (düz yürüyor)";
+                default: return "-";
+            }
         }
 
         private void Attack()
@@ -569,9 +874,25 @@ namespace EndlessCombat.AI
             }
         }
 
-        public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
+        public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) =>
+            TakeDamage(new DamageInfo(damage, DamageType.Other, hitPoint, hitNormal));
+
+        public void TakeDamage(DamageInfo info)
         {
             if (IsDead) return;
+            float damage = info.Amount;
+
+            // A raised shield stops the player's bullets from the front (and wears)
+            if (_body != null)
+            {
+                damage = _body.FilterDamage(info);
+                if (damage <= 0f)
+                {
+                    suspicionMeter = 100f;
+                    SetState(EnemyState.Combat);
+                    return;
+                }
+            }
 
             currentHealth -= damage;
             Debug.Log($"{gameObject.name} hasar aldi: {damage}. Kalan Can: {currentHealth}");
@@ -587,30 +908,119 @@ namespace EndlessCombat.AI
             }
         }
 
-        private void Die()
+        /// <summary>
+        /// Hit by a vehicle (VehicleRam): skips shield / roll i-frames. A lethal hit goes straight to the ragdoll
+        /// and throws it along the impulse (m/s); otherwise a heavy stagger and the usual alert reaction.
+        /// </summary>
+        public void HitByVehicle(float damage, Vector3 impulse, bool lethal)
+        {
+            if (IsDead) return;
+            currentHealth -= lethal ? Mathf.Max(damage, currentHealth) : damage;
+            suspicionMeter = 100f;
+            SetState(EnemyState.Combat);
+            AlertNearbyTeammates(transform.position, 25f);
+
+            if (currentHealth <= 0f)
+            {
+                Die(true, impulse);
+                return;
+            }
+
+            Vector3 push = new Vector3(impulse.x, 0f, impulse.z);
+            push = Vector3.ClampMagnitude(push * 0.25f, 6f);
+            if (_body != null) _body.Stagger(1.2f, push);
+        }
+
+        private System.Collections.IEnumerator PushRagdollNextFixedUpdate(Vector3 velocityChange)
+        {
+            // The bodies only turn non-kinematic at the next physics step
+            yield return new WaitForFixedUpdate();
+            foreach (var rb in ragdollRigidbodies)
+                if (rb != null && !rb.isKinematic) rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        }
+
+        private void Die() => Die(false, Vector3.zero);
+
+        private void Die(bool vehicleHit, Vector3 vehicleImpulse)
         {
             IsDead = true;
             if (agent != null) agent.enabled = false;
-            
+            if (_body != null) _body.Kill();
+            LeaveSquad();
+            DropShield();
+
             EndlessSurvival.World.GameStatsTracker.Instance?.RecordEnemyKilled();
 
             // The user's Mixamo death clip (Rifle Death) when the controller has it, ragdoll otherwise
-            if (!PlayDeathAnimation()) EnableRagdoll();
+            if (vehicleHit)
+            {
+                // Run over: no death clip, the body is thrown
+                EnableRagdoll();
+                StartCoroutine(PushRagdollNextFixedUpdate(vehicleImpulse));
+            }
+            else if (!PlayDeathAnimation()) EnableRagdoll();
 
-            LootSpawner.DropLoot(dropTable, transform.position);
+            LootChest corpseChest = CreateCorpseLoot();
             DropHeldWeapon();
 
-            Destroy(gameObject, 15f); // 15 saniye sonra cesedi sil
+            StartCoroutine(RemoveCorpseLater(corpseChest));
+        }
+
+        private const float CorpseLifetime = 180f;
+
+        /// <summary>Searchable loot on the body: a small trigger child under the hips so it follows a thrown ragdoll.</summary>
+        private LootChest CreateCorpseLoot()
+        {
+            if (dropTable == null) return null;
+
+            Transform hips = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Hips) : null;
+            if (hips == null && ragdollRigidbodies != null && ragdollRigidbodies.Count > 0 && ragdollRigidbodies[0] != null)
+                hips = ragdollRigidbodies[0].transform;
+            Transform parent = hips != null ? hips : transform;
+
+            var go = new GameObject("CorpseLoot");
+            go.transform.SetParent(parent, false);
+            var sphere = go.AddComponent<SphereCollider>();
+            sphere.isTrigger = true;
+            sphere.radius = 0.35f;
+
+            var chest = go.AddComponent<LootChest>();
+            chest.openPrompt = "Cesedi ara";
+            chest.emptyPrompt = "Ceset (boş)";
+            chest.containerTitle = "Ceset";
+            chest.FillFrom(dropTable, new EndlessSurvival.World.SeededRandom(Random.Range(1, int.MaxValue)));
+            return chest;
+        }
+
+        private System.Collections.IEnumerator RemoveCorpseLater(LootChest chest)
+        {
+            yield return new WaitForSeconds(CorpseLifetime);
+
+            // Do not pull the body out from under an open search window
+            while (chest != null && InventoryUI.Instance != null && InventoryUI.Instance.IsShowing(chest))
+                yield return new WaitForSeconds(1f);
+
+            Destroy(gameObject);
+        }
+
+        private void DropShield()
+        {
+            if (heldShieldItem == null) return;
+            var holder = GetComponent<ShieldHolder>();
+            if (holder != null) holder.Hide(true);
+            if (dropTable == null || dropTable.pickupPrefab == null) return;
+            WorldPickup.Spawn(dropTable.pickupPrefab, heldShieldItem, 1, transform.position + Vector3.up * 0.8f + transform.forward * 0.4f, null);
         }
 
         private void DropHeldWeapon()
         {
             if (heldWeaponItem == null || dropTable == null || dropTable.pickupPrefab == null) return;
 
-            Vector3 position = weapon != null ? weapon.transform.position : transform.position + Vector3.up;
+            WeaponController held = _stowedGun != null ? _stowedGun : weapon;
+            Vector3 position = held != null ? held.transform.position : transform.position + Vector3.up;
             WorldPickup.Spawn(dropTable.pickupPrefab, heldWeaponItem, 1, position, null);
 
-            if (weapon != null) weapon.gameObject.SetActive(false);
+            if (held != null) held.gameObject.SetActive(false);
         }
 
         private void SetupRagdoll()
@@ -673,6 +1083,7 @@ namespace EndlessCombat.AI
         {
             if (currentState == newState) return;
             currentState = newState;
+            if (newState != EnemyState.Combat) _brain?.Reset();
             
             if (newState == EnemyState.Combat)
             {
@@ -684,67 +1095,7 @@ namespace EndlessCombat.AI
 
         #region Stealth & Perception Helpers
 
-        private bool CanSeePlayer(out float sightClarity)
-        {
-            sightClarity = 0f;
-            if (target == null) return false;
-
-            Vector3 eyePos = transform.position + Vector3.up * eyeHeight;
-            Vector3 targetCenter = target.position + Vector3.up * 1.0f;
-            Vector3 dirToTarget = (targetCenter - eyePos);
-            float dist = dirToTarget.magnitude;
-
-            // Menzil hesabı (çömelme ve gece çarpanları)
-            float effectiveRange = detectionRange;
-            var stealthCtrl = EndlessCombat.Combat.PlayerStealthController.Instance;
-            if (stealthCtrl != null && stealthCtrl.IsCrouching)
-            {
-                effectiveRange *= stealthCtrl.crouchVisibilityMultiplier;
-            }
-
-            var cycle = EndlessSurvival.World.DayNightCycle.Instance;
-            if (cycle != null && cycle.IsNight)
-            {
-                effectiveRange *= 0.55f;
-            }
-
-            if (dist > effectiveRange) return false;
-
-            // Görüş açısı (FOV) kontrolü
-            float angle = Vector3.Angle(transform.forward, dirToTarget);
-            if (angle > fieldOfViewAngle * 0.5f)
-            {
-                // Karakter arkadan çok yaklaştığında (1.8 metre) fark edilir
-                if (dist > 1.8f) return false;
-            }
-
-            // Siper / Engel (Raycast) kontrolü
-            int mask = LayerMask.GetMask("Default", "Environment");
-            // Kendi collider'larımızı (hitbox, silah) ve trigger'ları yok say; aksi halde silah kalkınca
-            // kendi kolumuz/silahımız ışını keser, görüş kaybolur, silah iner, tekrar görür... (titreme)
-            var hits = Physics.RaycastAll(eyePos, dirToTarget.normalized, dist, mask, QueryTriggerInteraction.Ignore);
-            float nearest = float.MaxValue;
-            Collider nearestCol = null;
-            foreach (var h in hits)
-            {
-                if (h.collider.transform.IsChildOf(transform)) continue;
-                if (h.distance < nearest)
-                {
-                    nearest = h.distance;
-                    nearestCol = h.collider;
-                }
-            }
-
-            if (nearestCol != null)
-            {
-                bool isPlayer = nearestCol.CompareTag("Player") || nearestCol.transform.IsChildOf(target);
-                if (!isPlayer) return false;
-            }
-
-            float distFactor = 1f - Mathf.Clamp01(dist / effectiveRange);
-            sightClarity = Mathf.Clamp01(distFactor * 1.6f);
-            return true;
-        }
+        private bool CanSeePlayer(out float sightClarity) => EnemyPerception.CanSee(this, target, out sightClarity);
 
         private void CheckPlayerNoise()
         {
@@ -765,17 +1116,61 @@ namespace EndlessCombat.AI
             }
         }
 
-        public void HearSound(Vector3 soundOrigin, float radius)
-        {
-            if (IsDead) return;
+        private float _glintHoldUntil = -1f;
 
-            if (currentState != EnemyState.Combat)
+        /// <summary>
+        /// Binocular lens glint: slowly raises suspicion (not above maxSuspicion) without the enemy seeing the player.
+        /// While it lasts the meter does not decay. Above 25 the enemy turns suspicious and walks towards the glint.
+        /// </summary>
+        public void AddGlintSuspicion(float amount, float maxSuspicion, Vector3 source)
+        {
+            if (IsDead || currentState == EnemyState.Combat || amount <= 0f) return;
+            _glintHoldUntil = Time.time + 0.3f;
+            if (suspicionMeter < maxSuspicion) suspicionMeter = Mathf.Min(maxSuspicion, suspicionMeter + amount);
+            if (suspicionMeter > 25f && currentState != EnemyState.Suspicious)
             {
-                _investigatePoint = soundOrigin;
+                _investigatePoint = source;
                 _investigateTimer = investigateDuration;
-                suspicionMeter = Mathf.Max(suspicionMeter, 50f);
+                _investigateLookOnly = false;
                 SetState(EnemyState.Suspicious);
             }
+        }
+
+        public void HearSound(Vector3 soundOrigin, float radius)
+        {
+            if (IsDead || currentState == EnemyState.Combat) return;
+
+            // A noise the player makes where he stands (steps, a shot, a swing) tells where he is. A noise somewhere
+            // else (a thrown rock) is a distraction: it does not work on someone who has just seen or heard the player.
+            bool atPlayer = target != null && (soundOrigin - target.position).sqrMagnitude < 3f * 3f;
+            if (atPlayer) _playerEvidenceTime = Time.time;
+            else if (Time.time - _playerEvidenceTime < distractionIgnoreSeconds) return;
+
+            // Only the nearest few walk over; the rest turn toward the noise and keep watch
+            float myDist = (transform.position - soundOrigin).sqrMagnitude;
+            int closer = 0;
+            foreach (var other in Active)
+            {
+                if (other == null || other == this || other.IsDead || other.currentState == EnemyState.Combat) continue;
+                float d = (other.transform.position - soundOrigin).sqrMagnitude;
+                if (d > (radius + 2f) * (radius + 2f)) continue; // did not hear it
+                if (d < myDist || (Mathf.Approximately(d, myDist) && Active.IndexOf(other) < Active.IndexOf(this))) closer++;
+            }
+
+            _investigateLookOnly = closer >= Mathf.Max(1, maxNoiseInvestigators);
+            Vector3 point = soundOrigin;
+            if (!_investigateLookOnly && closer > 0)
+            {
+                // Not the same square metre for everyone: the next one stops a few steps to the side
+                Vector3 away = transform.position - soundOrigin;
+                away.y = 0f;
+                if (away.sqrMagnitude < 0.01f) away = transform.forward;
+                point = soundOrigin + Quaternion.AngleAxis(70f * closer, Vector3.up) * away.normalized * 2.5f;
+            }
+            _investigatePoint = point;
+            _investigateTimer = investigateDuration;
+            suspicionMeter = Mathf.Max(suspicionMeter, 50f);
+            SetState(EnemyState.Suspicious);
         }
 
         public void AlertNearbyTeammates(Vector3 center, float radius)
@@ -823,8 +1218,10 @@ namespace EndlessCombat.AI
 
             if (currentState == EnemyState.Combat)
             {
-                _stealthIndicator.color = Color.red;
-                _stealthIndicator.text = "!";
+                // Reloading: a short opening for the player
+                bool reloading = weapon != null && weapon.IsFirearm && weapon.IsReloading;
+                _stealthIndicator.color = reloading ? new Color(1f, 0.6f, 0.2f) : Color.red;
+                _stealthIndicator.text = reloading ? "..." : "!";
             }
             else if (currentState == EnemyState.Suspicious || suspicionMeter > 10f)
             {

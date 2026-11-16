@@ -13,7 +13,8 @@ namespace EndlessSurvival.Survival
         Camp,
         Vehicle,
         Status,
-        Stats
+        Stats,
+        Character  // paperdoll: the body slots around the character model (first tab)
     }
 
     /// <summary>
@@ -22,11 +23,11 @@ namespace EndlessSurvival.Survival
     /// are drawn in the same rectangle. [E] on a campfire opens the Kamp tab, [U] near the vehicle opens the Araç tab.
     /// Tab / Esc closes everything (the inventory owns open/close and the cursor).
     /// </summary>
-    public class SurvivalPanel : MonoBehaviour
+    public partial class SurvivalPanel : MonoBehaviour
     {
         public static SurvivalPanel Instance { get; private set; }
 
-        private static readonly HubTab[] Order = { HubTab.Inventory, HubTab.Craft, HubTab.Camp, HubTab.Vehicle, HubTab.Status, HubTab.Stats };
+        private static readonly HubTab[] Order = { HubTab.Character, HubTab.Inventory, HubTab.Craft, HubTab.Camp, HubTab.Vehicle, HubTab.Status, HubTab.Stats };
 
         private HubTab _tab;
         private bool _wasOpen;
@@ -83,6 +84,7 @@ namespace EndlessSurvival.Survival
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            OnDestroyPreview();
         }
 
         private void OnDisable()
@@ -92,7 +94,11 @@ namespace EndlessSurvival.Survival
 
         private void Select(HubTab tab)
         {
-            if (_tab != tab) _scroll = Vector2.zero;
+            if (_tab != tab)
+            {
+                _scroll = Vector2.zero;
+                PadGUI.Focus(this, 0);
+            }
             _tab = tab;
             _message = null;
             ApplyInventoryVisibility();
@@ -110,7 +116,8 @@ namespace EndlessSurvival.Survival
         private void ApplyInventoryVisibility()
         {
             var inv = InventoryUI.Instance;
-            if (inv != null && InventoryUI.IsOpen) inv.SetPanelVisible(_tab == HubTab.Inventory);
+            // The old scene window is never shown: the backpack tab is drawn here like the other tabs (SurvivalPanel.Bag.cs)
+            if (inv != null && InventoryUI.IsOpen) inv.SetPanelVisible(false);
         }
 
         private void Update()
@@ -125,12 +132,32 @@ namespace EndlessSurvival.Survival
             bool open = IsHubOpen;
             if (open && !_wasOpen)
             {
-                // Opened with Tab or a chest: start on the inventory
-                Select(_pending ?? HubTab.Inventory);
+                // Opened with Tab / View: the character tab. A chest opens on the backpack (its contents are there).
+                var invUi = InventoryUI.Instance;
+                Select(_pending ?? (invUi != null && invUi.HasChest ? HubTab.Inventory : HubTab.Character));
                 _pending = null;
             }
             _wasOpen = open;
             if (open) ApplyInventoryVisibility();
+            if (open) PadTabSwitch();
+            if (open && _tab == HubTab.Character) UpdateCharacterTab();
+            else EndCharacterPreview();
+            if (open && _tab == HubTab.Inventory) UpdateBagTab();
+            else _bagMenu = false;
+        }
+
+        /// <summary>Gamepad LB / RB: previous / next tab.</summary>
+        private void PadTabSwitch()
+        {
+            var pad = Gamepad.current;
+            if (pad == null) return;
+            // Right stick scrolls the tab (status, stats, long lists)
+            float sy = pad.rightStick.ReadValue().y;
+            if (Mathf.Abs(sy) > 0.2f && _tab != HubTab.Character) _scroll.y = Mathf.Max(0f, _scroll.y - sy * 900f * Time.unscaledDeltaTime);
+            int dir = pad.leftShoulder.wasPressedThisFrame ? -1 : pad.rightShoulder.wasPressedThisFrame ? 1 : 0;
+            if (dir == 0) return;
+            int i = System.Array.IndexOf(Order, _tab);
+            _clickedTab = Order[(i + dir + Order.Length) % Order.Length];
         }
 
         // ---------------- layout ----------------
@@ -163,7 +190,8 @@ namespace EndlessSurvival.Survival
         {
             switch (t)
             {
-                case HubTab.Inventory: return "Envanter";
+                case HubTab.Character: return "Karakter";
+                case HubTab.Inventory: return "Çanta";
                 case HubTab.Craft: return "Üretim";
                 case HubTab.Camp: return "Kamp";
                 case HubTab.Vehicle: return "Araç";
@@ -206,11 +234,21 @@ namespace EndlessSurvival.Survival
                 if (GUI.Button(r, TabName(t)) && !selected) _clickedTab = t;
                 GUI.color = old;
             }
-            GUI.Label(new Rect(bar.xMax - 220f, bar.y, 210f, barH), "TAB / ESC: kapat", SurvivalGUI.Small);
+            GUI.Label(new Rect(bar.xMax - 220f, bar.y, 210f, barH), EndlessCombat.Combat.GameInput.UsingPad ? "LB / RB: sekme   A: seç   B: kapat" : "TAB / ESC: kapat", SurvivalGUI.Small);
 
-            if (_tab == HubTab.Inventory) return; // the scene inventory window draws itself
+            if (_tab == HubTab.Inventory)
+            {
+                DrawBagTab(panel);
+                return;
+            }
+            if (_tab == HubTab.Character)
+            {
+                DrawCharacterTab(panel);
+                return;
+            }
 
             SurvivalGUI.Fill(panel, new Color(0.05f, 0.06f, 0.08f, 0.94f));
+            if (!PadGUI.Begin(this)) return; // a gamepad press changed the tab content: draw it again next frame
             GUILayout.BeginArea(new Rect(panel.x + 20f, panel.y + 14f, panel.width - 40f, panel.height - 28f));
             GUILayout.Label(TabName(_tab).ToUpperInvariant(), SurvivalGUI.Title);
             GUILayout.Space(4);
@@ -226,6 +264,7 @@ namespace EndlessSurvival.Survival
             GUILayout.EndScrollView();
             GUILayout.Label(string.IsNullOrEmpty(_message) ? " " : _message, SurvivalGUI.Text); // always present, see top of OnGUI
             GUILayout.EndArea();
+            PadGUI.End();
         }
 
         private static void Line(string label, string value)
@@ -253,11 +292,11 @@ namespace EndlessSurvival.Survival
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"Yapılıyor: {craft.CurrentJob.DisplayName}  %{Mathf.RoundToInt(craft.JobProgress * 100f)}", SurvivalGUI.Header);
-                if (GUILayout.Button("İptal", GUILayout.Width(80))) { craft.CancelJob(); GUIUtility.ExitGUI(); }
+                if (PadGUI.Button("İptal", GUILayout.Width(80))) { craft.CancelJob(); GUIUtility.ExitGUI(); }
                 GUILayout.EndHorizontal();
             }
 
-            bool free = GUILayout.Toggle(SurvivalTest.FreeResources, " TEST MODU: malzeme, alet, para ve ihtiyaç şartı yok, hiçbir şey harcanmaz");
+            bool free = PadGUI.Toggle(SurvivalTest.FreeResources, " TEST MODU: her eşya çantada, hiçbir şey bitmez, taşıma sınırsız, malzeme / alet / para / ihtiyaç şartı yok");
             if (free != SurvivalTest.FreeResources) SurvivalTest.FreeResources = free;
 
             foreach (CraftStation station in System.Enum.GetValues(typeof(CraftStation)))
@@ -271,7 +310,7 @@ namespace EndlessSurvival.Survival
                     bool can = craft.CanCraft(r, out string reason);
                     GUILayout.BeginHorizontal();
                     GUI.enabled = can;
-                    if (GUILayout.Button("Yap", GUILayout.Width(60)))
+                    if (PadGUI.Button("Yap", GUILayout.Width(60)))
                     {
                         craft.StartCraft(r);
                         _message = null;
@@ -322,10 +361,10 @@ namespace EndlessSurvival.Survival
             var inv = SurvivalDirector.Inventory;
 
             GUILayout.Label("Kamp kur", SurvivalGUI.Header);
-            GUILayout.Label("Kamp ateşini önüne yerleştirir: sol tık koyar, sağ tık iptal eder. Bir odun harcar. Kısayol: [B].", SurvivalGUI.Small);
+            GUILayout.Label("Kamp ateşini önüne yerleştirir: " + EndlessCombat.Combat.GameInput.Hint("sol tık koyar, sağ tık iptal eder. Kısayol: [B].", "A koyar, B iptal eder.") + " Bir odun harcar.", SurvivalGUI.Small);
             var placer = player != null ? player.GetComponent<PlayerCampPlacer>() : null;
             GUI.enabled = placer != null && !SurvivalDirector.PlayerInVehicle;
-            if (GUILayout.Button("Kamp ateşi yerleştir", GUILayout.Width(220)))
+            if (PadGUI.Button("Kamp ateşi yerleştir", GUILayout.Width(220)))
             {
                 CloseHub();
                 placer.BeginPlacement();
@@ -337,7 +376,7 @@ namespace EndlessSurvival.Survival
             var fire = NearbyFire();
             if (fire == null || inv == null)
             {
-                GUILayout.Label("Yakında kamp ateşi yok. Ateşin yanındayken [E] de bu sekmeyi açar.", SurvivalGUI.Text);
+                GUILayout.Label("Yakında kamp ateşi yok. Ateşin yanındayken " + EndlessCombat.Combat.GameInput.Hint("[E]", "X") + " de bu sekmeyi açar.", SurvivalGUI.Text);
                 return;
             }
 
@@ -351,7 +390,7 @@ namespace EndlessSurvival.Survival
             CampButton("Kirli suyu kaynat", CampfireUI.CampAction.BoilWater, fire, inv);
             CampButton("Yara sar (bandaj)", CampfireUI.CampAction.Bandage, fire, inv);
             GUILayout.Space(6);
-            CampButton("Ateşin başına otur", CampfireUI.CampAction.Sit, fire, inv);
+            CampButton(CampfireUI.PlayerSitting ? "Ayağa kalk" : "Ateşin başına otur", CampfireUI.CampAction.Sit, fire, inv);
             CampButton("Ateşin başında uyu (zaman ilerler)", CampfireUI.CampAction.Rest, fire, inv);
 
             if (!string.IsNullOrEmpty(CampfireUI.LastFeedback))
@@ -368,7 +407,7 @@ namespace EndlessSurvival.Survival
 
         private static void CampButton(string label, CampfireUI.CampAction action, PlayerCampfire fire, PlayerInventory inv)
         {
-            if (GUILayout.Button(label, GUILayout.Width(340))) CampfireUI.Do(action, fire, inv);
+            if (PadGUI.Button(label, GUILayout.Width(340))) CampfireUI.Do(action, fire, inv);
         }
 
         // ---------------- vehicle ----------------
@@ -386,25 +425,45 @@ namespace EndlessSurvival.Survival
             Line("Araç", $"Can {Mathf.RoundToInt(vehicle.currentHealth)} / {Mathf.RoundToInt(vehicle.maxHealth)}, yakıt {Mathf.RoundToInt(vehicle.currentFuel)} / {Mathf.RoundToInt(vehicle.maxFuel)}" + (near ? "" : "  (uzaktasın)"));
             if (VehicleHome.Has(VehicleModType.WaterTank)) Line("Su deposu", $"{home.TankWater:0} / {VehicleHome.TankCapacity:0} şişe");
 
+            // Fuel, repair and upgrades (they used to sit under the backpack list)
+            var upkeep = vehicle.GetComponent<VehicleMaintenance>();
+            if (upkeep != null)
+            {
+                GUILayout.Space(6);
+                GUILayout.Label("Bakım" + (near ? "" : "  (aracın yanına git)"), SurvivalGUI.Header);
+                GUI.enabled = near;
+                GUILayout.BeginHorizontal();
+                if (PadGUI.Button(upkeep.GetRefuelLabel(), GUILayout.Width(250), GUILayout.Height(42))) _message = upkeep.Refuel();
+                if (PadGUI.Button(upkeep.GetRepairLabel(), GUILayout.Width(250), GUILayout.Height(42))) _message = upkeep.Repair();
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                for (int i = 0; i < upkeep.upgrades.Count; i++)
+                    if (PadGUI.Button(upkeep.GetUpgradeLabel(i), GUILayout.Width(250), GUILayout.Height(42))) _message = upkeep.Upgrade(i);
+                GUILayout.EndHorizontal();
+                GUI.enabled = true;
+            }
+
             GUILayout.Space(6);
             GUI.enabled = near;
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Araçta uyu", GUILayout.Width(160))) _message = home.SleepInVehicle();
+            if (PadGUI.Button("Araçta uyu", GUILayout.Width(160))) _message = home.SleepInVehicle();
             GUI.enabled = near && VehicleHome.Has(VehicleModType.WaterTank);
-            if (GUILayout.Button("Temiz suyu depoya boşalt", GUILayout.Width(200))) _message = home.PourIntoTank();
-            if (GUILayout.Button("Depodan şişe doldur", GUILayout.Width(180))) _message = home.FillFromTank();
+            if (PadGUI.Button("Temiz suyu depoya boşalt", GUILayout.Width(200))) _message = home.PourIntoTank();
+            if (PadGUI.Button("Depodan şişe doldur", GUILayout.Width(180))) _message = home.FillFromTank();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
-            GUILayout.Label("Araçta uyumak kamp kurmadan olur; daha az dinlendirir ama baskına karşı daha güvenlidir. Yakıt, tamir ve bagaj: Envanter sekmesi. Tamir kiti: Üretim sekmesi > Araç.", SurvivalGUI.Small);
+            GUILayout.Label("Araçta uyumak kamp kurmadan olur; daha az dinlendirir ama baskına karşı daha güvenlidir. Bagaj: Çanta sekmesi (sağ sütun). Tamir kiti: Üretim sekmesi > Araç.", SurvivalGUI.Small);
 
             GUILayout.Space(6);
-            bool free = GUILayout.Toggle(SurvivalTest.FreeResources, " TEST MODU: malzeme, alet, para ve ihtiyaç şartı yok, hiçbir şey harcanmaz (maliyetler yine yazılır)");
+            bool free = PadGUI.Toggle(SurvivalTest.FreeResources, " TEST MODU: her eşya çantada, hiçbir şey bitmez, taşıma sınırsız, malzeme / alet / para / ihtiyaç şartı yok (maliyetler yine yazılır)");
             if (free != SurvivalTest.FreeResources) SurvivalTest.FreeResources = free;
 
             DrawVehicleParts(near);
 
             GUILayout.Space(10);
             GUILayout.Label("Modifiyeler" + (near ? "" : "  (takmak için aracın yanına git)"), SurvivalGUI.Header);
+            if (EndlessSurvival.Save.CharacterProfiles.Current != null)
+                GUILayout.Label($"Öğrenilen plan: {Plans.KnownCount} / {Plans.Total}. \"Plan gerekli\" yazanların planı benzinliklerde ve düşman kamplarında bulunur, Güvenli Bölge'de satılır; öğrenilen plan karakterde kalır.", SurvivalGUI.Small);
             var mods = VehicleModifications.Instance;
             if (mods == null) mods = vehicle.GetComponent<VehicleModifications>();
             if (mods == null || mods.modifications == null)
@@ -429,13 +488,14 @@ namespace EndlessSurvival.Survival
                 GUI.enabled = near;
                 if (mod.isInstalled)
                 {
-                    if (GUILayout.Button("Sök", GUILayout.Width(150))) uninstall = mod.type;
+                    if (PadGUI.Button("Sök", GUILayout.Width(150))) uninstall = mod.type;
                 }
                 else
                 {
-                    bool afford = SurvivalTest.FreeResources || mods.HasRequiredMaterials(mod, inv, stash);
+                    bool known = Plans.Knows(mod.type);
+                    bool afford = known && (SurvivalTest.FreeResources || mods.HasRequiredMaterials(mod, inv, stash));
                     GUI.enabled = near && afford;
-                    if (GUILayout.Button(afford ? "Monte et" : "Malzeme yetersiz", GUILayout.Width(150)))
+                    if (PadGUI.Button(!known ? "Plan gerekli" : afford ? "Monte et" : "Malzeme yetersiz", GUILayout.Width(150)))
                     {
                         if (SurvivalTest.FreeResources) installFree = mod.type; else install = mod.type;
                     }
@@ -462,21 +522,30 @@ namespace EndlessSurvival.Survival
             GUILayout.Space(10);
             GUILayout.Label("Parçalar ve Camlar" + (SurvivalDirector.PlayerInVehicle ? "  (çalışmak için araçtan in)" : near ? "" : "  (aracın yanına git)"), SurvivalGUI.Header);
             GUILayout.Label("Fabrika yok: parçalar enkazlardan sökülür. Değiştirmek zaman alır ve gürültü yapar; yakındaki düşmanlar duyar.", SurvivalGUI.Small);
+            // Say why the buttons are locked (they used to be greyed out without a word)
+            if (!canWork)
+            {
+                string lockReason = SurvivalDirector.PlayerInVehicle ? "Düğmeler kapalı: araçtayken çalışılmaz, önce araçtan in."
+                           : !near ? "Düğmeler kapalı: aracın yanında değilsin (bagaja erişebileceğin kadar yaklaş)."
+                           : $"Düğmeler kapalı: şu an bir iş sürüyor ({parts.CurrentJob.label}, %{Mathf.RoundToInt(parts.JobProgress * 100f)}). Aracın yanında bekle ya da işi iptal et.";
+                GUILayout.Label(lockReason, SurvivalGUI.Text);
+                if (parts.CurrentJob != null && PadGUI.Button("İşi iptal et", GUILayout.Width(160))) parts.CancelJob("iptal ettin");
+            }
 
             // Engine, battery, cabin
             parts.StartChance(out string why);
             Line("Motor", $"hararet {Mathf.RoundToInt(parts.EngineHeat)}" + (parts.Overheated ? " (HARARET, soğumayı bekle)" : "") + $", radyatör {Pct(parts.Radiator)}");
             Line("Akü", $"şarj {Pct(parts.BatteryCharge)}, sıcaklık {Mathf.RoundToInt(parts.BatteryTemp)}°C" + (why != null ? $" ({why}: marş zor tutar; yanına ateş yak)" : ""));
             Line("Kabin", $"dışarıdan +{parts.CabinBonus:0}°C, korunma {Pct(parts.ShelterFactor * 100f)}" + (parts.RainEnters ? ", yağmur giriyor" : ""));
-            Line("Farlar", $"{Pct(parts.Headlights)}" + (parts.HeadlightsOn ? ", AÇIK" : ", kapalı") + "  (araçta [H])");
+            Line("Farlar", $"{Pct(parts.Headlights)}" + (parts.HeadlightsOn ? ", AÇIK" : ", kapalı") + "  (araçta " + EndlessCombat.Combat.GameInput.Hint("[H]", "Yön ↑") + ")");
 
             GUILayout.BeginHorizontal();
             GUI.enabled = canWork && parts.Radiator < 99f;
-            if (GUILayout.Button(new GUIContent("Radyatörü değiştir", VehicleParts.RadiatorCost), GUILayout.Width(170))) _message = parts.ReplaceRadiator();
+            if (PadGUI.Button(new GUIContent("Radyatörü değiştir", VehicleParts.RadiatorCost), GUILayout.Width(170))) _message = parts.ReplaceRadiator();
             GUI.enabled = canWork;
-            if (GUILayout.Button(new GUIContent("Aküyü değiştir", VehicleParts.BatteryCost), GUILayout.Width(150))) _message = parts.ReplaceBattery();
+            if (PadGUI.Button(new GUIContent("Aküyü değiştir", VehicleParts.BatteryCost), GUILayout.Width(150))) _message = parts.ReplaceBattery();
             GUI.enabled = canWork && parts.Headlights < 99f;
-            if (GUILayout.Button(new GUIContent("Farları değiştir", VehicleParts.HeadlightCost), GUILayout.Width(150))) _message = parts.ReplaceHeadlights();
+            if (PadGUI.Button(new GUIContent("Farları değiştir", VehicleParts.HeadlightCost), GUILayout.Width(150))) _message = parts.ReplaceHeadlights();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             GUILayout.Label($"Radyatör: {VehicleParts.RadiatorCost}.  Akü: {VehicleParts.BatteryCost}.  Far: {VehicleParts.HeadlightCost}.", SurvivalGUI.Small);
@@ -490,14 +559,14 @@ namespace EndlessSurvival.Survival
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{VehicleParts.TireNames[i]}: " + (parts.IsFlat(i) ? "PATLAK" : Pct(parts.Tires[i])), SurvivalGUI.Small, GUILayout.Width(170));
                 GUI.enabled = canWork && parts.Tires[i] < 99f;
-                if (GUILayout.Button(new GUIContent(parts.SpareFilled ? "Yedekle değiştir" : "Lastiği değiştir", VehicleParts.TireCost), GUILayout.Width(150))) _message = parts.ChangeTire(i);
+                if (PadGUI.Button(new GUIContent(parts.SpareFilled ? "Yedekle değiştir" : "Lastiği değiştir", VehicleParts.TireCost), GUILayout.Width(150))) _message = parts.ChangeTire(i);
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
             }
             if (mount && !parts.SpareFilled)
             {
                 GUI.enabled = near;
-                if (GUILayout.Button(new GUIContent("Askıya yedek lastik as", VehicleParts.SpareCost), GUILayout.Width(200))) _message = parts.FillSpare();
+                if (PadGUI.Button(new GUIContent("Askıya yedek lastik as", VehicleParts.SpareCost), GUILayout.Width(200))) _message = parts.FillSpare();
                 GUI.enabled = true;
             }
             GUILayout.Label($"Lastik değişimi: {VehicleParts.TireCost}.  Askıya yedek: {VehicleParts.SpareCost}.", SurvivalGUI.Small);
@@ -512,25 +581,48 @@ namespace EndlessSurvival.Survival
                 GUILayout.BeginHorizontal();
                 string label = $"{VehicleParts.WindowNames[i]}: {VehicleParts.WindowLabel(state)}";
                 if (state == WindowState.Plastic) label += $" ({Pct(parts.PlasticWear[i])})";
+                if (parts.GlassUnder[i]) label += " (altında cam)";
                 GUILayout.Label(label, SurvivalGUI.Small, GUILayout.Width(210));
-                if (state != WindowState.Intact)
+                if (state == WindowState.Intact || parts.GlassUnder[i])
+                {
+                    // Sound glass: only a steel plate as armour (the glass stays under it), or take that plate off
+                    if (state == WindowState.Intact)
+                    {
+                        var cost = VehicleParts.CoverCost(WindowState.Metal, out _, out _);
+                        GUI.enabled = canWork && parts.CanAfford(cost) && VehicleParts.HasTools;
+                        if (PadGUI.Button(new GUIContent("Sacla zırhla", VehicleParts.CostText(cost) + " + Alet Çantası (18 sn). Cam altında kalır, saç kırılmaz."), GUILayout.Width(130))) _message = parts.CoverWindow(i, WindowState.Metal);
+                    }
+                    else
+                    {
+                        GUI.enabled = canWork && VehicleParts.HasTools;
+                        if (PadGUI.Button(new GUIContent("Saçı sök", "Alet Çantası (10 sn). Cam açıkta kalır, 2 hurda metal geri gelir."), GUILayout.Width(130))) _message = parts.RemoveArmour(i);
+                    }
+                    GUI.enabled = true;
+                }
+                else
                 {
                     foreach (var cover in new[] { WindowState.Plastic, WindowState.Plank, WindowState.Metal })
                     {
                         if (cover == state) continue;
-                        var cost = VehicleParts.CoverCost(cover, out _, out _);
-                        GUI.enabled = canWork && parts.CanAfford(cost);
+                        var cost = VehicleParts.CoverCost(cover, out _, out bool needsTools);
+                        GUI.enabled = canWork && parts.CanAfford(cost) && (!needsTools || VehicleParts.HasTools);
                         string name = cover == WindowState.Plastic ? "Naylon" : cover == WindowState.Plank ? "Tahta" : "Saç";
-                        if (GUILayout.Button(new GUIContent(name, VehicleParts.CostText(cost)), GUILayout.Width(70))) _message = parts.CoverWindow(i, cover);
+                        if (PadGUI.Button(new GUIContent(name, VehicleParts.CostText(cost)), GUILayout.Width(70))) _message = parts.CoverWindow(i, cover);
                     }
                     if (VehicleParts.HasGlassFrame(i))
                     {
                         GUI.enabled = canWork;
-                        if (GUILayout.Button(new GUIContent("Sağlam cam tak", VehicleParts.GlassCost), GUILayout.Width(130))) _message = parts.InstallGlass(i);
+                        if (PadGUI.Button(new GUIContent("Sağlam cam tak", VehicleParts.GlassCost), GUILayout.Width(130))) _message = parts.InstallGlass(i);
                     }
                     GUI.enabled = true;
                 }
                 GUILayout.EndHorizontal();
+            }
+            {
+                // What the player has (backpack + trunk when near): a greyed out cover button means one of these is short
+                int Have(string id) { var d = SurvivalSettings.Instance.Item(id); return d != null ? SurvivalDirector.CountItem(d) : 0; }
+                bool tools = Have("Item_ToolKit") > 0;
+                GUILayout.Label($"Sende (çanta + bagaj): {Have("Item_ScrapMetal")} hurda metal, {Have("Item_Plank")} tahta, {Have("Item_PlasticSheet")} naylon örtü, {Have("Item_DuctTape")} bant, alet çantası {(tools ? "var" : "YOK")}" + (SurvivalTest.FreeResources ? "  (test modu: gerekmez)" : ""), SurvivalGUI.Small);
             }
             GUILayout.Label("Naylon: 1 naylon örtü + 1 bant (zamanla yırtılır).  Tahta: 2 tahta + 1 bant.  Saç: 3 hurda metal + alet çantası.  Sağlam cam: 1 cam + alet çantası (enkazdan sökmek 40 sn).", SurvivalGUI.Small);
             // GUI.tooltip is filled only during Repaint; drawing the label only then broke the layout and lost clicks
@@ -553,12 +645,12 @@ namespace EndlessSurvival.Survival
             if (survival != null)
             {
                 Line("Açlık / Susuzluk", $"{Mathf.RoundToInt(survival.Hunger)} / {Mathf.RoundToInt(survival.Thirst)}");
-                Line("Tuvalet", $"{Mathf.RoundToInt(survival.Bladder)} / {Mathf.RoundToInt(survival.maxBladder)}" + (v.ToiletNeglected ? "  (ihmal: yavaşlama)" : "") + "   [P] ile git");
+                Line("Tuvalet", $"{Mathf.RoundToInt(survival.Bladder)} / {Mathf.RoundToInt(survival.maxBladder)}" + (v.ToiletNeglected ? "  (ihmal: yavaşlama)" : "") + "   " + EndlessCombat.Combat.GameInput.Hint("[P] ile git", "Yön ↓ basılı > Tuvalet"));
             }
             Line("Vücut ısısı", $"{Mathf.RoundToInt(v.BodyHeat)} / 100   Hava {Mathf.RoundToInt(v.AmbientTemperature)}°C, hissedilen {Mathf.RoundToInt(v.FeltTemperature)}°C");
             Line("Islaklık", $"{Mathf.RoundToInt(v.Wetness)} / 100");
             Line("Kıyafet", $"Sıcaklık +{v.ClothingInsulation:0.#}°C, su geçirmezlik %{Mathf.RoundToInt(v.ClothingWaterproof * 100f)}, ses +%{Mathf.RoundToInt(v.ClothingNoise * 100f)}, yıpranma %{Mathf.RoundToInt(100f - v.WornAverageDurability)}");
-            if (inv != null) Line("Yük", $"{inv.Storage.TotalWeight:0.0} kg / rahat {v.ComfortWeight:0.0} kg (en fazla {inv.Storage.MaxWeight:0.0})");
+            if (inv != null) Line("Yük", $"{inv.Storage.TotalWeight:0.0} kg / rahat {v.ComfortWeight:0.0} kg (en fazla {(inv.Storage.IsUnlimited ? "sınırsız" : inv.Storage.MaxWeight.ToString("0.0"))})");
             Line("Stres", $"{Mathf.RoundToInt(v.Stress)} / 100" + (v.Panicking ? "  PANİK" : ""));
             int anx = v.AnxietyLevel;
             Line("Anksiyete", anx == 0 ? (v.AnxietyHint ? "Gergin (dinlenmelisin)" : "Yok") : anx == 1 ? "Hafif" : anx == 2 ? "Orta" : "Ağır");
@@ -582,7 +674,7 @@ namespace EndlessSurvival.Survival
             }
 
             GUILayout.Space(8);
-            GUILayout.Label("Tuşlar: [Tab] bu ekran, [P] tuvalet, [H] balık tut (olta + su), [E] topla / doldur / kes, [B] kamp ateşi, sol tık: ağaçtan odun", SurvivalGUI.Small);
+            GUILayout.Label(EndlessCombat.Combat.GameInput.UsingPad ? "Gamepad: View bu ekran, X topla / doldur / kes, Yön ↓ basılı: eylemler (tuvalet, olta, kamp ateşi, dürbün), RB: ağaçtan odun" : "Tuşlar: [Tab] bu ekran, [P] tuvalet, [H] balık tut (olta + su), [E] topla / doldur / kes, [B] kamp ateşi, sol tık: ağaçtan odun", SurvivalGUI.Small);
         }
 
         // ---------------- stats ----------------

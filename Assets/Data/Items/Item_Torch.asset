@@ -21,14 +21,26 @@ MonoBehaviour:
   equipSlot: 1
   armor: 0
   weaponPrefab: {fileID: 0}
+  shield:
+    absorb: 0
+    bulletAbsorb: 0
+    staminaPerDamage: 0
+    coverAngle: 0
+    guardMoveSpeed: 0
+    heavy: 0
+    bounceAttackers: 0
+    durability: 0
+  ammoType: 0
   worldColor: {r: 0.6, g: 0.4, b: 0.2, a: 1}
   worldScale: {x: 0.1, y: 0.5, z: 0.1}
   worldModel: {fileID: 0}
   worldModelScale: 1
+  heldModel: {fileID: 7251045786077180042, guid: 71f68ff5c57311443af75c1d29279893, type: 3}
   spoilHours: 0
   spoilsInto: {fileID: 0}
   poisonChance: 0
   thirstPenalty: 0
+  bonusThirst: 0
   stressRelief: 0
   warmth: 0
   leavesItem: {fileID: 0}

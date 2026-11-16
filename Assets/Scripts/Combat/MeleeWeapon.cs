@@ -9,7 +9,15 @@ namespace EndlessCombat.Combat
     [RequireComponent(typeof(WeaponController))]
     public class MeleeWeapon : MonoBehaviour
     {
+        [Tooltip("Overwritten by the weapon's WeaponDefinition (melee numbers) when it has one")]
         public MeleeStats stats = MeleeStats.Default;
+
+        private void Awake()
+        {
+            var weapon = GetComponent<WeaponController>();
+            if (weapon != null && weapon.Definition != null && weapon.Definition.type == WeaponType.Melee)
+                stats = weapon.Definition.melee;
+        }
     }
 
     [System.Serializable]
@@ -21,9 +29,9 @@ namespace EndlessCombat.Combat
         public float range;
         [Tooltip("Radius of the hit sphere at the end of the reach (m)")]
         public float radius;
-        [Tooltip("Seconds between two attacks")]
+        [Tooltip("Old timing (s). Now only used by Auto category; the real timing comes from the clip sockets in MeleeAnimationSet")]
         public float attackInterval;
-        [Tooltip("Seconds from the start of the swing to the moment it hits")]
+        [Tooltip("Old timing (s), not used by the souls-like combat (hit window is in MeleeAnimationSet)")]
         public float hitDelay;
         [Tooltip("Stamina used per swing (used once stamina exists, Package 2.2)")]
         public float staminaCost;
@@ -35,6 +43,17 @@ namespace EndlessCombat.Combat
         public float staggerTime;
         [Tooltip("Animation: true = stab (fast jab), false = swing")]
         public bool stab;
+        [Tooltip("Animation set (MeleeAnimationSet). Auto: stab = Short, attack interval 0.85 s or more = TwoHand, else OneHand")]
+        public MeleeCategory category;
+
+        /// <summary>Category with Auto resolved. Fists are passed in by the caller (no weapon object).</summary>
+        public MeleeCategory ResolveCategory(bool isFists)
+        {
+            if (isFists) return MeleeCategory.Fists;
+            if (category != MeleeCategory.Auto) return category;
+            if (stab) return MeleeCategory.Short;
+            return attackInterval >= 0.85f ? MeleeCategory.TwoHand : MeleeCategory.OneHand;
+        }
 
         public static MeleeStats Default => new MeleeStats
         {

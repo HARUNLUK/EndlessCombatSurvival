@@ -7,7 +7,7 @@ namespace EndlessCombat.Combat
     /// A step plays every stride length of horizontal travel while grounded. Footsteps are focus sounds:
     /// their volume is multiplied by HearingFocus.FocusGain, so they stand out while the player crouches.
     /// Sits on the Animator object and also receives the OnFootstep / OnLand animation events of the
-    /// locomotion clips (ignored: the enemies have no ThirdPersonController to receive them otherwise).
+    /// locomotion clips (ignored: the enemies have no EndlessCombat.Character.PlayerMotor to receive them otherwise).
     /// </summary>
     [DisallowMultipleComponent]
     public class FootstepEmitter : MonoBehaviour
@@ -38,9 +38,6 @@ namespace EndlessCombat.Combat
 
             if (isPlayer)
             {
-                // The ThirdPersonController plays its own animation-event footsteps; this emitter replaces them
-                var tpc = GetComponentInParent<StarterAssets.ThirdPersonController>();
-                if (tpc != null) tpc.FootstepAudioVolume = 0f;
                 HearingFocus.Ensure();
             }
         }

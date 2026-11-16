@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using StarterAssets;
 
 namespace EndlessSurvival.Inventory
 {
@@ -15,11 +14,8 @@ namespace EndlessSurvival.Inventory
         public float maxThirst = 100f;
 
         [Header("Drain (units per second)")]
-        [Tooltip("Default: about 15 minutes from full to empty")]
-        public float hungerDrainPerSecond = 0.11f;
-
-        [Tooltip("Default: about 10 minutes from full to empty")]
-        public float thirstDrainPerSecond = 0.17f;
+        [HideInInspector] public float hungerDrainPerSecond = 0.11f; // legacy, see NeedsTuning
+        [HideInInspector] public float thirstDrainPerSecond = 0.17f; // legacy, see NeedsTuning
 
         [Tooltip("Drain multiplier while sprinting")]
         public float sprintMultiplier = 1.5f;
@@ -40,7 +36,7 @@ namespace EndlessSurvival.Inventory
 
         [Header("References")]
         public PlayerHealth health;
-        public StarterAssetsInputs inputs;
+        public EndlessCombat.Character.PlayerInputState inputs;
 
         [Header("Hierarchy UI")]
         public Text statusText;
@@ -78,6 +74,11 @@ namespace EndlessSurvival.Inventory
             }
         }
 
+        public float HungerRatio => maxHunger > 0f ? Hunger / maxHunger : 0f;
+        public float ThirstRatio => maxThirst > 0f ? Thirst / maxThirst : 0f;
+        /// <summary>Hunger or thirst below NeedsTuning.CriticalNeedThreshold.</summary>
+        public bool IsCritical => Mathf.Min(HungerRatio, ThirstRatio) < EndlessSurvival.Survival.NeedsTuning.CriticalNeedThreshold;
+
         public bool IsBladderFull => _bladder >= maxBladder * 0.85f;
 
         private void EnsureInitialized()
@@ -92,7 +93,7 @@ namespace EndlessSurvival.Inventory
         private void Awake()
         {
             if (health == null) health = GetComponent<PlayerHealth>();
-            if (inputs == null) inputs = GetComponent<StarterAssetsInputs>();
+            if (inputs == null) inputs = GetComponent<EndlessCombat.Character.PlayerInputState>();
             EnsureInitialized();
         }
 
@@ -114,8 +115,11 @@ namespace EndlessSurvival.Inventory
             if (health != null && health.IsDead) return;
 
             float multiplier = (dt < 1f && inputs != null && inputs.sprint) ? sprintMultiplier : 1f;
-            _hunger = Mathf.Max(0f, _hunger - hungerDrainPerSecond * multiplier * dt);
-            _thirst = Mathf.Max(0f, _thirst - thirstDrainPerSecond * multiplier * dt);
+            // Rates come from NeedsTuning; the serialized drain fields below are legacy and ignored.
+            float hungerRate = maxHunger / (EndlessSurvival.Survival.NeedsTuning.HungerMinutesToEmpty * 60f);
+            float thirstRate = maxThirst / (EndlessSurvival.Survival.NeedsTuning.ThirstMinutesToEmpty * 60f);
+            _hunger = Mathf.Max(0f, _hunger - hungerRate * multiplier * dt);
+            _thirst = Mathf.Max(0f, _thirst - thirstRate * multiplier * dt);
             _bladder = Mathf.Min(maxBladder, _bladder + bladderFillPerSecond * dt);
 
             if (health != null)
@@ -124,7 +128,7 @@ namespace EndlessSurvival.Inventory
                 if (empty > 0)
                 {
                     string cause = (_hunger <= 0f && _thirst <= 0f) ? "Açlık ve Susuzluk" : (_hunger <= 0f ? "Açlıktan Tükenme" : "Susuzluk (Dehidrasyon)");
-                    health.DamageIgnoringArmor(starvationDamagePerSecond * empty * dt, cause);
+                    health.DamageIgnoringArmor(EndlessSurvival.Survival.NeedsTuning.StarvationDamagePerSecond * empty * dt, cause);
                 }
             }
 
@@ -155,6 +159,18 @@ namespace EndlessSurvival.Inventory
             _bladder = Mathf.Min(maxBladder, _bladder + amount * 0.35f);
             RefreshUI();
             return _thirst - before;
+        }
+
+        /// <summary>
+        /// Uses up hunger and thirst (the cost of a night's sleep). Eat/Drink ignore negative values, so the
+        /// sleep calls could not do this. The bladder is not touched.
+        /// </summary>
+        public void Spend(float hunger, float thirst)
+        {
+            EnsureInitialized();
+            _hunger = Mathf.Max(0f, _hunger - Mathf.Max(0f, hunger));
+            _thirst = Mathf.Max(0f, _thirst - Mathf.Max(0f, thirst));
+            RefreshUI();
         }
 
         /// <summary>Relieves personal need. No animations/visuals, resets bladder.</summary>

@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using StarterAssets;
 using EndlessCombat.Combat;
 using EndlessSurvival.World;
 
@@ -84,21 +83,46 @@ namespace EndlessSurvival.Inventory
 
             if (isBleeding)
             {
-                DamageIgnoringArmor(bleedDamagePerSecond * Time.deltaTime, "Ağır Kan Kaybı (Kanamadan Öldü)");
+                // A wound slowly clots: full rate at first, a third of it near the end, then it stops by itself.
+                // A bandage still stops it at once; an untreated wound costs roughly 45 health in total.
+                _bleedTime += Time.deltaTime;
+                float t = Mathf.Clamp01(_bleedTime / Mathf.Max(1f, bleedClotSeconds));
+                DamageIgnoringArmor(bleedDamagePerSecond * Mathf.Lerp(1f, 0.33f, t) * Time.deltaTime, "Ağır Kan Kaybı (Kanamadan Öldü)");
+                if (!IsDead && bleedClotSeconds > 0f && _bleedTime >= bleedClotSeconds)
+                {
+                    StopBleeding();
+                    EndlessSurvival.Survival.SurvivalNotify.Show("Kanama kendiliğinden durdu", new Color(0.6f, 1f, 0.6f), 4f);
+                }
             }
         }
+
+        [Tooltip("Seconds until an untreated wound stops bleeding on its own (0 = never)")]
+        public float bleedClotSeconds = 35f;
+        private float _bleedTime;
 
         private void OnDestroy()
         {
             if (equipment != null) equipment.Changed -= RefreshUI;
         }
 
-        public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
+        public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) =>
+            TakeDamage(new DamageInfo(damage, DamageType.Other, hitPoint, hitNormal));
+
+        public void TakeDamage(DamageInfo info)
         {
             if (IsDead) return;
             EnsureInitialized();
 
-            GameStatsTracker.Instance?.SetCauseOfDeath("Düşman Ateşi / Çatışma");
+            // The raised shield (CombatBody). Melee hits arrive already resolved.
+            float damage = info.Amount;
+            var actor = GetComponent<CombatBody>();
+            if (actor != null)
+            {
+                damage = actor.FilterDamage(info);
+                if (damage <= 0f) return;
+            }
+
+            GameStatsTracker.Instance?.SetCauseOfDeath(CauseOf(info.Type));
 
             float reduction = equipment != null ? equipment.DamageReduction : 0f;
             float finalDamage = damage * (1f - reduction) * Mathf.Max(0f, DamageTakenMultiplier());
@@ -114,6 +138,18 @@ namespace EndlessSurvival.Inventory
             RefreshUI();
 
             if (_current <= 0f) Die();
+        }
+
+        private static string CauseOf(DamageType type)
+        {
+            switch (type)
+            {
+                case DamageType.Explosion: return "Patlama";
+                case DamageType.Animal: return "Vahşi Hayvan Saldırısı";
+                case DamageType.Trap: return "Tuzak Patlaması (Tripwire)";
+                case DamageType.Melee: return "Yakın Dövüş";
+                default: return "Düşman Ateşi / Çatışma";
+            }
         }
 
         /// <summary>Damage from starvation and similar sources that armor cannot absorb.</summary>
@@ -141,6 +177,7 @@ namespace EndlessSurvival.Inventory
         {
             if (IsDead || isBleeding) return;
             isBleeding = true;
+            _bleedTime = 0f;
             RefreshUI();
             BleedingStarted?.Invoke();
             Debug.Log("<color=red>[PlayerHealth] KANAMA BAŞLADI! Bandaj veya medkit kullanmalısın!</color>");
@@ -188,7 +225,10 @@ namespace EndlessSurvival.Inventory
             if (IsDead) return;
             IsDead = true;
 
-            var controller = GetComponent<ThirdPersonController>();
+            var actor = GetComponent<CombatBody>();
+            if (actor != null) actor.Kill();
+
+            var controller = GetComponent<EndlessCombat.Character.PlayerMotor>();
             if (controller != null) controller.enabled = false;
 
             var shooter = GetComponent<PlayerShooter>();

@@ -35,8 +35,8 @@ namespace EndlessSurvival.World
         public float maxRampWidth = 38f;
 
         [Tooltip("Uçurumun başladığı mesafe (chunk merkez çizgisinden)")]
-        public float minInnerEdge = 140f;
-        public float maxInnerEdge = 190f;
+        public float minInnerEdge = 300f;
+        public float maxInnerEdge = 400f;
 
         [Header("Kayalar (basit küp kümeleri)")]
         public float minRockSize = 14f;
@@ -89,8 +89,8 @@ namespace EndlessSurvival.World
         public float shoreNearMin = 22f;
         public float shoreNearMax = 40f;
         [Tooltip("Yol ortadan giderken kıyı çizgisinin chunk merkezine uzaklığı")]
-        public float shoreFarMin = 120f;
-        public float shoreFarMax = 210f;
+        public float shoreFarMin = 250f;
+        public float shoreFarMax = 430f;
         [Tooltip("Karadan kıyıya iniş genişliği. Küçük = dik kayalık kıyı, büyük = yumuşak kumsal")]
         public float minShoreSlope = 10f;
         public float maxShoreSlope = 70f;
@@ -148,8 +148,8 @@ namespace EndlessSurvival.World
         public float hillsideMinDrop = 10f;
         public float hillsideMaxDrop = 14f;
         [Tooltip("Dağ yamacı yerleşiminde vadinin karşı yamacının başladığı mesafe ve yüksekliği")]
-        public float hillsideFarStartMin = 140f;
-        public float hillsideFarStartMax = 190f;
+        public float hillsideFarStartMin = 300f;
+        public float hillsideFarStartMax = 400f;
         public float hillsideFarRise = 30f;
 
         [Header("Dağ: Kenardan Giden Yol (Ledge) - uçurum, kanyon, karşı dağ")]
@@ -163,8 +163,8 @@ namespace EndlessSurvival.World
         [Tooltip("Kanyon tabanının yol kotunun altındaki derinliği (zemin 3m'nin altına inmez)")]
         public float canyonDepth = 60f;
         [Tooltip("Kanyonun karşısındaki dağın başladığı yer: chunk merkez çizgisinden, yolun karşı tarafında")]
-        public float ledgeFarWallMinX = 110f;
-        public float ledgeFarWallMaxX = 160f;
+        public float ledgeFarWallMinX = 220f;
+        public float ledgeFarWallMaxX = 330f;
         [Tooltip("Karşı dağın yüksekliği (baseline üstü)")]
         public float ledgeFarWallMinHeight = 40f;
         public float ledgeFarWallMaxHeight = 65f;
@@ -1126,7 +1126,7 @@ namespace EndlessSurvival.World
             if (_sides == null)
             {
                 int rows = terrain != null && terrain.terrainData != null ? terrain.terrainData.heightmapResolution : 129;
-                float halfWidth = terrain != null && terrain.terrainData != null ? terrain.terrainData.size.x * 0.5f : 250f;
+                float halfWidth = terrain != null && terrain.terrainData != null ? terrain.terrainData.size.x * 0.5f : Chunk.HalfWidth;
                 var roadGen = chunk.GetComponentInChildren<RoadGenerator>();
                 BuildPlan(chunk.GetComponentInChildren<RoadSpline>(), rows, chunk.chunkLength, halfWidth,
                     roadGen != null ? roadGen.GetTotalHalfWidth() : 9f);
@@ -1184,6 +1184,12 @@ namespace EndlessSurvival.World
                         : inner + rng.Range(0f, 18f);
                     d = Mathf.Min(d, _halfWidth - size * 0.3f);
                     // River valley bends cut through the side cliffs: no rock wall across the river
+                    // Side roads end before the edge, but a big rock must not sit on one
+                    if (chunk.NearSideRoad(chunk.transform.TransformPoint(new Vector3(sign * d, 0f, z)), size * 0.7f))
+                    {
+                        z += settings.rockSpacing * 0.5f;
+                        continue;
+                    }
                     if (_valley != null && _valley.IsNearRiver(new Vector3(sign * d, 0f, z), size * 0.7f))
                     {
                         z += settings.rockSpacing * 0.5f;
@@ -1217,7 +1223,7 @@ namespace EndlessSurvival.World
 
         [Header("Dağ Eteği")]
         [Tooltip("Alçak taraftaki görünmez duvarın chunk merkezine uzaklığı (oyuncu açık araziden ufka yürüyemesin)")]
-        public float lowlandEdgeWallDistance = 248f;
+        public float lowlandEdgeWallDistance = 498f;
 
         /// <summary>
         /// Foothill lowland without a sea: open land with no cliff, so an invisible wall keeps the player inside.

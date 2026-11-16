@@ -1,116 +1,162 @@
-using System.Collections;
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace EndlessCombat.Combat
 {
     /// <summary>
-    /// Left click melee for the player: fists when nothing is in the hand (no weapon or holstered),
-    /// the weapon's MeleeWeapon stats when a melee weapon is held. Firearms are handled by PlayerShooter.
-    /// The character turns to the camera direction on each swing; the hit is a sphere check after hitDelay.
+    /// Player melee and shield input (Core_Feel_Plan stage 2, 2026-11-14; Combat_Action_Plan.md 6, 2026-11-16):
+    ///   RB / left click          one quick strike with what is in the hand: fists or the melee weapon; with a firearm
+    ///                            a gun butt / pistol whip (little damage, the enemy staggers). No combo.
+    ///   RT (melee weapon / fists) one heavy strike: slower, more damage, longer stagger, more stamina (CombatBody.Heavy*)
+    ///                            The character keeps walking during the strike (slower).
+    ///   LT / right button        with a shield on the arm: shield up (pistol behind it aims as usual, RT fires)
+    ///   B, Y                     nothing (dodge and grip switch were removed)
+    /// Damage by weapon: fists &lt; knife &lt; club &lt; bat (the weapons' MeleeWeapon stats). A knife from behind into an
+    /// enemy that has not noticed the player kills at once (CombatBody.ReceiveMelee).
+    /// When a strike may start and what LT means come from PlayerCombatState (rules table, input buffer);
+    /// the rest poses are drawn by PlayerCombatAnimation.
     /// </summary>
     [DisallowMultipleComponent]
     public class PlayerMelee : MonoBehaviour
     {
-        private PlayerShooter _shooter;
-        private CombatAnimator _anim;
-        private Camera _camera;
-        private float _nextAttackTime;
-        private bool _alternate;
+        [Header("Gun butt push (firearm in the hand)")]
+        public float buttDamage = 8f;
+        public float buttStagger = 0.8f;
+        public float buttKnockback = 3.5f;
+        public float buttRange = 1.3f;
+        public float buttRadius = 0.6f;
+        public float buttStamina = 8f;
 
-        public bool IsAttacking { get; private set; }
+        private PlayerShooter _shooter;
+        private PlayerCombatState _state;
+        private Character.PlayerInputState _inputs;
+        private CombatBody _body;
+        private ShieldHolder _shield;
+        private Camera _camera;
+        private EndlessSurvival.Inventory.PlayerLoadout _loadout;
+
+        public CombatBody Body => _body;
+        public bool IsAttacking => _body != null && _body.State == ActorState.Attacking;
 
         private void Awake()
         {
             _shooter = GetComponent<PlayerShooter>();
-            var animator = GetComponent<Animator>();
-            if (animator == null) animator = GetComponentInChildren<Animator>();
-            _anim = CombatAnimator.GetOrAdd(animator);
+            _state = PlayerCombatState.GetOrAdd(gameObject);
+            _inputs = GetComponent<Character.PlayerInputState>();
+            _shield = ShieldHolder.GetOrAdd(gameObject);
+            _body = CombatBody.GetOrAdd(gameObject, CombatTeam.Player);
+            _body.team = CombatTeam.Player;
+            _body.ExternalSpend = cost => CombatHooks.TrySpendStamina(cost);
+            _body.AimDirection = AimDirection;
+            _body.SwingFinished += OnSwingFinished;
+            _body.RefreshShield();
+
+            const string P = "Karakter";
+            Tuning.TuningPanel.Register(P, "Dipçik hasarı", () => buttDamage, v => buttDamage = v, 0f, 50f, 1f, this);
+            Tuning.TuningPanel.Register(P, "Dipçik sendeletme (sn)", () => buttStagger, v => buttStagger = v, 0f, 3f, 0.05f, this);
+            Tuning.TuningPanel.Register(P, "Dipçik itme", () => buttKnockback, v => buttKnockback = v, 0f, 10f, 0.25f, this);
+        }
+
+        private void OnDestroy()
+        {
+            if (_body != null) _body.SwingFinished -= OnSwingFinished;
         }
 
         private void Update()
         {
             if (_shooter == null) return;
             if (_camera == null) _camera = Camera.main;
+            if (_state == null) _state = PlayerCombatState.GetOrAdd(gameObject);
+            if (_loadout == null) _loadout = GetComponent<EndlessSurvival.Inventory.PlayerLoadout>();
 
             WeaponType hand = _shooter.HandType;
-            if (hand != WeaponType.Unarmed && hand != WeaponType.Melee) return;
-            if (CombatInputGate.Blocked(gameObject)) return;
+            bool holstered = _shooter.IsHolstered;
+            bool meleeHand = holstered || hand == WeaponType.Unarmed || hand == WeaponType.Melee;
 
-            var thrower = GetComponent<PlayerThrower>();
-            if (thrower != null && thrower.IsBusy) return;
+            // Without the loadout (old scenes): shield on the arm unless a rifle is in the hand or everything is stowed
+            if (_loadout == null && _shield != null && _shield.HasShield)
+                _shield.SetOnBack(holstered || hand == WeaponType.Rifle);
 
-            if (!AttackPressed() || Time.time < _nextAttackTime) return;
+            // Shield: what LT means is decided by the combat state (usable shield, no long gun, not throwing / staggered)
+            _body.SetGuard(_state.WantsGuard);
 
-            MeleeStats stats = CurrentStats(out bool isWeapon);
-            if (!CombatHooks.TrySpendStamina(stats.staminaCost)) return;
-            stats.damage *= CombatHooks.PlayerMeleeDamageMultiplier();
-            stats.attackInterval *= CombatHooks.PlayerMeleeIntervalMultiplier();
-            _nextAttackTime = Time.time + Mathf.Max(0.15f, stats.attackInterval);
-            StartCoroutine(AttackRoutine(stats, isWeapon));
+            // Strike: RB / left click (quick) or RT with a melee weapon / the fists (heavy), from the input buffer.
+            // The rules table decides (a reload is cut short, a strike pressed during the last one comes out when it
+            // ends, both wait while a weapon comes to the hand, nothing during a hit reaction).
+            bool quick = _state.TryConsume(CombatIntent.Strike);
+            bool heavy = !quick && meleeHand && _state.TryConsume(CombatIntent.Heavy);
+            if (!quick && !heavy) return;
+
+            if (meleeHand)
+            {
+                MeleeStats stats = CurrentStats(out MeleeCategory category);
+                stats.damage *= CombatHooks.PlayerMeleeDamageMultiplier();
+                if (heavy) stats.staminaCost *= CombatBody.HeavyStamina;
+                _body.attackSpeed = 1f / Mathf.Max(0.3f, CombatHooks.PlayerMeleeIntervalMultiplier());
+                _body.TryAttack(stats, category, false, heavy);
+            }
+            else
+            {
+                // Firearm in the hand: gun butt push
+                MeleeStats butt = MeleeStats.Fists;
+                butt.damage = buttDamage * CombatHooks.PlayerMeleeDamageMultiplier();
+                butt.staggerTime = buttStagger;
+                butt.knockback = buttKnockback;
+                butt.range = buttRange;
+                butt.radius = buttRadius;
+                butt.staminaCost = buttStamina;
+                _body.attackSpeed = 1f;
+                _body.TryAttack(butt, MeleeCategory.Fists, butt: true);
+            }
         }
 
-        private MeleeStats CurrentStats(out bool isWeapon)
+        private MeleeStats CurrentStats(out MeleeCategory category)
         {
-            isWeapon = false;
-            if (_shooter.HandType == WeaponType.Melee && _shooter.CurrentWeapon != null)
+            if (_shooter.HandType == WeaponType.Melee && !_shooter.IsHolstered && _shooter.CurrentWeapon != null)
             {
                 var melee = _shooter.CurrentWeapon.GetComponent<MeleeWeapon>();
                 if (melee != null)
                 {
-                    isWeapon = true;
+                    category = melee.stats.ResolveCategory(false);
                     return melee.stats;
                 }
             }
+            category = MeleeCategory.Fists;
             return CombatContent.Instance.fists;
         }
 
-        private IEnumerator AttackRoutine(MeleeStats stats, bool isWeapon)
+        private void OnSwingFinished(int hits)
         {
-            IsAttacking = true;
-
-            // Face the camera direction so the swing hits what the player looks at
-            Vector3 forward = transform.forward;
-            if (_camera != null)
-            {
-                forward = _camera.transform.forward;
-                forward.y = 0f;
-                if (forward.sqrMagnitude > 0.001f)
-                {
-                    forward.Normalize();
-                    transform.rotation = Quaternion.LookRotation(forward);
-                }
-            }
-
-            string trigger;
-            if (isWeapon) trigger = stats.stab ? CombatAnimator.MeleeStab : CombatAnimator.MeleeSwing;
-            else trigger = _alternate ? CombatAnimator.PunchCross : CombatAnimator.PunchJab;
-            _alternate = !_alternate;
-
-            if (_anim != null) _anim.PlayAction(trigger, Mathf.Max(0.45f, stats.attackInterval));
-
-            yield return new WaitForSeconds(stats.hitDelay);
-
-            int hits = MeleeHit.Strike(transform, forward, stats);
             CombatHooks.RaisePlayerMeleeLanded(hits);
-
-            // A swing is quiet; a landed hit is a bit louder
+            MeleeStats stats = CurrentStats(out _);
             float noise = hits > 0 ? stats.noiseRadius : stats.noiseRadius * 0.5f;
             if (noise > 0.1f) PlayerStealthController.Instance?.AlertNearbyEnemies(transform.position, noise);
-
-            yield return new WaitForSeconds(Mathf.Max(0f, stats.attackInterval - stats.hitDelay) * 0.5f);
-            IsAttacking = false;
         }
 
-        private static bool AttackPressed()
+        /// <summary>Camera relative move input on the ground plane (zero when not moving).</summary>
+        private Vector3 MoveDirection()
         {
-#if ENABLE_INPUT_SYSTEM
-            return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-#else
-            return Input.GetMouseButtonDown(0);
-#endif
+            if (_inputs == null || _inputs.move.sqrMagnitude < 0.01f) return Vector3.zero;
+            Vector3 fwd = _camera != null ? _camera.transform.forward : transform.forward;
+            Vector3 right = _camera != null ? _camera.transform.right : transform.right;
+            fwd.y = 0f;
+            right.y = 0f;
+            Vector3 dir = fwd.normalized * _inputs.move.y + right.normalized * _inputs.move.x;
+            return dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector3.zero;
+        }
+
+        /// <summary>Strike facing: where the camera looks while aiming, else the move direction, else the camera.</summary>
+        private Vector3 AimDirection()
+        {
+            bool aiming = _shooter != null && _shooter.IsAiming;
+            if (!aiming)
+            {
+                Vector3 move = MoveDirection();
+                if (move != Vector3.zero) return move;
+            }
+            if (_camera == null) return transform.forward;
+            Vector3 f = _camera.transform.forward;
+            f.y = 0f;
+            return f;
         }
     }
 }

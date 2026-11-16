@@ -22,6 +22,7 @@ namespace EndlessSurvival.World
         private Text _enemiesText;
         private Text _lootText;
         private Text _scoreText;
+        private Text _bestText;
 
         public static void Show(string customCause = null)
         {
@@ -37,6 +38,9 @@ namespace EndlessSurvival.World
             {
                 GameStatsTracker.Instance?.SetCauseOfDeath(customCause);
             }
+
+            // Death ends the journey: its save is removed, the character keeps its stats, notes and records
+            EndlessSurvival.Save.SaveManager.Instance?.EndRun(true);
 
             _instance.PopulateAndDisplay();
         }
@@ -85,7 +89,7 @@ namespace EndlessSurvival.World
             CreateText(card.transform, "Title", "YOLCULUK SONA ERDİ", 32, FontStyle.Bold, new Vector2(0, 290), new Vector2(600, 50), new Color(0.92f, 0.28f, 0.22f));
 
             // Ölüm Sebebi
-            _instance._causeText = CreateText(card.transform, "Cause", "Ölüm Sebebi: Bilinmeyen Tehlike", 17, FontStyle.Italic, new Vector2(0, 245), new Vector2(580, 35), new Color(1f, 0.75f, 0.4f));
+            _instance._causeText = CreateText(card.transform, "Cause", "Ölüm Sebebi: Bilinmeyen Tehlike", 16, FontStyle.Italic, new Vector2(0, 243), new Vector2(600, 46), new Color(1f, 0.75f, 0.4f));
 
             // Çizgi
             CreateDivider(card.transform, new Vector2(0, 215), 560);
@@ -104,9 +108,13 @@ namespace EndlessSurvival.World
             // Toplam Skor
             _instance._scoreText = CreateText(card.transform, "TotalScore", "TOPLAM HAYATTA KALMA SKORU: 0", 21, FontStyle.Bold, new Vector2(0, -90), new Vector2(580, 45), new Color(0.35f, 1f, 0.5f));
 
+            // En iyi skor
+            _instance._bestText = CreateText(card.transform, "BestScore", "", 15, FontStyle.Bold, new Vector2(0, -128), new Vector2(580, 28), new Color(1f, 0.85f, 0.4f));
+
             // Butonlar
-            CreateButton(card.transform, "Btn_Restart", "Yeniden Başla [R]", new Vector2(0, -170), new Vector2(480, 50), new Color(0.22f, 0.55f, 0.28f), () => _instance.RestartGame());
-            CreateButton(card.transform, "Btn_Quit", "Oyundan Çık", new Vector2(0, -235), new Vector2(480, 45), new Color(0.3f, 0.32f, 0.38f), () => Application.Quit());
+            CreateButton(card.transform, "Btn_Restart", "Yeni Yolculuk (aynı karakter)   [R] / gamepad A", new Vector2(0, -178), new Vector2(480, 50), new Color(0.22f, 0.55f, 0.28f), () => _instance.RestartGame());
+            CreateButton(card.transform, "Btn_Menu", "Ana Menü   gamepad Y", new Vector2(0, -236), new Vector2(480, 42), new Color(0.3f, 0.32f, 0.38f), () => _instance.GoToMainMenu());
+            CreateButton(card.transform, "Btn_Quit", "Oyundan Çık", new Vector2(0, -288), new Vector2(480, 38), new Color(0.24f, 0.25f, 0.3f), () => QuitGame());
 
             backdrop.SetActive(false);
             DontDestroyOnLoad(uiObj);
@@ -124,13 +132,27 @@ namespace EndlessSurvival.World
                 if (_timeText != null)
                 {
                     var cycle = DayNightCycle.Instance;
-                    string cycleInfo = cycle != null ? $" ({cycle.GetTimeString()} - {cycle.GetPhaseString()})" : "";
+                    string cycleInfo = cycle != null ? $"  (saat {cycle.GetTimeString()})" : "";
                     _timeText.text = $"{tracker.GetFormattedTimePlayed()}{cycleInfo}";
                 }
                 if (_enemiesText != null) _enemiesText.text = $"{tracker.enemiesKilled} Düşman";
                 if (_lootText != null) _lootText.text = $"{tracker.itemsLooted} Parça";
-                if (_scoreText != null) _scoreText.text = $"TOPLAM SKOR: {tracker.CalculateSurvivalScore():N0} PUAN";
+                int score = tracker.CalculateSurvivalScore();
+                if (_scoreText != null) _scoreText.text = $"TOPLAM SKOR: {score:N0} PUAN";
+                int best = PlayerPrefs.GetInt("best.score", 0);
+                if (score > best)
+                {
+                    PlayerPrefs.SetInt("best.score", score);
+                    PlayerPrefs.Save();
+                    if (_bestText != null) _bestText.text = best > 0 ? $"YENİ REKOR!  (önceki en iyi: {best:N0})" : "İlk kaydedilen skorun!";
+                }
+                else if (_bestText != null) _bestText.text = $"En iyi skor: {best:N0}";
             }
+
+            // What is lost and what stays
+            var character = EndlessSurvival.Save.CharacterProfiles.Current;
+            if (_causeText != null && character != null)
+                _causeText.text += $"\n{character.name}: çanta, araç ve yol gitti; statlar ve öğrendiklerin kaldı.";
 
             _panelRoot.SetActive(true);
 
@@ -138,7 +160,7 @@ namespace EndlessSurvival.World
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            var inputs = Object.FindAnyObjectByType<StarterAssets.StarterAssetsInputs>();
+            var inputs = Object.FindAnyObjectByType<EndlessCombat.Character.PlayerInputState>();
             if (inputs != null)
             {
                 inputs.cursorInputForLook = false;
@@ -167,15 +189,37 @@ namespace EndlessSurvival.World
             if (IsGameOver)
             {
                 var keyboard = UnityEngine.InputSystem.Keyboard.current;
-                if (keyboard != null && (keyboard.rKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame))
+                // R / Enter / gamepad A: new run. Gamepad Y: main menu
+                if ((keyboard != null && (keyboard.rKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame))
+                    || EndlessCombat.Combat.GameInput.PadPressed(0))
                 {
                     RestartGame();
+                }
+                else if (EndlessCombat.Combat.GameInput.PadPressed(3))
+                {
+                    GoToMainMenu();
                 }
             }
         }
 
-        public void RestartGame()
+        /// <summary>Back to the main menu (scene reload, menu opens).</summary>
+        public void GoToMainMenu() => Reload(false);
+
+        private static void QuitGame()
         {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        /// <summary>Starts a fresh run on a new random world right away (no main menu in between).</summary>
+        public void RestartGame() => Reload(true);
+
+        private void Reload(bool newRun)
+        {
+            if (newRun) EndlessSurvival.Survival.GameMenus.PrepareNewRun();
             IsGameOver = false;
             Time.timeScale = 1f;
 
@@ -241,7 +285,7 @@ namespace EndlessSurvival.World
             GameObject valObj = new GameObject("Value");
             valObj.transform.SetParent(row.transform, false);
             var valRect = valObj.AddComponent<RectTransform>();
-            valRect.anchorMin = new Vector2(0.55f, 0f);
+            valRect.anchorMin = new Vector2(0.42f, 0f);
             valRect.anchorMax = new Vector2(1f, 1f);
             valRect.offsetMin = Vector2.zero;
             valRect.offsetMax = Vector2.zero;

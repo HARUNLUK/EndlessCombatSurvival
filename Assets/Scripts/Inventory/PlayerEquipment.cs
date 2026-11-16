@@ -55,9 +55,30 @@ namespace EndlessSurvival.Inventory
 
         public float DamageReduction => Mathf.Clamp(TotalArmor * reductionPerArmorPoint, 0f, maxReduction);
 
+        /// <summary>Item in a slot. EquipSlot.Weapon (old single slot) returns the weapon in the hand.</summary>
         public ItemDefinition Get(EquipSlot slot)
         {
+            if (slot == EquipSlot.Weapon) return Loadout != null ? Loadout.ActiveItem : null;
             return _slots[(int)slot];
+        }
+
+        public PlayerLoadout Loadout { get; private set; }
+
+        /// <summary>Weight of the weapons and the shield on the body (counts toward the carry limit).</summary>
+        public float CarriedWeight
+        {
+            get
+            {
+                float w = 0f;
+                foreach (var s in new[] { EquipSlot.LongGun, EquipSlot.Pistol, EquipSlot.Melee, EquipSlot.Shield })
+                    if (_slots[(int)s] != null) w += _slots[(int)s].weight;
+                return w;
+            }
+        }
+
+        private void UpdateCarriedWeight()
+        {
+            if (inventory != null) inventory.CarriedWeight = CarriedWeight;
         }
 
         private void Awake()
@@ -67,14 +88,60 @@ namespace EndlessSurvival.Inventory
             if (animator == null) animator = GetComponent<Animator>();
 
             for (int i = 0; i < SlotCount; i++) _visuals[i] = new List<GameObject>();
+            Loadout = PlayerLoadout.GetOrAdd(gameObject);
         }
 
         private void Start()
         {
             if (startingWeapon != null && shooter != null && shooter.CurrentWeapon != null)
             {
-                _slots[(int)EquipSlot.Weapon] = startingWeapon;
+                EquipSlot slot = startingWeapon.CarrySlot;
+                _slots[(int)slot] = startingWeapon;
+                Loadout.AdoptExisting(PlayerLoadout.SlotOf(slot), startingWeapon, shooter.CurrentWeapon);
+                UpdateCarriedWeight();
                 Changed?.Invoke();
+            }
+            GiveStartingLoadout();
+        }
+
+        /// <summary>Set by the automatic play test: keep the scene's test weapons (its script was written for them).</summary>
+        public const string KeepSceneLoadoutKey = "playtest.keepSceneLoadout";
+
+        /// <summary>
+        /// What a new journey really starts with (2026-11-13): no rifle, a pistol in the holster with a few rounds
+        /// and nothing else on the body. The scene still holds the rifle that was used while the game was built;
+        /// it is taken away here. Continuing a journey replaces all of this right after from the save file.
+        /// </summary>
+        private void GiveStartingLoadout()
+        {
+            if (PlayerPrefs.GetInt(KeepSceneLoadoutKey, 0) == 1 || inventory == null) return;
+            var settings = EndlessSurvival.Survival.SurvivalSettings.Instance;
+            if (settings == null) return;
+
+            for (int i = 0; i < SlotCount; i++)
+            {
+                ItemDefinition worn = _slots[i];
+                if (worn == null || worn.category != ItemCategory.Weapon) continue;
+                if (Unequip((EquipSlot)i) != null) inventory.Storage.Remove(worn, 1);
+            }
+            inventory.SetAmmo(EndlessCombat.Combat.AmmoKind.Rifle, 0);
+            inventory.SetAmmo(EndlessCombat.Combat.AmmoKind.Shotgun, 0);
+            inventory.SetAmmo(EndlessCombat.Combat.AmmoKind.Pistol, 0);
+
+            ItemDefinition pistol = settings.Item("Item_Pistol");
+            if (pistol == null) return;
+            if (inventory.Storage.GetCount(pistol) == 0) inventory.Storage.Add(pistol, 1);
+            Equip(pistol);
+            var gun = Loadout != null ? Loadout.Weapon(PlayerLoadout.Slot.Pistol) : null;
+            if (gun != null) gun.TakeAllAmmo(); // the magazine it came with
+            inventory.SetAmmo(EndlessCombat.Combat.AmmoKind.Pistol, settings.startPistolRounds);
+
+            // A knife on the belt (melee slot)
+            ItemDefinition knife = settings.Item("Item_Knife");
+            if (knife != null && _slots[(int)knife.CarrySlot] != knife)
+            {
+                if (inventory.Storage.GetCount(knife) == 0) inventory.Storage.Add(knife, 1);
+                Equip(knife);
             }
         }
 
@@ -84,58 +151,211 @@ namespace EndlessSurvival.Inventory
             if (item == null || !item.IsEquippable || inventory == null) return null;
             if (inventory.Storage.GetCount(item) <= 0) return null;
 
-            EquipSlot slot = item.category == ItemCategory.Weapon ? EquipSlot.Weapon : item.equipSlot;
+            EquipSlot slot = item.CarrySlot; // weapons: long gun / pistol / melee slot
 
-            if (slot == EquipSlot.Weapon && item.weaponPrefab == null)
-                return $"{item.DisplayName} has no weapon model";
+            if (item.category == ItemCategory.Weapon && item.weaponPrefab == null)
+                return $"{item.DisplayName} için silah modeli yok";
 
             inventory.Storage.Remove(item, 1);
 
             ItemDefinition previous = _slots[(int)slot];
+            _slots[(int)slot] = null;
+            UpdateCarriedWeight(); // the old one leaves the body before it goes into the backpack
             if (previous != null && inventory.Storage.Add(previous, 1) <= 0)
             {
+                _slots[(int)slot] = previous;
+                UpdateCarriedWeight();
                 inventory.Storage.Add(item, 1);
-                return "Backpack is too heavy to swap";
+                return "Değiştirmek için çanta çok ağır";
             }
 
             _slots[(int)slot] = item;
             ApplySlot(slot);
+            UpdateCarriedWeight();
             Changed?.Invoke();
-            return $"Equipped {item.DisplayName}";
+            return $"Kuşanıldı: {item.DisplayName}";
         }
 
         /// <summary>Moves the item worn in the slot back to the backpack.</summary>
         public string Unequip(EquipSlot slot)
         {
+            if (slot == EquipSlot.Weapon && Loadout != null) slot = ActiveWeaponSlot();
             ItemDefinition item = _slots[(int)slot];
             if (item == null) return null;
 
-            if (inventory.Storage.Add(item, 1) <= 0) return "Backpack is too heavy";
-
             _slots[(int)slot] = null;
+            UpdateCarriedWeight();
+            if (inventory.Storage.Add(item, 1) <= 0)
+            {
+                _slots[(int)slot] = item;
+                UpdateCarriedWeight();
+                return "Çanta çok ağır";
+            }
+
             ApplySlot(slot);
             Changed?.Invoke();
-            return $"Unequipped {item.DisplayName}";
+            return $"Çıkarıldı: {item.DisplayName}";
+        }
+
+        /// <summary>
+        /// The carried item leaves its slot without going to the bag: it fell to the ground (Combat_Action_Plan.md 5,
+        /// the caller spawns the pickup). Empty the gun's magazine first, SetSlot would put it into the pool.
+        /// </summary>
+        public void DropCarried(EquipSlot slot)
+        {
+            ItemDefinition item = _slots[(int)slot];
+            if (item == null) return;
+            _slots[(int)slot] = null;
+            ApplySlot(slot);
+            UpdateCarriedWeight();
+            Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// A weapon / shield picked up from the ground goes straight to its slot when that slot is empty (it does not
+        /// go through the bag). False: the slot is taken, the caller puts it into the bag.
+        /// </summary>
+        public bool EquipFromGround(ItemDefinition item)
+        {
+            if (item == null || !item.IsEquippable) return false;
+            if (item.category == ItemCategory.Weapon && item.weaponPrefab == null) return false;
+            EquipSlot slot = item.CarrySlot;
+            if (slot != EquipSlot.LongGun && slot != EquipSlot.Pistol && slot != EquipSlot.Melee && slot != EquipSlot.Shield) return false;
+            if (_slots[(int)slot] != null) return false;
+            _slots[(int)slot] = item;
+            ApplySlot(slot);
+            UpdateCarriedWeight();
+            Changed?.Invoke();
+            return true;
         }
 
         private void ApplySlot(EquipSlot slot)
         {
-            if (slot == EquipSlot.Weapon) ApplyWeapon(_slots[(int)slot]);
+            if (slot == EquipSlot.LongGun || slot == EquipSlot.Pistol || slot == EquipSlot.Melee)
+                Loadout.SetSlot(PlayerLoadout.SlotOf(slot), _slots[(int)slot]);
+            else if (slot == EquipSlot.Weapon) { }
+            else if (slot == EquipSlot.Shield) ApplyShield(_slots[(int)slot]);
             else ApplyApparelVisuals(slot, _slots[(int)slot]);
+        }
+
+        // ------------------------------------------------------------------ Save / load
+
+        /// <summary>Writes the worn items, the weapons on the body (with their magazines and grips) and the hand state.</summary>
+        public void CaptureSave(EndlessSurvival.Save.SaveData data)
+        {
+            data.hasPlayerEquipment = true;
+            data.playerEquipment.Clear();
+            for (int i = 0; i < SlotCount; i++)
+            {
+                if (_slots[i] == null) continue;
+                var entry = new EndlessSurvival.Save.SavedEquipSlot { slot = i, itemName = _slots[i].name };
+                PlayerLoadout.Slot ws = PlayerLoadout.SlotOf((EquipSlot)i);
+                if (ws != PlayerLoadout.Slot.None && Loadout != null)
+                {
+                    WeaponController w = Loadout.Weapon(ws);
+                    entry.magazine = w != null && w.IsFirearm ? w.CurrentAmmo : 0;
+                    entry.twoHand = Loadout.GripFlag(ws);
+                }
+                data.playerEquipment.Add(entry);
+            }
+            data.playerActiveSlot = Loadout != null ? (int)Loadout.Active : -1;
+            data.playerWeaponStowed = Loadout == null || Loadout.IsStowed;
+            data.playerQuickItem = Loadout != null && Loadout.QuickItem != null ? Loadout.QuickItem.name : null;
+        }
+
+        /// <summary>
+        /// Puts the saved items back on the body (the backpack is not touched). Call before the ammo pools are set:
+        /// replacing a weapon returns its magazine to the pool.
+        /// </summary>
+        public void RestoreSave(EndlessSurvival.Save.SaveData data, Func<string, ItemDefinition> find)
+        {
+            if (data == null || !data.hasPlayerEquipment || find == null) return;
+
+            var wanted = new ItemDefinition[SlotCount];
+            var entries = new EndlessSurvival.Save.SavedEquipSlot[SlotCount];
+            foreach (var e in data.playerEquipment)
+            {
+                if (e == null || e.slot < 0 || e.slot >= SlotCount) continue;
+                wanted[e.slot] = find(e.itemName);
+                entries[e.slot] = e;
+            }
+
+            for (int i = 0; i < SlotCount; i++)
+            {
+                var slot = (EquipSlot)i;
+                if (slot == EquipSlot.Weapon) continue; // old single slot, not stored
+                ItemDefinition item = wanted[i];
+                if (item != null && item.category == ItemCategory.Weapon && item.weaponPrefab == null) item = null;
+                _slots[i] = item;
+                ApplySlot(slot);
+
+                PlayerLoadout.Slot ws = PlayerLoadout.SlotOf(slot);
+                if (ws == PlayerLoadout.Slot.None || Loadout == null || entries[i] == null) continue;
+                WeaponController w = Loadout.Weapon(ws);
+                if (w != null && w.IsFirearm)
+                {
+                    w.TakeAllAmmo();
+                    w.RestoreMagazine(entries[i].magazine);
+                }
+            }
+
+            // Grips last: putting the shield on resets them to one hand
+            for (int i = 0; i < SlotCount && Loadout != null; i++)
+            {
+                PlayerLoadout.Slot ws = PlayerLoadout.SlotOf((EquipSlot)i);
+                if (ws != PlayerLoadout.Slot.None && entries[i] != null) Loadout.SetTwoHanded(ws, entries[i].twoHand);
+            }
+
+            if (Loadout != null)
+            {
+                Loadout.RestoreActive((PlayerLoadout.Slot)Mathf.Clamp(data.playerActiveSlot, -1, 2), data.playerWeaponStowed);
+                Loadout.QuickItem = string.IsNullOrEmpty(data.playerQuickItem) ? null : find(data.playerQuickItem);
+            }
+            UpdateCarriedWeight();
+            Changed?.Invoke();
+        }
+
+        // ------------------------------------------------------------------ Shield (left arm)
+
+        private bool _shieldBreakHooked;
+
+        private void ApplyShield(ItemDefinition item)
+        {
+            var holder = ShieldHolder.GetOrAdd(gameObject);
+            if (holder.placeholderMaterial == null) holder.placeholderMaterial = placeholderMaterial;
+            if (!_shieldBreakHooked)
+            {
+                _shieldBreakHooked = true;
+                holder.Broken += OnShieldBroken;
+            }
+            holder.Set(item);
+            var body = GetComponent<CombatBody>();
+            if (body != null) body.RefreshShield();
+            if (Loadout != null) Loadout.OnShieldChanged(); // pistol goes one handed with a shield
+        }
+
+        /// <summary>The shield took too many hits and fell apart (ShieldHolder drops the pieces): the slot empties.</summary>
+        private void OnShieldBroken(ItemDefinition item)
+        {
+            int i = (int)EquipSlot.Shield;
+            if (_slots[i] == null) return;
+            _slots[i] = null;
+            ApplyShield(null);
+            UpdateCarriedWeight();
+            Changed?.Invoke();
+            EndlessSurvival.Survival.SurvivalNotify.Warn($"{(item != null ? item.DisplayName : "Kalkan")} kırıldı");
         }
 
         // ------------------------------------------------------------------ Weapon
 
-        private void ApplyWeapon(ItemDefinition item)
+        private EquipSlot ActiveWeaponSlot()
         {
-            if (shooter == null) return;
-
-            // Rounds stay with the player: they go to the backpack side pool and are handed to the next weapon.
-            WeaponController old = shooter.CurrentWeapon;
-            if (old != null) inventory.AddLooseAmmo(old.TakeAllAmmo());
-
-            WeaponController weapon = shooter.ReplaceWeapon(item != null ? item.weaponPrefab : null);
-            if (weapon != null) weapon.AddReserveAmmo(inventory.TakeLooseAmmo());
+            switch (Loadout.Active)
+            {
+                case PlayerLoadout.Slot.LongGun: return EquipSlot.LongGun;
+                case PlayerLoadout.Slot.Pistol: return EquipSlot.Pistol;
+                default: return EquipSlot.Melee;
+            }
         }
 
         // ------------------------------------------------------------------ Apparel visuals

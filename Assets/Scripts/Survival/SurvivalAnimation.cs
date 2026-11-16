@@ -1,5 +1,4 @@
 using UnityEngine;
-using StarterAssets;
 using EndlessSurvival.Inventory;
 using EndlessSurvival.Camping;
 
@@ -20,6 +19,9 @@ namespace EndlessSurvival.Survival
         Breath = 9,
         HeavyWalk = 10,
         Smoke = 11,
+        KneelHold = 12,   // kneeling still at the campfire (sitting, crafting, cooking)
+        PickUp = 13,      // picking a plant/mushroom off the ground (Kevin Iglesias Gathering02, squat)
+        Work = 14,        // kneeling work on the ground: butchering, salvaging (Kevin Iglesias hammering clip)
         Death = 20
     }
 
@@ -37,6 +39,9 @@ namespace EndlessSurvival.Survival
         public const string Breath = "Surv_Breath";
         public const string HeavyWalk = "Surv_HeavyWalk";
         public const string Smoke = "Surv_Smoke";
+        public const string KneelHold = "Surv_KneelHold";
+        public const string PickUp = "Surv_PickUp";
+        public const string Work = "Surv_Work";
         public const string NpcHit = "Npc_Hit";
         public const string NpcDeath = "Npc_Death";
         public const string NpcStand = "Npc_Stand";
@@ -52,6 +57,9 @@ namespace EndlessSurvival.Survival
     {
         public const string LayerName = "SurvivalFullBody";
         public const string Param = "SurvAction";
+        /// <summary>Same clips from the waist up only: the legs keep walking (smoking, drinking). Built by SurvivalUpperLayerSetup.</summary>
+        public const string UpperLayerName = "SurvivalUpperBody";
+        public const string UpperParam = "SurvUpper";
 
         public float fadeSpeed = 5f;
 
@@ -61,8 +69,14 @@ namespace EndlessSurvival.Survival
         private SurvAnim _target;
         private SurvAnim _shown;
         private float _weight;
+        private int _upperLayer = -1;
+        private bool _hasUpperParam;
+        private SurvAnim _upperTarget, _upperShown;
+        private float _upperWeight;
 
         public bool Available => _layer >= 0 && _hasParam;
+        /// <summary>The upper body layer exists in the controller (else upper body actions fall back to the full body).</summary>
+        public bool UpperAvailable => _upperLayer >= 0 && _hasUpperParam;
         public SurvAnim Current => _target;
 
         public static SurvivalAnimLayer GetOrAdd(Animator animator)
@@ -82,8 +96,25 @@ namespace EndlessSurvival.Survival
             _animator = GetComponent<Animator>();
             if (_animator == null || _animator.runtimeAnimatorController == null) return;
             _layer = _animator.GetLayerIndex(LayerName);
+            _upperLayer = _animator.GetLayerIndex(UpperLayerName);
             foreach (var p in _animator.parameters)
+            {
                 if (p.name == Param && p.type == AnimatorControllerParameterType.Int) _hasParam = true;
+                if (p.name == UpperParam && p.type == AnimatorControllerParameterType.Int) _hasUpperParam = true;
+            }
+        }
+
+        /// <summary>Upper body only action (None to stop). The legs keep their locomotion.</summary>
+        public void SetUpper(SurvAnim action)
+        {
+            Init();
+            _upperTarget = action;
+            if (!UpperAvailable) return;
+            if (action != SurvAnim.None)
+            {
+                _upperShown = action;
+                _animator.SetInteger(UpperParam, (int)action);
+            }
         }
 
         public void Set(SurvAnim action)
@@ -128,6 +159,15 @@ namespace EndlessSurvival.Survival
                 _shown = SurvAnim.None;
                 _animator.SetInteger(Param, 0);
             }
+
+            if (!UpperAvailable) return;
+            _upperWeight = Mathf.MoveTowards(_upperWeight, _upperTarget != SurvAnim.None ? 1f : 0f, Time.deltaTime * fadeSpeed);
+            _animator.SetLayerWeight(_upperLayer, _upperWeight);
+            if (_upperTarget == SurvAnim.None && _upperWeight <= 0.001f && _upperShown != SurvAnim.None)
+            {
+                _upperShown = SurvAnim.None;
+                _animator.SetInteger(UpperParam, 0);
+            }
         }
     }
 
@@ -142,12 +182,19 @@ namespace EndlessSurvival.Survival
 
         private GameObject _player;
         private SurvivalAnimLayer _layer;
-        private StarterAssetsInputs _inputs;
+        private EndlessCombat.Character.PlayerInputState _inputs;
         private Animator _animator;
         private bool _hasAimParam;
         private SurvAnim _oneShot;
         private float _oneShotUntil;
         private SurvAnim _current;
+        private SurvAnim _upper;
+
+        /// <summary>Actions that only need the arms: they play on the upper body layer and do not stop the player.</summary>
+        private static bool UpperOnly(SurvAnim a) => a == SurvAnim.Smoke || a == SurvAnim.Drink;
+
+        /// <summary>The action shown now, on either layer (hands busy check).</summary>
+        public static SurvAnim ShownAction => Instance == null ? SurvAnim.None : (Instance._current != SurvAnim.None ? Instance._current : Instance._upper);
 
         /// <summary>True while an action that keeps the player in place is playing.</summary>
         public static bool LocksMovement
@@ -201,6 +248,9 @@ namespace EndlessSurvival.Survival
                 case SurvAnim.Breath: return SurvivalAnimClips.Breath;
                 case SurvAnim.HeavyWalk: return SurvivalAnimClips.HeavyWalk;
                 case SurvAnim.Smoke: return SurvivalAnimClips.Smoke;
+                case SurvAnim.KneelHold: return SurvivalAnimClips.KneelHold;
+                case SurvAnim.PickUp: return SurvivalAnimClips.PickUp;
+                case SurvAnim.Work: return SurvivalAnimClips.Work;
                 case SurvAnim.Death: return SurvivalAnimClips.NpcDeath;
             }
             return null;
@@ -213,7 +263,7 @@ namespace EndlessSurvival.Survival
         private void OnDisable()
         {
             PlayerInventory.ItemConsumed -= OnItemConsumed;
-            if (_layer != null) _layer.Set(SurvAnim.None);
+            if (_layer != null) { _layer.Set(SurvAnim.None); _layer.SetUpper(SurvAnim.None); }
         }
 
         private void OnDestroy()
@@ -234,7 +284,7 @@ namespace EndlessSurvival.Survival
             _layer = null;
             _inputs = null;
             if (player == null) return;
-            _inputs = player.GetComponent<StarterAssetsInputs>();
+            _inputs = player.GetComponent<EndlessCombat.Character.PlayerInputState>();
             _animator = player.GetComponentInChildren<Animator>();
             _hasAimParam = false;
             if (_animator != null)
@@ -249,10 +299,22 @@ namespace EndlessSurvival.Survival
             if (_layer == null || !_layer.Available) return;
 
             SurvAnim want = Pick();
+            // Smoking and drinking: arms only, when the controller has the upper body layer
+            SurvAnim upper = SurvAnim.None;
+            if (UpperOnly(want) && _layer.UpperAvailable)
+            {
+                upper = want;
+                want = SurvAnim.None;
+            }
             if (want != _current)
             {
                 _current = want;
                 _layer.Set(want);
+            }
+            if (upper != _upper)
+            {
+                _upper = upper;
+                _layer.SetUpper(upper);
             }
         }
 
@@ -275,7 +337,9 @@ namespace EndlessSurvival.Survival
             var fishing = FishingController.Instance;
             if (fishing != null && fishing.State != FishingController.FishState.Idle) return SurvAnim.FishIdle;
             var craft = CraftingSystem.Instance;
-            if (craft != null && craft.CurrentJob != null && craft.CurrentJob.station == CraftStation.Campfire) return SurvAnim.KneelFire;
+            if (craft != null && craft.CurrentJob != null && craft.CurrentJob.station == CraftStation.Campfire) return SurvAnim.KneelHold;
+            var sitting = _player.GetComponent<PlayerSittingController>();
+            if (sitting != null && sitting.IsSitting) return SurvAnim.KneelHold; // campfire: kneel instead of the old sit
 
             bool moving = _inputs != null && _inputs.move.sqrMagnitude > 0.01f;
             bool aiming = _hasAimParam && _animator != null && _animator.GetBool("IsAiming");

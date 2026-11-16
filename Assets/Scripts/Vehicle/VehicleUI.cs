@@ -116,7 +116,7 @@ namespace EndlessSurvival.Vehicle
             {
                 int speed = Mathf.RoundToInt(vehicleController.CurrentSpeedKmh);
                 int rpm = Mathf.RoundToInt(vehicleController.EngineRpm / 100f) * 100;
-                speedText.text = $"{speed} KM/H   [{vehicleController.GearLabel}]   {rpm} RPM";
+                speedText.text = $"{speed} km/s   [{vehicleController.GearLabel}]   {rpm} d/dk";
             }
 
             float fuelRatio = vehicleController.maxFuel > 0 ? (vehicleController.currentFuel / vehicleController.maxFuel) : 0f;
@@ -129,15 +129,15 @@ namespace EndlessSurvival.Vehicle
             if (healthText != null)
             {
                 float healthRatio = vehicleController.maxHealth > 0 ? (vehicleController.currentHealth / vehicleController.maxHealth) : 0f;
-                healthText.text = $"HULL: {Mathf.RoundToInt(healthRatio * 100f)}%";
+                healthText.text = $"GÖVDE: %{Mathf.RoundToInt(healthRatio * 100f)}";
             }
 
             if (warningText != null)
             {
                 if (vehicleController.IsBroken)
-                    warningText.text = "ENGINE BROKEN - exit and repair it (needs materials)";
+                    warningText.text = "MOTOR BOZUK - in ve tamir et (Tab > Envanter > Tamir et)";
                 else if (vehicleController.currentFuel <= 0f)
-                    warningText.text = "OUT OF FUEL - exit and refuel it (needs fuel cans)";
+                    warningText.text = "YAKIT BİTTİ - in ve depoyu doldur (benzin bidonu)";
                 else
                     warningText.text = string.Empty;
             }
@@ -145,7 +145,7 @@ namespace EndlessSurvival.Vehicle
             if (fuelText != null)
             {
                 int fuelPercent = Mathf.RoundToInt(fuelRatio * 100f);
-                fuelText.text = $"FUEL: {fuelPercent}%";
+                fuelText.text = $"YAKIT: %{fuelPercent}";
             }
         }
     }

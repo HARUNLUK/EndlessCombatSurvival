@@ -32,6 +32,10 @@ namespace EndlessSurvival.World.Road
         [Range(0.2f, 1.5f)]
         public float roadThickness = 0.40f;
 
+        [Tooltip("Kaldirimin dis kenari dikey duvar yerine bu genislikte (m) bir rampayla araziye iner; araclar yola cikabilsin. 0 = eski dikey etek.")]
+        [Range(0f, 2f)]
+        public float shoulderRampWidth = 1.6f;
+
         [Header("Cross-Section Preset & Style")]
         [Tooltip("Road cross-section style: Kaldırımlı, Bariyerli, Otoyol, Açık Kırsal, vb.")]
         public RoadCrossSectionPreset crossSectionPreset = RoadCrossSectionPreset.ProfileDefault;
@@ -44,6 +48,34 @@ namespace EndlessSurvival.World.Road
 
         [Tooltip("Whether roadside metal guardrails & posts are enabled")]
         public bool hasGuardrails = true;
+
+        [Header("Bariyer Kırıkları (Guardrail Gaps)")]
+        [Tooltip("Bariyerde ara ara açıklıklar olsun (temiz kesik, kırılıp bükülmüş, içine araç girmiş). Araç çıkıp geri girebilir.")]
+        public bool guardrailGapsEnabled = true;
+        [Tooltip("Her ~100m'de bir taraf için açıklık olma şansı")]
+        [Range(0f, 1f)] public float guardrailGapChance = 0.45f;
+        [Tooltip("Açıklık uzunluğu (m), araç rahat geçsin diye en az ~9m")]
+        public Vector2 guardrailGapLength = new Vector2(9f, 18f);
+        [Tooltip("Kırık açıklıklarda bariyer uçlarının dışarı bükülme uzunluğu (m)")]
+        public float guardrailBendLength = 4.5f;
+        [Tooltip("Açıklık türü ağırlıkları: temiz kesik / kırılıp bükülmüş / içine araç çarpmış")]
+        public int gapCleanWeight = 30, gapBrokenWeight = 45, gapCrashWeight = 25;
+
+        public enum GuardrailGapKind { Clean, Broken, Crash }
+
+        /// <summary>An opening in one side's guardrail, in spline t (0..1). Crash gaps get a wreck from AbandonedVehicleSpawner.</summary>
+        public struct GuardrailGap
+        {
+            public float side;            // -1 left, +1 right
+            public float tStart, tEnd;
+            public GuardrailGapKind kind;
+            public float bendStart, bendEnd; // outward bend (m) of the rail end before / after the gap
+            public float TMid => (tStart + tEnd) * 0.5f;
+        }
+
+        private readonly List<GuardrailGap> _guardrailGaps = new List<GuardrailGap>();
+        /// <summary>Openings of the last built guardrails (empty when the road has none).</summary>
+        public IReadOnlyList<GuardrailGap> GuardrailGaps => _guardrailGaps;
 
         [Header("Generation Settings")]
         [Tooltip("Automatically generate mesh on Awake/Start")]
@@ -346,6 +378,23 @@ namespace EndlessSurvival.World.Road
                 float rightCurbOuterX = halfRoad + curbWidth;
                 float rightSidewalkOuterX = halfRoad + curbWidth + sidewalkWidth;
 
+                // Outer edge: ramp down into the terrain bed instead of a vertical wall (vehicles can climb it).
+                // The bottom reaches below the terrain bed (spline-relative roadY - 0.10, depression -0.125).
+                float rampBottomY = roadElevation - skirtDepth;
+                float rampOutX = 0f;
+                Vector3 rampNormalL = -right;
+                Vector3 rampNormalR = right;
+                if (shoulderRampWidth > 0.001f)
+                {
+                    rampBottomY = Mathf.Min(rampBottomY, -0.25f);
+                    float rampDrop = (roadElevation + curbHeight) - rampBottomY;
+                    rampOutX = Mathf.Max(shoulderRampWidth, rampDrop / Mathf.Tan(25f * Mathf.Deg2Rad));
+                    rampOutX = Mathf.Min(rampOutX, 1.9f); // stay inside the flat terrain platform (road edge + 2 m)
+                    rampNormalL = (-right * rampDrop + Vector3.up * rampOutX).normalized;
+                    rampNormalR = (right * rampDrop + Vector3.up * rampOutX).normalized;
+                }
+                Vector3 rampBottomOffset = Vector3.up * rampBottomY;
+
                 // --- 0..4: Road Surface (Asphalt + Markings) ---
                 vertices[baseIndex + 0] = center - right * leftRoadX + roadElevationOffset;
                 normals[baseIndex + 0] = normal;
@@ -398,8 +447,8 @@ namespace EndlessSurvival.World.Road
                 normals[baseIndex + 11] = normal;
                 uvs[baseIndex + 11] = new Vector2(1.0f, vSidewalk);
 
-                vertices[baseIndex + 12] = center - right * leftSidewalkOuterX + skirtElevationOffset;
-                normals[baseIndex + 12] = -right;
+                vertices[baseIndex + 12] = center - right * (leftSidewalkOuterX + rampOutX) + rampBottomOffset;
+                normals[baseIndex + 12] = rampNormalL;
                 uvs[baseIndex + 12] = new Vector2(0.0f, vSidewalk);
 
                 // --- 13..14: Right Sidewalk & Skirt ---
@@ -407,8 +456,8 @@ namespace EndlessSurvival.World.Road
                 normals[baseIndex + 13] = normal;
                 uvs[baseIndex + 13] = new Vector2(1.0f, vSidewalk);
 
-                vertices[baseIndex + 14] = center + right * rightSidewalkOuterX + skirtElevationOffset;
-                normals[baseIndex + 14] = right;
+                vertices[baseIndex + 14] = center + right * (rightSidewalkOuterX + rampOutX) + rampBottomOffset;
+                normals[baseIndex + 14] = rampNormalR;
                 uvs[baseIndex + 14] = new Vector2(0.0f, vSidewalk);
 
                 // Strictly clamp boundary vertices to Z=0 and Z=500
@@ -774,6 +823,7 @@ namespace EndlessSurvival.World.Road
             }
 
             Transform existingHolder = transform.Find("Guardrails");
+            _guardrailGaps.Clear();
             if (!enabled)
             {
                 if (existingHolder != null)
@@ -814,12 +864,133 @@ namespace EndlessSurvival.World.Road
             renderer.sharedMaterial = gMat;
         }
 
+        private const float GuardrailLength = 500f; // rail z runs 0..500 (same as the chunk)
+
+        /// <summary>Seeded openings per side, kept away from the chunk seams so neighbors always meet with a rail.</summary>
+        private void PlanGuardrailGaps()
+        {
+            _guardrailGaps.Clear();
+            if (_parentChunk == null) _parentChunk = GetComponentInParent<Chunk>();
+            if (!guardrailGapsEnabled || guardrailGapChance <= 0f) { AddSideRoadGaps(); return; }
+
+            if (_parentChunk == null) _parentChunk = GetComponentInParent<Chunk>();
+            int seed = 1;
+            if (_parentChunk != null)
+                seed = _parentChunk.ChunkSeed != 0 ? _parentChunk.ChunkSeed : SeededRandom.Combine(_parentChunk.WorldSeed, _parentChunk.ChunkIndex);
+            var rng = new SeededRandom(SeededRandom.Combine(seed, "guardrail_gaps"));
+
+            int totalWeight = Mathf.Max(1, gapCleanWeight + gapBrokenWeight + gapCrashWeight);
+            for (int s = 0; s < 2; s++)
+            {
+                float side = s == 0 ? -1f : 1f;
+                // Ledge roads: fewer openings toward the drop (a car leaving there does not come back)
+                float chance = guardrailGapChance;
+                if (_parentChunk != null && _parentChunk.IsMountain && _parentChunk.mountainLayout == MountainLayout.Ledge
+                    && _parentChunk.GetLandSide(side) != side) chance *= 0.4f;
+
+                float z = rng.Range(25f, 90f);
+                while (z < GuardrailLength - 40f)
+                {
+                    float len = rng.Range(guardrailGapLength.x, Mathf.Max(guardrailGapLength.x, guardrailGapLength.y));
+                    if (z + len > GuardrailLength - 30f) break;
+                    if (rng.Chance(chance))
+                    {
+                        int roll = rng.Range(0, totalWeight);
+                        GuardrailGapKind kind = roll < gapCleanWeight ? GuardrailGapKind.Clean
+                            : roll < gapCleanWeight + gapBrokenWeight ? GuardrailGapKind.Broken : GuardrailGapKind.Crash;
+                        float bendMax = kind == GuardrailGapKind.Crash ? 1.6f : 1.0f;
+                        bool bent = kind != GuardrailGapKind.Clean;
+                        _guardrailGaps.Add(new GuardrailGap
+                        {
+                            side = side,
+                            tStart = z / GuardrailLength,
+                            tEnd = (z + len) / GuardrailLength,
+                            kind = kind,
+                            bendStart = bent && rng.Value < 0.8f ? rng.Range(0.3f, bendMax) : 0f,
+                            bendEnd = bent && rng.Value < 0.8f ? rng.Range(0.3f, bendMax) : 0f
+                        });
+                        z += len + rng.Range(60f, 150f);
+                    }
+                    else z += rng.Range(70f, 130f);
+                }
+            }
+            AddSideRoadGaps();
+        }
+
+        /// <summary>Clean openings where side roads leave the main road (after the seeded gaps, so those stay the same).</summary>
+        private void AddSideRoadGaps()
+        {
+            if (_parentChunk == null || _parentChunk.sideRoads.Count == 0) return;
+            var openings = new List<Vector2>();
+            for (int s = 0; s < 2; s++)
+            {
+                float side = s == 0 ? -1f : 1f;
+                openings.Clear();
+                SideRoads.GuardrailOpenings(_parentChunk, side, openings);
+                foreach (var o in openings)
+                {
+                    _guardrailGaps.Add(new GuardrailGap
+                    {
+                        side = side,
+                        tStart = Mathf.Clamp01(o.x / GuardrailLength),
+                        tEnd = Mathf.Clamp01(o.y / GuardrailLength),
+                        kind = GuardrailGapKind.Clean
+                    });
+                }
+            }
+        }
+
+        private bool InGuardrailGap(float side, float t, float marginT = 0f)
+        {
+            for (int g = 0; g < _guardrailGaps.Count; g++)
+            {
+                GuardrailGap gap = _guardrailGaps[g];
+                if (gap.side == side && t > gap.tStart - marginT && t < gap.tEnd + marginT) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Bent-out rail ends next to broken openings: offset (outward m, down m) of the rail at <paramref name="t"/>.</summary>
+        private Vector2 GuardrailBend(float side, float t)
+        {
+            Vector2 best = Vector2.zero;
+            float bendLen = Mathf.Max(0.5f, guardrailBendLength);
+            for (int g = 0; g < _guardrailGaps.Count; g++)
+            {
+                GuardrailGap gap = _guardrailGaps[g];
+                if (gap.side != side) continue;
+                float z = t * GuardrailLength;
+                float startZ = gap.tStart * GuardrailLength, endZ = gap.tEnd * GuardrailLength;
+                float amount = 0f, bend = 0f;
+                if (z <= startZ && startZ - z < bendLen) { amount = 1f - (startZ - z) / bendLen; bend = gap.bendStart; }
+                else if (z >= endZ && z - endZ < bendLen) { amount = 1f - (z - endZ) / bendLen; bend = gap.bendEnd; }
+                if (bend <= 0f) continue;
+                amount *= amount;
+                Vector2 v = new Vector2(bend * amount, 0.45f * amount * Mathf.Min(1f, bend));
+                if (v.x > best.x) best = v;
+            }
+            return best;
+        }
+
+        /// <summary>Closes a cut rail end (both windings, the cap is seen from either side).</summary>
+        private static void AddRailCap(List<int> tris, int ring)
+        {
+            // Ring order around the profile: 0,1,2,3,4 (front), 6 (bottom back), 5 (top back)
+            int[] loop = { 0, 1, 2, 3, 4, 6, 5 };
+            for (int k = 1; k < loop.Length - 1; k++)
+            {
+                tris.Add(ring + loop[0]); tris.Add(ring + loop[k]); tris.Add(ring + loop[k + 1]);
+                tris.Add(ring + loop[0]); tris.Add(ring + loop[k + 1]); tris.Add(ring + loop[k]);
+            }
+        }
+
         private Mesh BuildGuardrailMesh(float offset, float curbH)
         {
             float sidewalkY = roadElevation + curbH;
 
             int steps = SampleSteps;
             float postSpacing = activeProfile != null ? Mathf.Max(2f, activeProfile.guardrailSpacing) : 3.5f;
+            PlanGuardrailGaps();
 
             List<Vector3> verts = new List<Vector3>();
             List<Vector3> norms = new List<Vector3>();
@@ -848,10 +1019,12 @@ namespace EndlessSurvival.World.Road
                 }
 
                 float vCoord = totalLength * 0.8f;
-                Vector3 leftAnchor = center - right * offset;
+                // Rail ends next to broken openings are bent outward and sag down
+                Vector2 bendL = GuardrailBend(-1f, t), bendR = GuardrailBend(1f, t);
+                Vector3 leftAnchor = center - right * (offset + bendL.x) - Vector3.up * bendL.y;
                 Vector3 leftBack = leftAnchor - right * beamThickness;
 
-                Vector3 rightAnchor = center + right * offset;
+                Vector3 rightAnchor = center + right * (offset + bendR.x) - Vector3.up * bendR.y;
                 Vector3 rightBack = rightAnchor + right * beamThickness;
 
                 int baseLeft = verts.Count;
@@ -894,11 +1067,21 @@ namespace EndlessSurvival.World.Road
                 uvs.Add(new Vector2(0f, vCoord));
                 uvs.Add(new Vector2(1f, vCoord));
 
+                // Openings: a side's segment i..i+1 is skipped when it lies in a gap; cut ends get a cap
+                bool leftPrev = i == 0 || !InGuardrailGap(-1f, (i - 0.5f) / steps);
+                bool leftNext = i == steps || !InGuardrailGap(-1f, (i + 0.5f) / steps);
+                bool rightPrev = i == 0 || !InGuardrailGap(1f, (i - 0.5f) / steps);
+                bool rightNext = i == steps || !InGuardrailGap(1f, (i + 0.5f) / steps);
+                if (leftPrev != leftNext) AddRailCap(tris, baseLeft);
+                if (rightPrev != rightNext) AddRailCap(tris, baseRight);
+
                 if (i < steps)
                 {
                     int nextLeft = baseLeft + 14;
                     int nextRight = baseRight + 14;
 
+                    if (leftNext)
+                    {
                     // === Left Guardrail Faces (Solid 3D Closed Box Volume) ===
                     // 1. Front W-beam face (Strictly facing road = +right)
                     for (int q = 0; q < 4; q++)
@@ -938,7 +1121,10 @@ namespace EndlessSurvival.World.Road
                     tris.Add(baseLeft + 4);
                     tris.Add(nextLeft + 6);
                     tris.Add(baseLeft + 6);
+                    }
 
+                    if (rightNext)
+                    {
                     // === Right Guardrail Faces (Solid 3D Closed Box Volume) ===
                     // 1. Front W-beam face (Strictly facing road = -right)
                     for (int q = 0; q < 4; q++)
@@ -978,6 +1164,7 @@ namespace EndlessSurvival.World.Road
                     tris.Add(baseRight + 6);
                     tris.Add(nextRight + 4);
                     tris.Add(baseRight + 4);
+                    }
                 }
             }
 
@@ -997,12 +1184,39 @@ namespace EndlessSurvival.World.Road
                 if (p == 0) { center = new Vector3(center.x, center.y, 0f); right = Vector3.right; forward = Vector3.forward; }
                 else if (p == postCount) { center = new Vector3(center.x, center.y, 500f); right = Vector3.right; forward = Vector3.forward; }
 
-                Vector3 leftPostCenter = center - right * (offset + beamThickness + postHalfW) + Vector3.up * (postBaseY + postHeight * 0.5f);
-                Vector3 rightPostCenter = center + right * (offset + beamThickness + postHalfW) + Vector3.up * (postBaseY + postHeight * 0.5f);
+                Vector2 bendL = GuardrailBend(-1f, t), bendR = GuardrailBend(1f, t);
+                Vector3 leftPostCenter = center - right * (offset + bendL.x + beamThickness + postHalfW) + Vector3.up * (postBaseY + postHeight * 0.5f - bendL.y);
+                Vector3 rightPostCenter = center + right * (offset + bendR.x + beamThickness + postHalfW) + Vector3.up * (postBaseY + postHeight * 0.5f - bendR.y);
                 Vector3 postSize = new Vector3(postHalfW * 2f, postHeight, postHalfW * 2f);
 
-                AddPostBox(verts, norms, uvs, tris, leftPostCenter, right, forward, postSize);
-                AddPostBox(verts, norms, uvs, tris, rightPostCenter, right, forward, postSize);
+                // No posts inside openings (a little margin so no post stands alone at the cut end)
+                float postMargin = 0.6f / GuardrailLength;
+                if (!InGuardrailGap(-1f, t, postMargin)) AddPostBox(verts, norms, uvs, tris, leftPostCenter, right, forward, postSize);
+                if (!InGuardrailGap(1f, t, postMargin)) AddPostBox(verts, norms, uvs, tris, rightPostCenter, right, forward, postSize);
+            }
+
+            // Broken openings: a torn-off rail piece and a knocked-over post lie in the gap (flat, on the shoulder)
+            for (int g = 0; g < _guardrailGaps.Count; g++)
+            {
+                GuardrailGap gap = _guardrailGaps[g];
+                if (gap.kind != GuardrailGapKind.Broken) continue;
+                var drng = new SeededRandom(SeededRandom.Combine(Mathf.RoundToInt(gap.tStart * 100000f), gap.side > 0f ? "gap_r" : "gap_l"));
+                float tm = Mathf.Lerp(gap.tStart, gap.tEnd, drng.Range(0.3f, 0.7f));
+                Vector3 c = spline.GetPoint(tm);
+                Vector3 r = spline.GetRight(tm);
+                Vector3 f = spline.GetTangent(tm);
+                f.y = 0f; r.y = 0f;
+                if (f.sqrMagnitude < 0.001f) f = Vector3.forward;
+                if (r.sqrMagnitude < 0.001f) r = Vector3.right;
+                f.Normalize(); r.Normalize();
+
+                Quaternion yaw = Quaternion.Euler(0f, drng.Range(-30f, 30f), 0f);
+                Vector3 pieceCenter = c + r * gap.side * (offset + drng.Range(0.1f, 0.6f)) + Vector3.up * (sidewalkY + 0.06f);
+                AddPostBox(verts, norms, uvs, tris, pieceCenter, yaw * r, yaw * f, new Vector3(0.32f, 0.08f, drng.Range(2.4f, 3.8f)));
+
+                Quaternion yaw2 = Quaternion.Euler(0f, drng.Range(40f, 140f), 0f);
+                Vector3 postCenter = c + f * drng.Range(-3f, 3f) + r * gap.side * (offset + drng.Range(0.2f, 0.8f)) + Vector3.up * (sidewalkY + postHalfW);
+                AddPostBox(verts, norms, uvs, tris, postCenter, yaw2 * r, yaw2 * f, new Vector3(postHalfW * 2f, postHalfW * 2f, postHeight));
             }
 
             Mesh mesh = new Mesh();

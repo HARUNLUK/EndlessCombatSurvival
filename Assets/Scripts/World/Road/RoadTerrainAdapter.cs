@@ -24,25 +24,8 @@ namespace EndlessSurvival.World.Road
         {
             if (terrain == null || spline == null) return;
 
-            // In play mode, ensure each chunk operates on its own cloned runtime TerrainData instance
-            if (Application.isPlaying)
-            {
-                if (!terrain.gameObject.name.Contains("(RuntimeClone)"))
-                {
-                    TerrainLayer[] oldLayers = terrain.terrainData.terrainLayers;
-                    Material oldMat = terrain.materialTemplate;
-                    
-                    terrain.terrainData = Object.Instantiate(terrain.terrainData);
-                    terrain.terrainData.terrainLayers = oldLayers;
-                    terrain.materialTemplate = oldMat;
-                    
-                    terrain.gameObject.name += " (RuntimeClone)";
-                    var tCol = terrain.GetComponent<TerrainCollider>();
-                    if (tCol != null) tCol.terrainData = terrain.terrainData;
-                    
-                    terrain.allowAutoConnect = false;
-                }
-            }
+            // In play mode, ensure each chunk operates on its own cloned (and widened) runtime TerrainData instance
+            EnsureRuntimeTerrainClone(terrain);
 
             TerrainData td = terrain.terrainData;
             if (td == null) return;
@@ -269,7 +252,10 @@ namespace EndlessSurvival.World.Road
             var valley = terrain.GetComponentInParent<ValleyRiverGenerator>();
             if (field != null && field.IsFullField) field.PaintTerrainLayers(terrain.terrainData, terrainXOffset);
             else if (valley != null && valley.IsActive) valley.PaintTerrainLayers(terrain.terrainData);
+            else if (GroundThemePainter.TryPaint(terrain, heights)) { } // çorak arazi / kasaba
             else if (boundary != null) boundary.PaintTerrainLayers(terrain.terrainData, heights, terrainXOffset);
+            // First chunk after a desert run: the sand fades out along it
+            GroundThemePainter.PaintCarryOver(terrain, heights);
         }
 
         /// <summary>
@@ -297,6 +283,17 @@ namespace EndlessSurvival.World.Road
                 terrain.terrainData = Object.Instantiate(terrain.terrainData);
                 terrain.terrainData.terrainLayers = oldLayers;
                 terrain.materialTemplate = oldMat;
+
+                // Widen to the runtime chunk width (resolution first: setting it rescales size). The heights are reset;
+                // ConformTerrainToRoad rewrites every sample.
+                TerrainData td = terrain.terrainData;
+                float length = td.size.z, height = td.size.y;
+                if (td.heightmapResolution != Chunk.RuntimeHeightmapResolution) td.heightmapResolution = Chunk.RuntimeHeightmapResolution;
+                td.size = new Vector3(Chunk.HalfWidth * 2f, height, length);
+                Vector3 lp = terrain.transform.localPosition;
+                terrain.transform.localPosition = new Vector3(-Chunk.HalfWidth, lp.y, lp.z);
+                var ownerChunk = terrain.GetComponentInParent<Chunk>();
+                if (ownerChunk != null) ownerChunk.ApplyRuntimeWidth();
 
                 terrain.gameObject.name += " (RuntimeClone)";
                 var tCol = terrain.GetComponent<TerrainCollider>();

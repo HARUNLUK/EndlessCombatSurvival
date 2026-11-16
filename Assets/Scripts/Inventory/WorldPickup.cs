@@ -11,6 +11,11 @@ namespace EndlessSurvival.Inventory
         public ItemDefinition item;
         [Min(1)] public int amount = 1;
 
+        [Tooltip("Fell from the player's hand (drop rule): picking it up puts it back into its empty slot")]
+        public bool fromHand;
+        [Tooltip("Rounds left in the dropped gun's magazine (-1: not a gun)")]
+        public int magazineRounds = -1;
+
         [Tooltip("Degrees per second of idle spin")]
         public float spinSpeed = 40f;
 
@@ -68,17 +73,41 @@ namespace EndlessSurvival.Inventory
 
         public string GetPrompt()
         {
-            return item == null ? string.Empty : $"Pick up {item.DisplayName} x{amount}";
+            return item == null ? string.Empty : $"Al: {item.DisplayName} x{amount}";
         }
 
         public string Interact(PlayerInventory user)
         {
             if (!CanInteract || user == null) return null;
 
-            int taken = user.AddItem(item, amount);
-            if (taken <= 0) return "Backpack is too heavy";
+            // A weapon / shield that fell from the hand (Combat_Action_Plan.md 5): back to its slot when the slot is
+            // empty, with the rounds that were in its magazine
+            if (fromHand && amount == 1)
+            {
+                var equipment = user.GetComponent<PlayerEquipment>();
+                if (equipment != null && equipment.EquipFromGround(item))
+                {
+                    if (magazineRounds >= 0 && equipment.Loadout != null)
+                    {
+                        EndlessCombat.Combat.WeaponController w = equipment.Loadout.Weapon(PlayerLoadout.SlotOf(item.CarrySlot));
+                        if (w != null && w.IsFirearm)
+                        {
+                            user.Add(w.AmmoKind, w.TakeAllAmmo()); // the fresh gun's own magazine is not a gift
+                            user.Add(w.AmmoKind, w.RestoreMagazine(magazineRounds));
+                        }
+                    }
+                    Destroy(gameObject);
+                    return $"Alındı: {item.DisplayName}";
+                }
+            }
 
-            string message = $"Picked up {item.DisplayName} x{taken}";
+            int taken = user.AddItem(item, amount);
+            if (taken <= 0) return "Çanta çok ağır";
+
+            string message = $"Alındı: {item.DisplayName} x{taken}";
+            // Into the bag (its slot was taken): the dropped gun's magazine goes to the ammo
+            if (fromHand && magazineRounds > 0 && item.weaponPrefab != null) user.Add(item.weaponPrefab.AmmoKind, magazineRounds);
+            magazineRounds = -1;
             amount -= taken;
             if (amount <= 0) Destroy(gameObject);
             return message;

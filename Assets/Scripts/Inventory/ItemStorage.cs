@@ -41,11 +41,28 @@ namespace EndlessSurvival.Inventory
             MaxWeight = maxWeight;
         }
 
+        private float _extraWeight;
+
+        /// <summary>Weight that is not in the item list but counts toward the limit (player: carried weapons, worn gear, rounds).</summary>
+        public float ExtraWeight
+        {
+            get => _extraWeight;
+            set
+            {
+                if (Mathf.Abs(value - _extraWeight) < 0.0001f) return;
+                _extraWeight = value;
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>Weight of the stored items only (without ExtraWeight).</summary>
+        public float ItemWeight => TotalWeight - _extraWeight;
+
         public float TotalWeight
         {
             get
             {
-                float total = 0f;
+                float total = _extraWeight;
                 foreach (var pair in _items)
                     total += pair.Key.weight * pair.Value;
                 return total;

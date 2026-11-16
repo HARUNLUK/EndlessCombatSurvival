@@ -53,9 +53,9 @@ namespace EndlessSurvival.Inventory
         [Header("Upgrades")]
         public List<UpgradeRule> upgrades = new List<UpgradeRule>
         {
-            new UpgradeRule { label = "Fuel Tank", type = UpgradeType.FuelTank, baseCost = 4, costPerLevel = 3, maxLevel = 3, amountPerLevel = 25f },
-            new UpgradeRule { label = "Engine", type = UpgradeType.Engine, baseCost = 2, costPerLevel = 2, maxLevel = 3, amountPerLevel = 35f },
-            new UpgradeRule { label = "Armor", type = UpgradeType.Armor, baseCost = 4, costPerLevel = 3, maxLevel = 3, amountPerLevel = 25f }
+            new UpgradeRule { label = "Yakıt Deposu", type = UpgradeType.FuelTank, baseCost = 4, costPerLevel = 3, maxLevel = 3, amountPerLevel = 25f },
+            new UpgradeRule { label = "Motor", type = UpgradeType.Engine, baseCost = 2, costPerLevel = 2, maxLevel = 3, amountPerLevel = 35f },
+            new UpgradeRule { label = "Zırh", type = UpgradeType.Armor, baseCost = 4, costPerLevel = 3, maxLevel = 3, amountPerLevel = 25f }
         };
 
         public event Action Changed;
@@ -64,6 +64,15 @@ namespace EndlessSurvival.Inventory
         {
             if (vehicle == null) vehicle = GetComponent<VehicleController>();
             if (storage == null) storage = GetComponent<VehicleStorage>();
+            // Older scenes serialized English labels
+            foreach (var rule in upgrades)
+            {
+                if (rule == null) continue;
+                if (rule.label == "Fuel Tank") rule.label = "Yakıt Deposu";
+                else if (rule.label == "Engine") rule.label = "Motor";
+                else if (rule.label == "Armor") rule.label = "Zırh";
+                else if (rule.label == "Upgrade") rule.label = "Yükseltme";
+            }
         }
 
         private int Available(ItemDefinition item)
@@ -86,10 +95,10 @@ namespace EndlessSurvival.Inventory
 
         public string Refuel()
         {
-            if (vehicle == null || fuelItem == null) return "Refueling is not set up";
+            if (vehicle == null || fuelItem == null) return "Yakıt doldurma kurulmamış";
 
             float missing = vehicle.maxFuel - vehicle.currentFuel;
-            if (missing < 0.5f) return "Fuel tank is already full";
+            if (missing < 0.5f) return "Depo zaten dolu";
 
             int perUnit = Mathf.Max(1, fuelItem.useAmount);
             int needed = Mathf.CeilToInt(missing / perUnit);
@@ -100,19 +109,19 @@ namespace EndlessSurvival.Inventory
                 return $"Depo dolduruldu +{Mathf.RoundToInt(free)} (TEST: normalde {needed}x {fuelItem.DisplayName})";
             }
             int taken = Take(fuelItem, needed);
-            if (taken <= 0) return $"No {fuelItem.DisplayName} available";
+            if (taken <= 0) return $"{fuelItem.DisplayName} yok";
 
             float added = vehicle.Refuel(taken * perUnit);
             Changed?.Invoke();
-            return $"Refueled +{Mathf.RoundToInt(added)} using {taken}x {fuelItem.DisplayName}";
+            return $"Depo dolduruldu +{Mathf.RoundToInt(added)} ({taken}x {fuelItem.DisplayName})";
         }
 
         public string Repair()
         {
-            if (vehicle == null || repairItem == null) return "Repairing is not set up";
+            if (vehicle == null || repairItem == null) return "Tamir kurulmamış";
 
             float missing = vehicle.maxHealth - vehicle.currentHealth;
-            if (missing < 0.5f) return "Vehicle is undamaged";
+            if (missing < 0.5f) return "Araç hasarsız";
 
             int needed = Mathf.CeilToInt(missing / Mathf.Max(1f, healthPerRepairItem));
             if (SurvivalTest.FreeResources)
@@ -122,11 +131,11 @@ namespace EndlessSurvival.Inventory
                 return $"Araç tamir edildi +{Mathf.RoundToInt(free)} (TEST: normalde {needed}x {repairItem.DisplayName})";
             }
             int taken = Take(repairItem, needed);
-            if (taken <= 0) return $"No {repairItem.DisplayName} available";
+            if (taken <= 0) return $"{repairItem.DisplayName} yok";
 
             float restored = vehicle.Repair(taken * healthPerRepairItem);
             Changed?.Invoke();
-            return $"Repaired +{Mathf.RoundToInt(restored)} using {taken}x {repairItem.DisplayName}";
+            return $"Araç tamir edildi +{Mathf.RoundToInt(restored)} ({taken}x {repairItem.DisplayName})";
         }
 
         public string Upgrade(int index)
@@ -134,13 +143,13 @@ namespace EndlessSurvival.Inventory
             if (vehicle == null || index < 0 || index >= upgrades.Count) return null;
 
             UpgradeRule rule = upgrades[index];
-            if (rule.costItem == null) return "Upgrade is not set up";
-            if (rule.level >= rule.maxLevel) return $"{rule.label} is at max level";
+            if (rule.costItem == null) return "Yükseltme kurulmamış";
+            if (rule.level >= rule.maxLevel) return $"{rule.label} en üst seviyede";
 
             int cost = rule.NextCost;
             if (!SurvivalTest.FreeResources)
             {
-                if (Available(rule.costItem) < cost) return $"Need {cost}x {rule.costItem.DisplayName}";
+                if (Available(rule.costItem) < cost) return $"Gerekli: {cost}x {rule.costItem.DisplayName}";
                 Take(rule.costItem, cost);
             }
             rule.level++;
@@ -161,7 +170,7 @@ namespace EndlessSurvival.Inventory
             }
 
             Changed?.Invoke();
-            return $"{rule.label} upgraded to level {rule.level}";
+            return $"{rule.label} seviye {rule.level} oldu";
         }
 
         public string GetUpgradeLabel(int index)
@@ -169,24 +178,24 @@ namespace EndlessSurvival.Inventory
             if (index < 0 || index >= upgrades.Count) return string.Empty;
 
             UpgradeRule rule = upgrades[index];
-            if (rule.level >= rule.maxLevel) return $"{rule.label} Lv{rule.level}/{rule.maxLevel} (MAX)";
+            if (rule.level >= rule.maxLevel) return $"{rule.label} {rule.level}/{rule.maxLevel}\n(en üst seviye)";
 
             string costName = rule.costItem != null ? rule.costItem.DisplayName : "?";
-            return $"{rule.label} Lv{rule.level}/{rule.maxLevel}: {rule.NextCost}x {costName}" + (SurvivalTest.FreeResources ? " (TEST: bedava)" : "");
+            return $"{rule.label} yükselt {rule.level}/{rule.maxLevel}\n" + (SurvivalTest.FreeResources ? "(test: bedava)" : $"{rule.NextCost}x {costName}");
         }
 
         public string GetRefuelLabel()
         {
-            if (fuelItem == null) return "Refuel";
+            if (fuelItem == null) return "Yakıt doldur";
             int need = vehicle != null ? Mathf.CeilToInt(Mathf.Max(0f, vehicle.maxFuel - vehicle.currentFuel) / Mathf.Max(1, fuelItem.useAmount)) : 0;
-            return $"Refuel ({fuelItem.DisplayName}: {Available(fuelItem)}, gereken {need})" + (SurvivalTest.FreeResources ? " TEST: bedava" : "");
+            return "Yakıt doldur\n" + (SurvivalTest.FreeResources ? "(test: bedava)" : $"{fuelItem.DisplayName} {Available(fuelItem)} / {need}");
         }
 
         public string GetRepairLabel()
         {
-            if (repairItem == null) return "Repair";
+            if (repairItem == null) return "Tamir et";
             int need = vehicle != null ? Mathf.CeilToInt(Mathf.Max(0f, vehicle.maxHealth - vehicle.currentHealth) / Mathf.Max(1f, healthPerRepairItem)) : 0;
-            return $"Repair ({repairItem.DisplayName}: {Available(repairItem)}, gereken {need})" + (SurvivalTest.FreeResources ? " TEST: bedava" : "");
+            return "Tamir et\n" + (SurvivalTest.FreeResources ? "(test: bedava)" : $"{repairItem.DisplayName} {Available(repairItem)} / {need}");
         }
     }
 }

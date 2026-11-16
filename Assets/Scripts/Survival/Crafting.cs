@@ -77,6 +77,7 @@ namespace EndlessSurvival.Survival
         {
             reason = null;
             if (r == null) { reason = "Tarif yok"; return false; }
+            if (!Plans.Knows(r)) { reason = "Planını bilmiyorsun (terk edilmiş evlerde bulunur, Güvenli Bölge'de satılır)"; return false; }
             if (CurrentJob != null) { reason = "Başka bir iş sürüyor"; return false; }
             if (!StationAvailable(r.station))
             {

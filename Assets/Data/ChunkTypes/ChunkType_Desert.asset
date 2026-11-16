@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51c7dc95999318b45b55371307be6aee, type: 3}
+  m_Name: ChunkType_Desert
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.World.ChunkTypeProfile
+  displayName: "\xC7orak Arazi"
+  biome: 1
+  flatSeamEdges: 0
+  allowSpecialChunks: 0
+  neighbours:
+  - {fileID: 11400000, guid: 4f7f0a43f96aa0c4b953d105384b05a5, type: 2}
+  - {fileID: 11400000, guid: 7ee0e00bb12a3554eb097861d4d24b53, type: 2}
+  inset:
+    enabled: 0
+    hosts: []
+    chancePerRun: 0.35
+    minLength: 1
+    maxLength: 2
+  elevationConfig:
+    elevationChance: 0.55
+    maxHillHeight: 11
+    minHillHeight: 4
+    maxDipDepth: 8
+    minDipDepth: 3
+    hillWeight: 30
+    valleyWeight: 20
+    rollingHillsWeight: 35
+    mountainPassWeight: 0
+    elevatedChicaneWeight: 0
+    flatWeight: 15
+  curveSettings:
+    curveChance: 0.35
+    minBends: 1
+    maxBends: 2
+    minShift: 8
+    maxShift: 30
+    maxLateral: 40
+    maxSlope: 0.55
+    minTurnRadius: 35
+    lengthVariance: 2.5
+  roadStyle:
+    curveChanceMultiplier: 0.6
+    sharpCurveChance: 0
+    alwaysCurvy: 0
+    forceCrossSection: 1
+    forcedCrossSection: 4
+  mountainSettings:
+    snowyChance: 0.6
+    ledgeChance: 0.7
+    ledgeRoadMinOffset: 80
+    ledgeRoadMaxOffset: 100
+    roadMinHeight: 100
+    roadMaxHeight: 140
+    roadClimbPerChunk: 40
+    hillsideChance: 0.4
+    foothills: 0
+    lowlandForestWeight: 30
+    lowlandFieldWeight: 30
+    lowlandLandThenCoastWeight: 20
+    lowlandCoastWeight: 20
+    lowlandSlopeMin: 8
+    lowlandSlopeMax: 16
+    lowlandSlopeStart: 2.5
+    landStripMin: 50
+    landStripMax: 100
+    coastStripMin: 10
+    coastStripMax: 30
+  riverValley:
+    enabled: 0
+    crossingChance: 0.35
+    crossingMinZ: 210
+    crossingMaxZ: 290
+    crossingLength: 150
+    crossingWidth: 34
+    crossingMinDrop: 5
+    minWidth: 40
+    maxWidth: 80
+    widthNoise: 0.18
+    minGap: 6
+    maxGap: 25
+    minDrop: 3
+    maxDrop: 7
+    maxDepth: 1.3
+    minBank: 4
+    maxBank: 16
+    bendSideZ: 120
+    bendJoinZ: 300
+    bendBank: 24
+    waterColor: {r: 0.16, g: 0.34, b: 0.4, a: 0.84}
+    flowSpeed: 1.1
+    flowTile: 14
+    ambientScale: 0.45
+  settlement:
+    kind: 0
+    townDensity: 0.72
+    townSetbackMin: 12
+    townSetbackMax: 17
+    townBackRowChance: 0.3
+    townRuinShare: 0.55
+    stopFuelChance: 0.8
+    stopTraderChance: 0.3
+    stopOppositeSideChance: 0.4
+  sideRoads:
+    enabled: 1
+    style: 1
+    chance: 0.45
+    minCount: 1
+    maxCount: 1
+    halfWidth: 2.2
+    minLength: 150
+    maxLength: 300
+    crossChance: 0.35
+    endContentChance: 0.25
+    surfaceColor: {r: 0.6, g: 0.5, b: 0.37, a: 1}
+    pavedChance: 0.3
+    pavedColor: {r: 0.22, g: 0.22, b: 0.23, a: 1}
+  boundary:
+    biome: 1
+    cliffWeight: 30
+    rocksWeight: 40
+    cliffAndRocksWeight: 30
+    minCliffHeight: 25
+    maxCliffHeight: 50
+    minRampWidth: 18
+    maxRampWidth: 38
+    minInnerEdge: 360
+    maxInnerEdge: 440
+    minRockSize: 14
+    maxRockSize: 30
+    rockSpacing: 22
+    rockColor: {r: 0.56, g: 0.4, b: 0.29, a: 1}
+    mossColor: {r: 0.62, g: 0.52, b: 0.36, a: 1}
+  backdrop:
+    biome: 1
+    riseDistance: 140
+    minAboveEdge: 12
+    baseHeight: 45
+    peakAmplitude: 170
+    detailAmplitude: 25
+    ridgeFrequency: 0.0022
+    rockLine: 55
+    snowLine: 5000
+    rockSlope: 0.8
+    forestColor: {r: 0.66, g: 0.54, b: 0.37, a: 1}
+    rockColor: {r: 0.56, g: 0.37, b: 0.26, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}
+  alpineBackdrop:
+    biome: 4
+    riseDistance: 55
+    minAboveEdge: 20
+    baseHeight: 120
+    peakAmplitude: 340
+    detailAmplitude: 40
+    ridgeFrequency: 0.0032
+    rockLine: 110
+    snowLine: 240
+    rockSlope: 0.62
+    forestColor: {r: 0.2, g: 0.33, b: 0.17, a: 1}
+    rockColor: {r: 0.4, g: 0.39, b: 0.37, a: 1}
+    snowColor: {r: 0.94, g: 0.95, b: 0.97, a: 1}
+  foothillLowlandBackdrop:
+    biome: 6
+    riseDistance: 1500
+    minAboveEdge: 0
+    baseHeight: 12
+    peakAmplitude: 75
+    detailAmplitude: 6
+    ridgeFrequency: 0.0011
+    rockLine: 400
+    snowLine: 2000
+    rockSlope: 0.35
+    forestColor: {r: 0.24, g: 0.4, b: 0.2, a: 1}
+    rockColor: {r: 0.3, g: 0.4, b: 0.24, a: 1}
+    snowColor: {r: 0.9, g: 0.92, b: 0.95, a: 1}

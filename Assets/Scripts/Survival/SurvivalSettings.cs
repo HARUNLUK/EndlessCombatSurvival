@@ -91,6 +91,31 @@ namespace EndlessSurvival.Survival
         [Tooltip("An alerted enemy or hunting animal this close interrupts smoking")]
         public float smokeDangerRadius = 18f;
 
+        [Header("Binoculars (Dürbün)")]
+        [Tooltip("Zoom range (x). Mouse wheel changes it while looking.")]
+        public float binoZoomMin = 4f;
+        public float binoZoomMax = 8f;
+        [Tooltip("Field of view at 1x; the binocular FOV is this divided by the zoom")]
+        public float binoBaseFov = 60f;
+        [Tooltip("Walking speed while looking through the binoculars (no sprint)")]
+        [Range(0.1f, 1f)] public float binoMoveSpeed = 0.35f;
+        [Tooltip("Hand sway in degrees at 1x (smaller at higher zoom it still looks bigger)")]
+        public float binoSwayDegrees = 0.18f;
+        [Tooltip("Seconds of looking at the screen centre needed to mark a target")]
+        public float binoMarkSeconds = 1.5f;
+        [Tooltip("Marks stay this long after the binoculars close")]
+        public float binoMarkLifetime = 30f;
+        [Tooltip("Farthest distance a target can be marked")]
+        public float binoMaxRange = 450f;
+        [Tooltip("Lens glint: by day, looking towards the sun, an enemy this close that you look at grows suspicious")]
+        public float binoGlintRange = 60f;
+        [Tooltip("Suspicion added per second by the lens glint (enemy meter 0-100, suspicious above 25)")]
+        public float binoGlintSuspicionPerSecond = 4f;
+        [Tooltip("The glint alone never raises suspicion above this")]
+        public float binoGlintMaxSuspicion = 45f;
+        [Tooltip("Angle between the view and the sun direction below which the lens glints")]
+        public float binoGlintSunAngle = 70f;
+
         [Header("Carry weight (2.7)")]
         [Tooltip("Above the backpack's comfortable weight the player slows down; the hard limit is this many times more")]
         public float hardLimitMultiplier = 1.5f;
@@ -206,6 +231,63 @@ namespace EndlessSurvival.Survival
         [Tooltip("Fuel found is multiplied by 1 - this at max distance")]
         public float fuelScarcityAtMax = 0.55f;
 
+        [Header("Road pressure (R2): fuel and roadblocks")]
+        [Tooltip("Share of the tank a new journey starts with (fuel per km is on the vehicle prefab)")]
+        [Range(0.1f, 1f)] public float startFuelFraction = 0.6f;
+        [Tooltip("Pistol rounds a new journey starts with (the pistol itself is given, its magazine starts empty and is loaded from these)")]
+        public int startPistolRounds = 9;
+        [Tooltip("Road barricades on the road. Off since 2026-11-15 (user cancelled them); the code stays, switch on to bring them back")]
+        public bool spawnRoadBarricades = false;
+        [Tooltip("Seconds to clear a roadblock gate by hand (Mechanics shortens it)")]
+        public float barricadeSeconds = 26f;
+        [Tooltip("Time multiplier with a tool kit in the backpack")]
+        [Range(0.2f, 1f)] public float barricadeToolMultiplier = 0.6f;
+        [Tooltip("Enemies this close hear the work")]
+        public float barricadeNoiseRadius = 35f;
+        [Tooltip("Chance that a roadblock is guarded, at the start and at max difficulty")]
+        [Range(0f, 1f)] public float barricadeGuardChance = 0.08f;
+        [Range(0f, 1f)] public float barricadeGuardChanceAtMax = 0.6f;
+
+        [Header("Safe Zones and long road (R3)")]
+        [Tooltip("A Safe Zone (trader, fuel, mechanic, save) stands every this many km")]
+        public float safeZoneEveryKm = 12f;
+        [Tooltip("Money per unit of fuel at a Safe Zone pump")]
+        public float safeZoneFuelPrice = 0.8f;
+        [Tooltip("Money per point of vehicle body health at a Safe Zone mechanic")]
+        public float safeZoneRepairPrice = 0.6f;
+        [Tooltip("R4: price of the plan sold at a Safe Zone")]
+        public int safeZonePlanPrice = 120;
+        [Tooltip("R5: preparation points for every 2 km zone reached and for every Safe Zone reached")]
+        public int prepPointsPerZone = 1;
+        public int prepPointsPerSafeZone = 8;
+        [Tooltip("R6: money the Safe Zone tow asks to bring the vehicle that was left behind")]
+        public int safeZoneTowPrice = 60;
+        [Tooltip("Fuel and body health a towed vehicle has at least when it arrives")]
+        public float safeZoneTowFuel = 12f;
+        public float safeZoneTowHealth = 25f;
+        [Tooltip("Not used any more (difficulty comes from the character level only); kept so the asset stays valid")]
+        public float difficultyGrowthPastMax = 0.6f;
+        [Tooltip("Not used any more (difficulty comes from the character level only); kept so the asset stays valid")]
+        public float characterDifficultyWeight = 0.6f;
+
+        [Header("Early game and road content (2026-11-14)")]
+        [Tooltip("Character level (0-1) below which the world is in the early game: few humans, lone campers")]
+        [Range(0f, 1f)] public float earlyGameLevel = 0.15f;
+        [Tooltip("Early game: no human group (patrol, camp, roadblock guards, ambush) is bigger than this")]
+        public int earlyGameMaxHumans = 2;
+        [Tooltip("Early game: at least this share of encounters is animals")]
+        [Range(0f, 1f)] public float earlyGameAnimalShare = 0.85f;
+        [Tooltip("Share of enemy camps with a single seated camper (early game)")]
+        [Range(0f, 1f)] public float loneCamperShare = 0.6f;
+        [Tooltip("Same, after the early game")]
+        [Range(0f, 1f)] public float loneCamperShareLate = 0.15f;
+        [Tooltip("Chance of at least one corpse beside the road per chunk (2/7 of those chunks get two, i.e. 10% of all)")]
+        [Range(0f, 1f)] public float corpseChance = 0.35f;
+        [Tooltip("Chance of a readable note beside the road per chunk (the start chunk always has one)")]
+        [Range(0f, 1f)] public float roadNoteChance = 0.12f;
+        [Tooltip("Loot of a corpse; when empty an enemy drop / roadside / wreck table is used")]
+        public LootTable corpseLoot;
+
         [Header("Animals and encounters (3.x)")]
         public float encounterChance = 0.55f;
         public float nightWolfCheckSeconds = 90f;
@@ -213,6 +295,10 @@ namespace EndlessSurvival.Survival
 
         [Header("Trader (4.5)")]
         public float traderChance = 0.12f;
+        [Tooltip("Enemy camps: share of the chunks that may hold a camp which really get one. 0.1 = about one camp every 5 km (2026-11-13: every chunk had one)")]
+        [Range(0f, 1f)] public float enemyCampFrequency = 0.1f;
+        [Tooltip("Of the roadside buildings, the share that is a gas station (the rest are abandoned houses). 0.15 = about one station every 9 km")]
+        [Range(0f, 1f)] public float gasStationShare = 0.15f;
         [Tooltip("Trader sells for value * this, buys for value * sellBack")]
         public float traderMarkup = 1.6f;
         public float traderSellBack = 0.5f;

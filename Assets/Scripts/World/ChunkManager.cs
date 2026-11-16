@@ -15,7 +15,7 @@ namespace EndlessSurvival.World
     {
         [Header("Kenar Uçurumları (seam)")]
         [Tooltip("Z=0 ve Z=500'de uçurumun başladığı sabit mesafe (chunk merkez çizgisinden)")]
-        public float seamInnerEdge = 175f;
+        public float seamInnerEdge = 370f;
         public float seamRampWidth = 28f;
         [Range(0f, 1f)]
         [Tooltip("Bir birleşim noktasında uçurum olma ihtimali (0 ise orada kayalar boşluğu doldurur)")]
@@ -24,7 +24,7 @@ namespace EndlessSurvival.World
         public float seamMaxHeight = 55f;
 
         [Header("Arka Plan Dağ Şeridi")]
-        [Tooltip("Chunk kenarından (X=±250) dışarıya doğru şeridin genişliği")]
+        [Tooltip("Chunk kenarından (X=±500) dışarıya doğru şeridin genişliği")]
         public float backdropStripDepth = 2600f;
         [Tooltip("Farklı tipli komşu chunk ile arka planın harmanlandığı mesafe")]
         public float backdropBlendDistance = 250f;
@@ -177,6 +177,7 @@ namespace EndlessSurvival.World
             public CoastSide seaSide;           // coast: sea side; mountain: side of the mountain a ledge road follows
             public MountainVariant variant;     // mountain sub-type, same for the whole run
             public FoothillLowland lowland;     // foothills: the land opposite the mountain, same for the whole run
+            public ChunkTypeProfile inset;      // town / rest stop set into this chunk of the run (null = none)
 
             public ChunkTypeRef Type => new ChunkTypeRef(profile, special != null ? special.prefab : null, special != null && special.inheritRunLook);
             public bool IsSpecial => special != null && special.prefab != null;
@@ -201,6 +202,15 @@ namespace EndlessSurvival.World
         [Tooltip("Number of chunks to spawn when the game starts")]
         [Range(1, 5)]
         public int initialChunkCount = 2;
+
+        [Tooltip("Oyun başında oyuncunun arkasına konan chunk sayısı (geriye gidilebilsin diye). Oyuncu bunların hemen önündeki chunk'ın başında başlar.")]
+        [Range(0, 5)]
+        public int startBackChunks = 3;
+
+        [Tooltip("En arkadaki chunk'ın başına (dünyanın başlangıcına) kırmızı duvar koyar")]
+        public bool startBackWall = true;
+        public Color startBackWallColor = new Color(0.8f, 0.08f, 0.06f);
+        [Min(1f)] public float startBackWallHeight = 40f;
 
         [Tooltip("Number of ready chunks kept ahead of the chunk the player is in. 2 = entering chunk N spawns chunk N+2, so new chunks appear ~1km away.")]
         [Range(1, 3)]
@@ -347,10 +357,18 @@ namespace EndlessSurvival.World
             ProcessBuildQueue();
         }
 
+        /// <summary>
+        /// Index of the chunk the player starts in. The <see cref="startBackChunks"/> chunks before it (0..N-1) lie behind
+        /// the start so the player can drive back a little; chunk 0 begins with a red wall (the world's start).
+        /// </summary>
+        public int StartChunkIndex => _startChunkIndex;
+        private int _startChunkIndex;
+
         public void SpawnInitialChunks()
         {
-            // The player starts on these, so they are built right away
-            for (int i = 0; i < initialChunkCount; i++)
+            // The player starts on these (and the chunks behind the start), so they are built right away
+            _startChunkIndex = Mathf.Max(0, startBackChunks);
+            for (int i = 0; i < _startChunkIndex + initialChunkCount; i++)
             {
                 SpawnNextChunk(immediate: true);
             }
@@ -425,6 +443,9 @@ namespace EndlessSurvival.World
             var roadGen = chunk.GetComponentInChildren<RoadGenerator>();
             var spline = chunk.GetComponentInChildren<RoadSpline>();
             var terrain = chunk.GetComponentInChildren<Terrain>();
+            // Widen the terrain (and move the side walls) before anything reads its size: POIs, spawners, cliffs
+            if (terrain != null && Application.isPlaying && chunk.generationMode == ChunkGenerationMode.Procedural)
+                RoadTerrainAdapter.EnsureRuntimeTerrainClone(terrain);
 
             // Procedural types get the standard generators (added if the prefab lacks them) and a seeded road + terrain.
             // Handcrafted types keep their authored road and terrain; only the generators on their prefab run.
@@ -475,6 +496,12 @@ namespace EndlessSurvival.World
                 {
                     RoadTerrainAdapter.ConformTerrainToRoad(terrain, spline, roadGen, true, paintLayers: false);
                     chunk.GroundPointsOfInterest();
+                    // Side roads off the main road (streets, tracks, field roads): ground, guardrail openings, surface
+                    if (Application.isPlaying)
+                    {
+                        try { SideRoads.Build(chunk, terrain, spline, roadGen); }
+                        catch (System.Exception e) { Debug.LogWarning("[SideRoads] " + e); }
+                    }
                     yield return "terrain";
 
                     // 4) Sand / soil painting
@@ -541,6 +568,8 @@ namespace EndlessSurvival.World
                     terrain.drawTreesAndFoliage = true;
                 }
             }
+
+            if (index == 0 && _startChunkIndex > 0 && startBackWall) BuildStartWall(chunk);
 
             chunk.name = $"Chunk_{index}_{chunk.TypeName}_{chunk.roadType}_{chunk.crossSectionType}";
             chunk.MarkBuilt();
@@ -613,11 +642,44 @@ namespace EndlessSurvival.World
                     entry.Biome, entry.variant, ownSettings, prevSettings, nextSettings,
                     IsSameMountainRun(prevEntry, entry), IsSameMountainRun(entry, nextEntry), hasSea, seaSign,
                     IsSameCoast(prevEntry, entry), IsSameCoast(nextEntry, entry),
-                    worldSeed, seamSettings, last.chunkLength, baseElevation, 250f, coastTransition,
+                    worldSeed, seamSettings, last.chunkLength, baseElevation, Chunk.HalfWidth, coastTransition,
                     SeamRoadOffset(i), SeamRoadOffset(i + 1),
                     SeamRoadHeight(i, baseElevation), SeamRoadHeight(i + 1, baseElevation),
                     lowlandSign, lowlandLook);
             }
+        }
+
+        /// <summary>Red wall across the whole chunk width at the entry of chunk 0 (the end of the world behind the start).</summary>
+        private void BuildStartWall(Chunk chunk)
+        {
+            Vector3 origin = chunk.transform.position;
+            float width = 1000f, centerX = 0f, bottom = origin.y - 50f, top = origin.y + startBackWallHeight;
+            Terrain terrain = chunk.ChunkTerrain;
+            if (terrain != null && terrain.terrainData != null)
+            {
+                Vector3 size = terrain.terrainData.size;
+                Vector3 tPos = terrain.GetPosition();
+                width = size.x;
+                centerX = chunk.transform.InverseTransformPoint(tPos).x + size.x * 0.5f;
+                bottom = tPos.y - 20f;
+                top = Mathf.Max(top, tPos.y + size.y + 10f);
+            }
+
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "StartWall_Red";
+            wall.transform.SetParent(chunk.transform, false);
+            const float thickness = 3f;
+            float height = top - bottom;
+            wall.transform.localPosition = new Vector3(centerX, bottom - origin.y + height * 0.5f, thickness * 0.5f);
+            wall.transform.localRotation = Quaternion.identity;
+            wall.transform.localScale = new Vector3(width, height, thickness);
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            var mat = new Material(shader) { name = "StartWall_Red", color = startBackWallColor };
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", startBackWallColor);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.1f);
+            wall.GetComponent<MeshRenderer>().sharedMaterial = mat;
         }
 
         private Transform _staging;
@@ -693,7 +755,8 @@ namespace EndlessSurvival.World
                 return null;
             }
 
-            Vector3 spawnPos = initialSpawnPosition;
+            // The first chunk lies StartChunkIndex chunk lengths behind the start, so the start chunk begins at initialSpawnPosition
+            Vector3 spawnPos = initialSpawnPosition - Vector3.forward * (prefab.chunkLength * _startChunkIndex);
             Quaternion spawnRot = Quaternion.identity;
 
             if (_activeChunks.Count > 0)
@@ -823,7 +886,7 @@ namespace EndlessSurvival.World
         private void ApplyProceduralElevation(Chunk chunk, RoadGenerator roadGen, RoadSpline spline)
         {
             // First N chunks are kept flat (no hills/dips) as runway, but may still have gentle curves
-            bool isRunway = chunk.ChunkIndex < initialFlatChunks;
+            bool isRunway = chunk.ChunkIndex < _startChunkIndex + initialFlatChunks; // chunks behind the start are flat too
             RollProceduralRoad(chunk, roadGen, spline, chunk.RoadRandom, isRunway, enableElevationVariation);
         }
 
@@ -1022,6 +1085,10 @@ namespace EndlessSurvival.World
             chunk.seaSide = entry.seaSide;
             chunk.mountainVariant = entry.variant;
             chunk.foothillLowland = entry.lowland;
+            // Town / rest stop set into this chunk of the run: the host's look, the inset's settlement
+            if (entry.inset != null && !entry.IsSpecial) chunk.ApplyInset(entry.inset);
+            chunk.settlementContinuesBefore = entry.inset != null && index > 0 && prev.inset == entry.inset;
+            chunk.settlementContinuesAfter = entry.inset != null && next.inset == entry.inset;
             // Foothills: the run's side is the mountain side (road ledge offsets go toward it); the lowland is opposite
             if (entry.IsFoothill) chunk.uphillOnRight = entry.seaSide == CoastSide.Right;
 
@@ -1250,6 +1317,13 @@ namespace EndlessSurvival.World
 
                 // Start run: its own stream so the main sequence does not depend on the start type
                 ChunkTypeProfile start = StartType;
+                // Starting in an inset type (town / rest stop): the start run is its first host, with the inset in it
+                ChunkTypeProfile startInset = null;
+                if (start != null && start.IsInset)
+                {
+                    startInset = start;
+                    start = InsetHost(start);
+                }
                 var startRng = new SeededRandom(SeededRandom.Combine(seed, "start_run"));
                 var startEntry = new TypePlanEntry
                 {
@@ -1265,24 +1339,43 @@ namespace EndlessSurvival.World
                 {
                     if (chunkTypes[i] != null && chunkTypes[i].profile == start) startLength = Mathf.Max(startLength, chunkTypes[i].minLength);
                 }
+                // The start inset covers the start chunk (and the one after it), with host chunks around it
+                int insetFirst = _startChunkIndex, insetLength = 0;
+                if (startInset != null)
+                {
+                    insetLength = Mathf.Clamp(startInset.inset.maxLength, 1, 2);
+                    startLength = Mathf.Max(startLength, insetFirst + insetLength + 1);
+                }
                 // No special chunks in the start run: the player starts here
-                for (int i = 0; i < startLength; i++) _typePlan.Add(startEntry);
+                for (int i = 0; i < startLength; i++)
+                {
+                    TypePlanEntry e = startEntry;
+                    if (startInset != null && i >= insetFirst && i < insetFirst + insetLength) e.inset = startInset;
+                    _typePlan.Add(e);
+                }
                 _lastRunType = start;
             }
 
             while (_typePlan.Count <= index)
             {
-                // Never repeat the same type as two consecutive runs (when there is an alternative)
+                // Never repeat the same type as two consecutive runs (when there is an alternative), only types the
+                // previous run may border (ChunkTypeProfile.neighbours), never an inset-only type (town, rest stop)
                 var candidates = new List<ChunkTypeEntry>();
                 for (int i = 0; i < chunkTypes.Count; i++)
                 {
                     var t = chunkTypes[i];
-                    if (t != null && t.profile != null && t.weight > 0 && t.profile != _lastRunType) candidates.Add(t);
+                    if (IsRunCandidate(t) && t.profile != _lastRunType && (_lastRunType == null || _lastRunType.AllowsNeighbour(t.profile))) candidates.Add(t);
+                }
+                if (candidates.Count == 0)
+                {
+                    // Neighbour lists leave nothing: any other type (a list was set up wrong; better than stopping)
+                    for (int i = 0; i < chunkTypes.Count; i++)
+                        if (IsRunCandidate(chunkTypes[i]) && chunkTypes[i].profile != _lastRunType) candidates.Add(chunkTypes[i]);
                 }
                 if (candidates.Count == 0)
                 {
                     for (int i = 0; i < chunkTypes.Count; i++)
-                        if (chunkTypes[i] != null && chunkTypes[i].profile != null && chunkTypes[i].weight > 0) candidates.Add(chunkTypes[i]);
+                        if (IsRunCandidate(chunkTypes[i])) candidates.Add(chunkTypes[i]);
                 }
                 if (candidates.Count == 0)
                 {
@@ -1307,9 +1400,58 @@ namespace EndlessSurvival.World
                 _lastRunType = chosen.profile;
 
                 PlaceSpecialChunks(seed, runStart, length, chosen.profile);
+                PlaceInset(seed, runStart, length, chosen.profile);
             }
 
             return _typePlan[index];
+        }
+
+        private static bool IsRunCandidate(ChunkTypeEntry t) => t != null && t.profile != null && t.weight > 0 && !t.profile.IsInset;
+
+        /// <summary>The first host of an inset type that is in the type list (else its first host at all).</summary>
+        private ChunkTypeProfile InsetHost(ChunkTypeProfile inset)
+        {
+            foreach (var host in inset.inset.hosts)
+                if (host != null && chunkTypes.Exists(t => t != null && t.profile == host)) return host;
+            foreach (var host in inset.inset.hosts)
+                if (host != null) return host;
+            return inset;
+        }
+
+        /// <summary>
+        /// May put one inset type (town, rest stop) into the run [runStart, runStart + length): never on the run's first
+        /// chunk (the transition from the previous type) or its last, never over a special chunk. Own seed stream per run,
+        /// so insets never change the type sequence.
+        /// </summary>
+        private void PlaceInset(int seed, int runStart, int length, ChunkTypeProfile runType)
+        {
+            if (runType == null || length < 3) return;
+            var rng = new SeededRandom(SeededRandom.Combine(SeededRandom.Combine(seed, "inset_chunks"), runStart));
+            float roll = rng.Value;
+            float acc = 0f;
+            for (int i = 0; i < chunkTypes.Count; i++)
+            {
+                ChunkTypeProfile p = chunkTypes[i] != null ? chunkTypes[i].profile : null;
+                if (p == null || !p.IsInset || chunkTypes[i].weight <= 0 || !p.inset.hosts.Contains(runType)) continue;
+                acc += p.inset.chancePerRun;
+                if (roll >= acc) continue;
+
+                int insetLength = rng.Range(p.inset.minLength, Mathf.Max(p.inset.minLength, p.inset.maxLength) + 1);
+                insetLength = Mathf.Min(insetLength, length - 2);
+                if (insetLength < 1) return;
+                int first = rng.Range(runStart + 1, runStart + length - insetLength); // keeps the first and last chunk
+                for (int k = first; k < first + insetLength; k++)
+                {
+                    if (_typePlan[k].IsSpecial) return;
+                }
+                for (int k = first; k < first + insetLength; k++)
+                {
+                    TypePlanEntry slot = _typePlan[k];
+                    slot.inset = p;
+                    _typePlan[k] = slot;
+                }
+                return;
+            }
         }
 
         /// <summary>
@@ -1363,7 +1505,7 @@ namespace EndlessSurvival.World
 
         private bool IsSpecialEligible(SpecialChunkEntry e, ChunkTypeProfile runType, int index)
         {
-            if (e == null || e.prefab == null || e.chance <= 0f || index < e.minChunkIndex) return false;
+            if (e == null || e.prefab == null || e.chance <= 0f || index - _startChunkIndex < e.minChunkIndex) return false;
             bool typeAllowed = e.allowedTypes != null && e.allowedTypes.Count > 0
                 ? e.allowedTypes.Contains(runType)
                 : runType.allowSpecialChunks;
@@ -1438,10 +1580,25 @@ namespace EndlessSurvival.World
             UnloadPassedChunks(chunk);
         }
 
+        /// <summary>Returns the loaded chunk with this index, or null if it is not (or no longer) active.</summary>
+        public Chunk GetActiveChunkByIndex(int chunkIndex)
+        {
+            for (int i = 0; i < _activeChunks.Count; i++)
+            {
+                if (_activeChunks[i] != null && _activeChunks[i].ChunkIndex == chunkIndex) return _activeChunks[i];
+            }
+            return null;
+        }
+
         private void UnloadPassedChunks(Chunk currentChunk)
         {
+            // The chunk right behind the player holds the freshly sealed wall; it must never be unloaded under him
+            maxChunksBehind = Mathf.Max(1, maxChunksBehind);
+
             int currentIndex = _activeChunks.IndexOf(currentChunk);
             if (currentIndex < 0) return;
+            // Until the player leaves the start chunk, the chunks behind the start stay so they can drive back
+            if (currentChunk.ChunkIndex <= _startChunkIndex) return;
 
             // Unload chunks further behind than maxChunksBehind
             while (_activeChunks.Count > 0)
@@ -1541,6 +1698,7 @@ namespace EndlessSurvival.World
             _activeChunks.Clear();
             _chunkSeeds.Clear();
             _totalSpawnedCount = 0;
+            _startChunkIndex = 0; // edit-mode preview shows the start chunk first
             _typeRng = null; // re-plan types from the (possibly changed) seed
 
             for (int i = 0; i < count; i++)

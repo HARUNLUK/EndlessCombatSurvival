@@ -154,7 +154,15 @@ namespace EndlessSurvival.Survival
     /// </summary>
     public class WaterFillInteractable : MonoBehaviour, IInteractable
     {
+        /// <summary>Thirst restored by drinking straight from a stream.</summary>
+        public const float DirectDrinkThirst = 25f;
+        /// <summary>Chance of getting poisoned (same as Item_DirtyWater), reduced by Nature.</summary>
+        public const float DirectDrinkSickChance = 0.35f;
+        /// <summary>Seconds the drinking action takes.</summary>
+        public const float DirectDrinkSeconds = 2f;
+
         private WaterKind _kind;
+        private bool _hasBottle;
         private float _nextScan;
 
         public Vector3 InteractPosition => transform.position + transform.forward * 2.3f;
@@ -163,26 +171,84 @@ namespace EndlessSurvival.Survival
         {
             get
             {
+                if (FootAction.Busy) return false;
                 if (Time.time >= _nextScan)
                 {
                     _nextScan = Time.time + 0.4f;
                     var bottle = SurvivalSettings.Instance.Item("Item_EmptyBottle");
                     var inv = GetComponent<PlayerInventory>();
-                    _kind = bottle != null && inv != null && inv.Storage.GetCount(bottle) > 0 ? WaterBodies.Near(transform.position, 2.2f) : WaterKind.None;
+                    _hasBottle = bottle != null && inv != null && inv.Storage.GetCount(bottle) > 0;
+                    _kind = WaterBodies.Near(transform.position, 2.2f);
                 }
-                return _kind != WaterKind.None;
+                if (_kind == WaterKind.Fresh) return true; // bottle: fill it, no bottle: drink straight
+                return _kind == WaterKind.Sea && (_hasBottle || SurvivalTest.FreeResources);
             }
         }
 
-        public string GetPrompt() => _kind == WaterKind.Sea ? "Şişeye deniz suyu doldur (tuzlu)" : "Şişeye dereden su doldur (kirli)";
+        public string GetPrompt()
+        {
+            if (_kind == WaterKind.Sea) return "Şişeye deniz suyu doldur (tuzlu)";
+            return _hasBottle ? "Şişeye dereden su doldur (kirli)" : "Dereden su iç (kirli)";
+        }
+
+        private float _nextFreshScan;
+        private bool _nearFresh;
+
+        /// <summary>True when fresh water is within reach (cached for the action menu).</summary>
+        public bool NearFreshWater
+        {
+            get
+            {
+                if (Time.unscaledTime >= _nextFreshScan)
+                {
+                    _nextFreshScan = Time.unscaledTime + 0.3f;
+                    _nearFresh = WaterBodies.Near(transform.position, 2.2f) == WaterKind.Fresh;
+                }
+                return _nearFresh;
+            }
+        }
+
+        /// <summary>
+        /// Drinks straight from fresh water (short action, then thirst up, maybe sick).
+        /// Returns a message; started tells whether the action began.
+        /// </summary>
+        public string TryDirectDrink(out bool started)
+        {
+            started = false;
+            if (SurvivalDirector.PlayerInVehicle) return "Araçtan in";
+            if (WaterBodies.Near(transform.position, 2.2f) != WaterKind.Fresh) return "Yakınında tatlı su yok";
+            var survival = GetComponent<PlayerSurvival>();
+            if (survival == null) return "Şimdi olmaz";
+            if (!SurvivalTest.FreeResources && survival.Thirst >= survival.maxThirst - 1f) return "Susamadın";
+
+            var action = FootAction.Get(gameObject);
+            if (action == null) return "Şimdi olmaz";
+            string error = action.Begin("Su içiliyor", DirectDrinkSeconds, FinishDirectDrink);
+            if (error != null) return error;
+            started = true;
+            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.PickUp, DirectDrinkSeconds + 0.5f);
+            _nextScan = 0f;
+            return "Su içiyorsun";
+        }
+
+        private string FinishDirectDrink()
+        {
+            var survival = GetComponent<PlayerSurvival>();
+            if (survival != null) survival.Drink(DirectDrinkThirst);
+            float chance = DirectDrinkSickChance * (1f - StatSettings.Instance.naturePoisonReduction * CharacterStats.Frac(StatType.Nature));
+            if (PlayerVitals.Instance != null && Random.value < chance) PlayerVitals.Instance.Poison(SurvivalSettings.Instance.poisonSeconds);
+            return "Dereden su içtin";
+        }
 
         public string Interact(PlayerInventory user)
         {
             var s = SurvivalSettings.Instance;
             var bottle = s.Item("Item_EmptyBottle");
+            bool hasBottle = bottle != null && user.Storage.GetCount(bottle) > 0;
+            if (_kind == WaterKind.Fresh && !hasBottle) return TryDirectDrink(out _);
             var water = s.Item(_kind == WaterKind.Sea ? "Item_SaltWater" : "Item_DirtyWater");
             bool free = SurvivalTest.FreeResources; // test mode: no empty bottle needed
-            if (water == null || !free && (bottle == null || user.Storage.GetCount(bottle) <= 0)) return "Boş şişe yok";
+            if (water == null || !free && !hasBottle) return "Boş şişe yok";
             bool usedBottle = bottle != null && user.Storage.GetCount(bottle) > 0 && !free;
             if (usedBottle) user.Storage.Remove(bottle, 1);
             if (user.Storage.Add(water, 1) <= 0)
@@ -245,7 +311,8 @@ namespace EndlessSurvival.Survival
             if (Random.value < StatSettings.Instance.natureExtraYieldChance * CharacterStats.Frac(StatType.Nature)) amount += 1;
             int added = user.AddItem(item, amount);
             if (added <= 0) return "Çantada yer yok";
-            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.Gather);
+            if (kind == ResourceKind.BerryBush) PlayerSurvivalAnimator.PlayOneShot(SurvAnim.Gather);
+            else PlayerSurvivalAnimator.PlayOneShot(SurvAnim.PickUp, 1.6f); // looping squat clip: hold it a moment
             remaining = 0;
             CharacterStats.Instance?.Train(StatType.Nature, StatSettings.Instance.naturePerGather);
             Deplete();
@@ -408,7 +475,7 @@ namespace EndlessSurvival.Survival
             if (State == FishState.Waiting)
             {
                 if (_bobber != null) _bobber.transform.position += Vector3.up * Mathf.Sin(Time.time * 2f) * 0.0015f;
-                if (SKeys.Down(Key.H))
+                if (FishKey())
                 {
                     PlayerSurvivalAnimator.PlayOneShot(SurvAnim.FishReel);
                     Stop("Olta erken çekildi");
@@ -418,13 +485,13 @@ namespace EndlessSurvival.Survival
                 {
                     State = FishState.Bite;
                     _timer = SurvivalSettings.Instance.fishBiteWindow * (1f + 0.5f * CharacterStats.Frac(StatType.Nature));
-                    StatusText = "VURDU! [H]";
+                    StatusText = EndlessCombat.Combat.GameInput.UsingPad ? "VURDU! [X]" : "VURDU! [H]";
                     if (_bobber != null) _bobber.transform.position += Vector3.down * 0.12f;
                 }
             }
             else if (State == FishState.Bite)
             {
-                if (SKeys.Down(Key.H))
+                if (FishKey())
                 {
                     Catch();
                     return;
@@ -433,6 +500,9 @@ namespace EndlessSurvival.Survival
                 if (_timer <= 0f) Stop("Balık kaçtı");
             }
         }
+
+        /// <summary>H, or gamepad X while the line is in the water.</summary>
+        private static bool FishKey() => SKeys.Down(Key.H) || EndlessCombat.Combat.GameInput.PadPressed(2);
 
         private void TryCast(GameObject player)
         {
@@ -453,7 +523,7 @@ namespace EndlessSurvival.Survival
             PlayerSurvivalAnimator.PlayOneShot(SurvAnim.FishCast);
             State = FishState.Waiting;
             _timer = Random.Range(s.fishWaitMin, s.fishWaitMax);
-            StatusText = "Balık bekleniyor... (vurunca [H])";
+            StatusText = EndlessCombat.Combat.GameInput.UsingPad ? "Balık bekleniyor... (vurunca [X])" : "Balık bekleniyor... (vurunca [H])";
             _bobber = SurvivalPrimitives.Part(PrimitiveType.Sphere, null, point + Vector3.up * 0.05f, Vector3.one * 0.12f, new Color(0.9f, 0.2f, 0.15f), false);
             _bobber.name = "FishingBobber";
             _bobber.transform.position = point + Vector3.up * 0.05f;

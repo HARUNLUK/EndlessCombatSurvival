@@ -30,6 +30,9 @@ namespace EndlessCombat.AI
         [Tooltip("Layers whose colliders are part of the NavMesh (ground and obstacles)")]
         public LayerMask includedLayers = ~0;
 
+        [Tooltip("Agent radius used for the bake (enemy capsule is 0.28 m)")]
+        public float agentRadius = 0.32f;
+
         [Header("Debug")]
         public bool logBakes = false;
 
@@ -136,6 +139,12 @@ namespace EndlessCombat.AI
             settings.voxelSize = voxelSize;
             settings.overrideTileSize = true;
             settings.tileSize = tileSize;
+            // The default agent (radius 0.5) cannot pass a door or a gap between two walls narrower than a metre:
+            // the route then ends in front of the wall and the enemy pushes straight into it. The enemies' capsule
+            // is 0.28 wide.
+            settings.agentRadius = agentRadius;
+            settings.agentClimb = 0.45f;
+            settings.agentSlope = 50f;
 
             _operation = NavMeshBuilder.UpdateNavMeshDataAsync(_data, settings, _sources, bounds);
         }

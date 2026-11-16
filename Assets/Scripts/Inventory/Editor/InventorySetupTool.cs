@@ -4,7 +4,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using StarterAssets;
 using EndlessCombat.AI;
 using EndlessCombat.Combat;
 using EndlessSurvival.Inventory;
@@ -650,7 +649,7 @@ namespace EndlessSurvival.Inventory.Editor
 
             PlayerInventory playerInventory = null;
             PlayerInteractor interactor = null;
-            StarterAssetsInputs inputs = null;
+            EndlessCombat.Character.PlayerInputState inputs = null;
             PlayerEquipment equipment = null;
             PlayerHealth health = null;
             PlayerSurvival survival = null;
@@ -662,7 +661,7 @@ namespace EndlessSurvival.Inventory.Editor
                 equipment = GetOrAdd<PlayerEquipment>(player, true);
                 health = GetOrAdd<PlayerHealth>(player, true);
                 survival = GetOrAdd<PlayerSurvival>(player, true);
-                inputs = player.GetComponent<StarterAssetsInputs>();
+                inputs = player.GetComponent<EndlessCombat.Character.PlayerInputState>();
 
                 SetRef(survival, "health", health);
                 SetRef(survival, "inputs", inputs);
@@ -759,7 +758,7 @@ namespace EndlessSurvival.Inventory.Editor
         // ------------------------------------------------------------------ UI
 
         private static void BuildUI(ItemDatabase database, PlayerInventory playerInventory, PlayerInteractor interactor,
-            StarterAssetsInputs inputs, PlayerEquipment equipment, PlayerHealth health, PlayerSurvival survival, VehicleStorage vehicleStorage,
+            EndlessCombat.Character.PlayerInputState inputs, PlayerEquipment equipment, PlayerHealth health, PlayerSurvival survival, VehicleStorage vehicleStorage,
             VehicleMaintenance vehicleMaintenance, VehicleInteraction vehicleInteraction)
         {
             var oldCanvas = GameObject.Find("InventoryCanvas");
@@ -841,11 +840,12 @@ namespace EndlessSurvival.Inventory.Editor
             Text equipTitle = NewText("EquipTitle", playerColumn, "EQUIPPED", 20, TextAnchor.MiddleLeft, new Color(0.6f, 1f, 0.6f));
             TopLeft(equipTitle.rectTransform, 0f, 490f, 720f, 30f);
 
-            var equipRows = new ItemRowUI[6];
+            var equipRows = new ItemRowUI[System.Enum.GetValues(typeof(EquipSlot)).Length];
             for (int i = 0; i < equipRows.Length; i++)
             {
-                float x = (i / 3) * 365f;
-                float y = 524f + (i % 3) * 34f;
+                // 2 columns of 3; extra slots (Shield) go below the second column
+                float x = (Mathf.Min(i, 5) / 3) * 365f;
+                float y = 524f + (i < 6 ? i % 3 : 3 + (i - 6)) * 34f;
                 equipRows[i] = BuildRow(playerColumn, $"EquipRow_{(EquipSlot)i}", x, y, 355f, 1);
             }
 

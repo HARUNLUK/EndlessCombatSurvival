@@ -111,7 +111,7 @@ namespace EndlessSurvival.EditorTools
             Debug.Log($"<color=green>[Quaternius] Seçilen Klipler: Idle -> {crouchIdleClip.name}, Walk -> {crouchWalkClip.name}</color>");
 
             // Controller'ı güncelle
-            string controllerPath = "Assets/Starter Assets/Runtime/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller";
+            string controllerPath = "Assets/Animations/Character/CharacterAnimator.controller";
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
             if (controller == null)
             {

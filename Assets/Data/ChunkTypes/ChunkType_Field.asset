@@ -16,6 +16,18 @@ MonoBehaviour:
   biome: 6
   flatSeamEdges: 1
   allowSpecialChunks: 1
+  neighbours:
+  - {fileID: 11400000, guid: b0a0bb3ab767c2749889885646bf16ec, type: 2}
+  - {fileID: 11400000, guid: b0ed9d987030bd943ae82e236dbcfff6, type: 2}
+  - {fileID: 11400000, guid: 2e0efd764daa07d40a6cc0e96e163678, type: 2}
+  - {fileID: 11400000, guid: 7ee0e00bb12a3554eb097861d4d24b53, type: 2}
+  - {fileID: 11400000, guid: 8b97d3c1e64f19d4c9f23101707fbaff, type: 2}
+  inset:
+    enabled: 0
+    hosts: []
+    chancePerRun: 0.35
+    minLength: 1
+    maxLength: 2
   elevationConfig:
     elevationChance: 0.2
     maxHillHeight: 9
@@ -65,6 +77,55 @@ MonoBehaviour:
     landStripMax: 100
     coastStripMin: 10
     coastStripMax: 30
+  riverValley:
+    enabled: 0
+    crossingChance: 0.35
+    crossingMinZ: 210
+    crossingMaxZ: 290
+    crossingLength: 150
+    crossingWidth: 34
+    crossingMinDrop: 5
+    minWidth: 40
+    maxWidth: 80
+    widthNoise: 0.18
+    minGap: 6
+    maxGap: 25
+    minDrop: 3
+    maxDrop: 7
+    maxDepth: 1.3
+    minBank: 4
+    maxBank: 16
+    bendSideZ: 120
+    bendJoinZ: 300
+    bendBank: 24
+    waterColor: {r: 0.16, g: 0.34, b: 0.4, a: 0.84}
+    flowSpeed: 1.1
+    flowTile: 14
+    ambientScale: 0.45
+  settlement:
+    kind: 0
+    townDensity: 0.72
+    townSetbackMin: 12
+    townSetbackMax: 17
+    townBackRowChance: 0.3
+    townRuinShare: 0.55
+    stopFuelChance: 0.8
+    stopTraderChance: 0.3
+    stopOppositeSideChance: 0.4
+  sideRoads:
+    enabled: 1
+    style: 2
+    chance: 0.5
+    minCount: 1
+    maxCount: 1
+    halfWidth: 2.4
+    minLength: 140
+    maxLength: 270
+    crossChance: 0.35
+    endContentChance: 0.4
+    surfaceColor: {r: 0.45, g: 0.4, b: 0.32, a: 1}
+    pavedChance: 0.35
+    pavedColor: {r: 0.22, g: 0.22, b: 0.23, a: 1}
   boundary:
     biome: 6
     cliffWeight: 40
@@ -74,8 +135,8 @@ MonoBehaviour:
     maxCliffHeight: 65
     minRampWidth: 18
     maxRampWidth: 38
-    minInnerEdge: 140
-    maxInnerEdge: 190
+    minInnerEdge: 340
+    maxInnerEdge: 430
     minRockSize: 14
     maxRockSize: 30
     rockSpacing: 22

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using StarterAssets;
 using EndlessSurvival.Inventory;
 using EndlessSurvival.World;
 using EndlessSurvival.Save;
@@ -13,7 +12,21 @@ namespace EndlessSurvival.Survival
     /// <summary>Keyboard helper (Input System).</summary>
     public static class SKeys
     {
-        public static bool Down(Key key) => Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame;
+        public static bool Down(Key key) =>
+            (Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame) || (_injected == key && _injectedFrame == Time.frameCount);
+
+        private static Key _injected = Key.None;
+        private static int _injectedFrame = -1;
+
+        /// <summary>
+        /// Presses a key for the next frame (gamepad action menu): the action starts through the same code path
+        /// as its keyboard key, with all its checks.
+        /// </summary>
+        public static void Inject(Key key)
+        {
+            _injected = key;
+            _injectedFrame = Time.frameCount + 1;
+        }
         public static bool Held(Key key) => Keyboard.current != null && Keyboard.current[key].isPressed;
         public static bool Up(Key key) => Keyboard.current != null && Keyboard.current[key].wasReleasedThisFrame;
     }
@@ -21,8 +34,8 @@ namespace EndlessSurvival.Survival
     /// <summary>Open state of the survival panels and the shared cursor handling.</summary>
     public static class SurvivalUIState
     {
-        public static bool PanelOpen, TradeOpen, PauseOpen, MenuOpen;
-        public static bool AnyOwnOpen => PanelOpen || TradeOpen || PauseOpen || MenuOpen;
+        public static bool PanelOpen, TradeOpen, PauseOpen, MenuOpen, JourneyOpen;
+        public static bool AnyOwnOpen => PanelOpen || TradeOpen || PauseOpen || MenuOpen || JourneyOpen;
 
         /// <summary>Panels made by other systems (inventory, campfire, notes...).</summary>
         public static bool OtherOpen
@@ -70,7 +83,7 @@ namespace EndlessSurvival.Survival
 
         internal static void ResetAll()
         {
-            PanelOpen = TradeOpen = PauseOpen = MenuOpen = false;
+            PanelOpen = TradeOpen = PauseOpen = MenuOpen = JourneyOpen = false;
             _cursorUsers = 0;
             _enforcedOpen = false;
         }
@@ -104,16 +117,16 @@ namespace EndlessSurvival.Survival
 
         private static void SyncStarterAssets(bool locked)
         {
-            // StarterAssetsInputs re-locks the cursor on window focus using this flag
+            // EndlessCombat.Character.PlayerInputState re-locks the cursor on window focus using this flag
             var player = SurvivalDirector.Player;
-            var inputs = player != null ? player.GetComponent<StarterAssetsInputs>() : null;
+            var inputs = player != null ? player.GetComponent<EndlessCombat.Character.PlayerInputState>() : null;
             if (inputs != null) inputs.cursorLocked = locked;
         }
 
         private static void SetLook(bool on)
         {
             var player = SurvivalDirector.Player;
-            var inputs = player != null ? player.GetComponent<StarterAssetsInputs>() : null;
+            var inputs = player != null ? player.GetComponent<EndlessCombat.Character.PlayerInputState>() : null;
             if (inputs == null) return;
             inputs.cursorInputForLook = on;
             if (!on) inputs.look = Vector2.zero;
@@ -250,6 +263,8 @@ namespace EndlessSurvival.Survival
             if (UnityEngine.Object.FindAnyObjectByType<ChunkManager>() == null) return; // only the game scene
             GameClock.Reset();
             SurvivalUIState.ResetAll();
+            RoadBarricade.ResetAll();
+            SafeZone.ResetAll();
             var root = new GameObject("SurvivalSystems");
             root.AddComponent<SurvivalDirector>();
         }
@@ -271,6 +286,7 @@ namespace EndlessSurvival.Survival
             SaveManager.CollectingSave += OnCollectingSave;
             SaveManager.ApplyingLoad += OnApplyingLoad;
             DayNightCycle.Slept += OnSlept;
+            TurkishText.ApplyToItems();
 
             // World systems (do not need the player)
             gameObject.AddComponent<WeatherSystem>();
@@ -278,6 +294,13 @@ namespace EndlessSurvival.Survival
             gameObject.AddComponent<FoodSpoilage>();
             gameObject.AddComponent<GameMenus>();
             gameObject.AddComponent<SurvivalHUD>();
+            gameObject.AddComponent<SurvivalTips>();
+            gameObject.AddComponent<ActionMenu>();
+            gameObject.AddComponent<SurvivalTestKit>(); // test mode: every item in the backpack, topped up
+
+            // While a menu or panel is open the gamepad navigates it: the character must not walk or jump behind it
+            EndlessCombat.Character.PlayerInputState.Blocked = () =>
+                SurvivalUIState.AnyOpen || ActionMenu.IsOpen || EndlessCombat.Combat.GameInput.GameplayBlocked;
         }
 
         private void OnDestroy()
@@ -324,8 +347,39 @@ namespace EndlessSurvival.Survival
             gameObject.AddComponent<PlayerSurvivalAnimator>();
             gameObject.AddComponent<VehicleParts>();
             gameObject.AddComponent<SmokingAction>();
+            gameObject.AddComponent<BinocularsController>();
             gameObject.AddComponent<HandsBusyHolster>();
+            gameObject.AddComponent<Journey>(); // goal, zones, first steps, arrival
             if (player.GetComponent<WaterFillInteractable>() == null) player.AddComponent<WaterFillInteractable>();
+            GiveSurvivalStarterKit(player);
+        }
+
+        /// <summary>
+        /// A new run starts with the bare minimum to survive the first wound and the first hours: 2 bandages,
+        /// 3 bottles of water and 2 cans of beans (no bandages). Loading a save replaces the backpack, so this never piles up.
+        /// </summary>
+        private static void GiveSurvivalStarterKit(GameObject player)
+        {
+            var inv = player.GetComponent<PlayerInventory>();
+            var s = SurvivalSettings.Instance;
+            if (inv == null || s == null) return;
+            void Give(string asset, int count)
+            {
+                var item = s.Item(asset);
+                if (item == null) return;
+                int have = inv.Storage.GetCount(item);
+                if (have < count) inv.Storage.Add(item, count - have);
+            }
+            Give("Item_WaterBottle", 3);
+            Give("Item_CannedBeans", 2);
+
+            // The tank is not full: the first fuel has to be found within the first kilometres.
+            // (Loading a journey sets the saved fuel right after this.)
+            var car = Vehicle;
+            if (car != null) car.currentFuel = Mathf.Min(car.currentFuel, car.maxFuel * s.startFuelFraction);
+
+            // R5: starting gear bought with preparation points on the character screen
+            Preparation.Apply(inv);
         }
 
         // ---------------- save bridge ----------------

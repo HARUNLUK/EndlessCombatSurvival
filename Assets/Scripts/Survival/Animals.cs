@@ -196,7 +196,9 @@ namespace EndlessSurvival.Survival
             if (player == null) return;
             var health = player.GetComponent<PlayerHealth>();
             if (health == null || health.IsDead) return;
-            health.TakeDamage(_damage, player.transform.position + Vector3.up, (player.transform.position - transform.position).normalized);
+            Vector3 away = (player.transform.position - transform.position).normalized;
+            EndlessCombat.Combat.Damage.Deal(health, new EndlessCombat.Combat.DamageInfo(_damage, EndlessCombat.Combat.DamageType.Animal,
+                player.transform.position + Vector3.up, away) { SourceDirection = -away, Source = gameObject });
             PlayerVitals.Instance?.AddStress(SurvivalSettings.Instance.stressPredatorAttack * 0.5f);
         }
 
@@ -299,6 +301,8 @@ namespace EndlessSurvival.Survival
 
         // ---------------- damage ----------------
 
+        public void TakeDamage(DamageInfo info) => TakeDamage(info.Amount, info.Point, info.Normal);
+
         public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
         {
             if (IsDead) return;
@@ -310,6 +314,40 @@ namespace EndlessSurvival.Survival
             }
             if (IsPredator) StartHunt();
             else StartFlee(SurvivalDirector.PlayerPosition);
+        }
+
+        /// <summary>Run over by a vehicle (VehicleRam): damage as usual; a dead animal's carcass is thrown 1-3 m along the push.</summary>
+        public void HitByVehicle(float damage, Vector3 push)
+        {
+            if (IsDead) return;
+            _health -= damage;
+            if (_health <= 0f)
+            {
+                Die();
+                Vector3 flat = Flat(push);
+                if (flat.sqrMagnitude > 0.001f) StartCoroutine(SlideCarcass(flat.normalized * Mathf.Clamp(flat.magnitude * 0.15f, 1f, 3f)));
+                return;
+            }
+            if (IsPredator) StartHunt();
+            else StartFlee(SurvivalDirector.PlayerPosition);
+        }
+
+        private System.Collections.IEnumerator SlideCarcass(Vector3 offset)
+        {
+            const float duration = 0.4f;
+            Vector3 start = transform.position;
+            float lift = 0.25f; // Die() raised the lying body by this much over the ground
+            for (float t = 0f; t < duration; t += Time.deltaTime)
+            {
+                float k = 1f - Mathf.Pow(1f - t / duration, 2f);
+                Vector3 p = start + offset * k;
+                p.y = GroundHeight(p, start.y - lift) + lift;
+                transform.position = p;
+                yield return null;
+            }
+            Vector3 end = start + offset;
+            end.y = GroundHeight(end, start.y - lift) + lift;
+            transform.position = end;
         }
 
         private void Die()
@@ -363,6 +401,7 @@ namespace EndlessSurvival.Survival
             else hide = Mathf.Max(0, hide - 1);
             if (Random.value < StatSettings.Instance.natureExtraYieldChance * CharacterStats.Frac(StatType.Nature)) meat += 1;
 
+            PlayerSurvivalAnimator.PlayOneShot(SurvAnim.Work, 2.5f);
             SurvivalDirector.GiveItem(s.Item("Item_RawMeat"), meat);
             if (hide > 0) SurvivalDirector.GiveItem(s.Item("Item_RawHide"), hide);
             CharacterStats.Instance?.Train(StatType.Nature, StatSettings.Instance.naturePerGather * 1.5f);
@@ -374,7 +413,8 @@ namespace EndlessSurvival.Survival
         private static bool HoldsKnife(PlayerInventory user)
         {
             var eq = user != null ? user.GetComponent<PlayerEquipment>() : null;
-            var w = eq != null ? eq.Get(EquipSlot.Weapon) : null;
+            // A knife carried in the melee slot is enough (it is drawn for the cut)
+            var w = eq != null ? eq.Get(EquipSlot.Melee) : null;
             return w != null && w.name == "Item_Knife";
         }
     }

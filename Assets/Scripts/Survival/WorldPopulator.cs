@@ -13,7 +13,7 @@ namespace EndlessSurvival.Survival
     /// resource nodes (2.4/2.13), wreck salvage (2.18), buildings (4.1), encounters (3.4) and traders (4.5).
     /// Everything is parented under the chunk, so it disappears with it. Also spawns night wolves (3.3).
     /// </summary>
-    public class WorldPopulator : MonoBehaviour
+    public class WorldPopulator : MonoBehaviour, ISurvivalSave
     {
         private readonly HashSet<Chunk> _done = new HashSet<Chunk>();
         private float _wolfTimer;
@@ -22,8 +22,32 @@ namespace EndlessSurvival.Survival
         private void OnEnable() => ChunkManager.ChunkBuilt += OnChunkBuilt;
         private void OnDisable() => ChunkManager.ChunkBuilt -= OnChunkBuilt;
 
+        // ---------------- save: roadblock gates the player opened ----------------
+
+        public string SaveKey => "barricades";
+
+        [System.Serializable]
+        private class BarricadeState
+        {
+            public List<int> opened = new List<int>();
+        }
+
+        public string CaptureJson() => JsonUtility.ToJson(new BarricadeState { opened = new List<int>(RoadBarricade.Opened) });
+
+        public void RestoreJson(string json)
+        {
+            var state = JsonUtility.FromJson<BarricadeState>(json);
+            RoadBarricade.Opened.Clear();
+            if (state?.opened != null)
+                foreach (int index in state.opened) RoadBarricade.Opened.Add(index);
+            // Roadblocks that were built before the journey loaded
+            foreach (var barricade in RoadBarricade.All)
+                if (barricade != null && RoadBarricade.Opened.Contains(barricade.ChunkIndex)) barricade.Open(false);
+        }
+
         private void Start()
         {
+            SurvivalDirector.Instance?.Register(this);
             // Chunks that were built before this object existed
             var manager = ChunkManager.Instance;
             if (manager == null) return;
@@ -44,11 +68,112 @@ namespace EndlessSurvival.Survival
             var root = new GameObject("SurvivalContent").transform;
             root.SetParent(chunk.transform, false);
 
+            // A Safe Zone chunk has no roadblock, no encounter and no other building: only the stop and nature
+            bool stop = false;
+            try { stop = SpawnSafeZone(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] safe zone: " + e.Message); }
+
+            // The roadblock first: everything else keeps clear of its line
+            if (!stop) try { SpawnBarricade(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] barricade: " + e.Message); }
+            // Town / rest stop: planned now (the footprints keep the rest of the roadside content out), built over frames
+            if (!stop && (chunk.HasSettlement || Settlements.HasSideRoadEnds(chunk)))
+                try { StartCoroutine(Settlements.Build(chunk, spline, root)); } catch (System.Exception e) { Debug.LogWarning("[Survival] settlement: " + e.Message); }
             try { SpawnResources(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] resources: " + e.Message); }
+            if (chunk.biomeType == ChunkBiomeType.Desert || (chunk.IsTransitionChunk && chunk.prevBiome == ChunkBiomeType.Desert))
+                try { Settlements.DesertScatter(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] desert scatter: " + e.Message); }
             try { HookWrecks(chunk); } catch (System.Exception e) { Debug.LogWarning("[Survival] wrecks: " + e.Message); }
+            if (stop) return;
+            try { SpawnCampPlans(chunk, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] camp plans: " + e.Message); }
             try { SpawnBuilding(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] building: " + e.Message); }
             try { SpawnEncounter(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] encounter: " + e.Message); }
             try { SpawnTrader(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] trader: " + e.Message); }
+            try { SpawnRoadNotes(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] road notes: " + e.Message); }
+            try { SpawnCorpses(chunk, spline, root); } catch (System.Exception e) { Debug.LogWarning("[Survival] corpses: " + e.Message); }
+        }
+
+        private static bool IsStartChunk(Chunk chunk)
+        {
+            var manager = chunk.Manager;
+            return manager != null && chunk.ChunkIndex == manager.StartChunkIndex;
+        }
+
+        // ---------------- road notes and corpses ----------------
+
+        private static void SpawnRoadNotes(Chunk chunk, RoadSpline spline, Transform root)
+        {
+            var rng = new SeededRandom(chunk.ChunkSeed).SubStream("road_note");
+            if (IsStartChunk(chunk))
+            {
+                // One readable note near the start: 30-80 m along the road, a few metres beside it
+                for (int attempt = 0; attempt < 12; attempt++)
+                {
+                    float localZ = rng.Range(30f, 80f);
+                    Vector3 world = chunk.transform.TransformPoint(new Vector3(0f, 0f, localZ));
+                    Transform st = spline.transform;
+                    Vector3 road = st.TransformPoint(spline.GetPointAtZ(st.InverseTransformPoint(world).z));
+                    float side = rng.Value < 0.5f ? -1f : 1f;
+                    Vector3 probe = road + chunk.transform.right * side * rng.Range(3f, 7f);
+                    if (!Ground(chunk, probe, road, out Vector3 p)) continue;
+                    RoadNotes.Spawn(root, SurvivalPrimitives.Ground(p), rng);
+                    return;
+                }
+                return;
+            }
+            if (!rng.Chance(SurvivalSettings.Instance.roadNoteChance)) return;
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                if (!TryRoadsidePoint(chunk, spline, rng, 3f, 9f, out Vector3 p, out _)) continue;
+                RoadNotes.Spawn(root, SurvivalPrimitives.Ground(p), rng);
+                return;
+            }
+        }
+
+        private static void SpawnCorpses(Chunk chunk, RoadSpline spline, Transform root)
+        {
+            var rng = new SeededRandom(chunk.ChunkSeed).SubStream("corpse");
+            float chance = SurvivalSettings.Instance.corpseChance;
+            float roll = rng.Value;
+            if (roll >= chance) return;
+            int count = roll < chance * (10f / 35f) ? 2 : 1;
+            for (int i = 0; i < count; i++)
+            {
+                for (int attempt = 0; attempt < 6; attempt++)
+                {
+                    if (!TryRoadsidePoint(chunk, spline, rng, 3f, 14f, out Vector3 p, out _)) continue;
+                    Corpses.Spawn(root, SurvivalPrimitives.Ground(p), rng);
+                    break;
+                }
+            }
+        }
+
+        // ---------------- R4 plans in enemy camps ----------------
+
+        /// <summary>Clearing a camp can pay off for good: some camps keep a plan (either kind) by their fire.</summary>
+        private static void SpawnCampPlans(Chunk chunk, Transform root)
+        {
+            var rng = new SeededRandom(chunk.ChunkSeed).SubStream("camp_plans");
+            foreach (var camp in chunk.GetComponentsInChildren<EnemyCampPOI>(true))
+            {
+                if (!camp.gameObject.activeInHierarchy || !rng.Chance(0.45f)) continue;
+                Vector3 probe = camp.transform.position + camp.transform.right * 2.2f + camp.transform.forward * 1.5f;
+                if (!Ground(chunk, probe, camp.transform.position, out Vector3 p)) p = probe;
+                PlanPickup.Create(root, p, Plans.Kind.Any, rng.Range(int.MinValue, int.MaxValue));
+            }
+        }
+
+        // ---------------- R3 Safe Zone stops ----------------
+
+        private bool SpawnSafeZone(Chunk chunk, RoadSpline spline, Transform root)
+        {
+            if (!SafeZone.TryGetStop(chunk, out int number, out float localZ)) return false;
+            var rng = new SeededRandom(chunk.ChunkSeed).SubStream("safe_zone");
+            Vector3 fwd = chunk.transform.forward, right = chunk.transform.right;
+            Vector3 road = chunk.transform.TransformPoint(new Vector3(0f, 0f, localZ));
+            Transform st = spline.transform;
+            road = st.TransformPoint(spline.GetPointAtZ(st.InverseTransformPoint(road).z));
+            // Level ground for the service side
+            if (Ground(chunk, road + right * 11f - fwd * 8f, road, out Vector3 pad)) PrepareGround(chunk, pad, 16f);
+            SafeZone.Create(chunk, spline, root, number, localZ, rng);
+            return true;
         }
 
         // ---------------- ground points ----------------
@@ -64,7 +189,46 @@ namespace EndlessSurvival.Survival
             float side = rng.Value < 0.5f ? -1f : 1f;
             float lateral = rng.Range(minLat, maxLat);
             roadPoint = center;
-            return Ground(chunk, center + right * side * lateral, center, out point);
+            if (RoadBarricade.NearLine(chunk, center + right * side * lateral, 22f)) return false; // the fence runs here
+            if (SafeZone.Near(center, 40f)) return false; // the stop's own ground
+            if (!Ground(chunk, center + right * side * lateral, center, out point)) return false;
+            if (chunk.NearSideRoad(point, 2f)) return false; // side roads (streets, tracks)
+            return !Settlements.Blocked(chunk, point, 3f); // town / rest stop buildings and yards
+        }
+
+        // ---------------- R2 roadblocks ----------------
+
+        private void SpawnBarricade(Chunk chunk, RoadSpline spline, Transform root)
+        {
+            if (!SurvivalSettings.Instance.spawnRoadBarricades) return; // cancelled 2026-11-15
+            var manager = ChunkManager.Instance;
+            if (manager == null) return;
+            if (!RoadBarricade.ChunkHasBarricade(manager.ResolvedSeed, chunk.ChunkIndex, manager.StartChunkIndex)) return;
+            var rng = new SeededRandom(chunk.ChunkSeed).SubStream("barricade");
+            var barricade = RoadBarricade.Create(chunk, spline, root, rng);
+            if (barricade == null || barricade.IsOpen) return;
+
+            // Sometimes people hold the roadblock: more often the further the road goes
+            var s = SurvivalSettings.Instance;
+            Vector3 gate = barricade.InteractPosition;
+            float guardChance = Mathf.Lerp(s.barricadeGuardChance, s.barricadeGuardChanceAtMax, DifficultyCurve.CharacterLevel);
+            if (!rng.Chance(guardChance)) return;
+            var prefabs = s.humanEnemyPrefabs;
+            if (prefabs == null || prefabs.Length == 0) return;
+            int count = DifficultyCurve.CapHumans(DifficultyCurve.ScaleEnemyCount(rng.Range(2, 4), gate));
+            Vector3 beyond = chunk.transform.forward; // the guards stand on the far side of the gate
+            for (int i = 0; i < count; i++)
+            {
+                var prefab = DifficultyCurve.PickEnemyPrefab(rng, prefabs, gate);
+                if (prefab == null) continue;
+                Vector3 probe = gate + beyond * rng.Range(4f, 11f) + chunk.transform.right * rng.Range(-8f, 8f);
+                if (!Ground(chunk, probe, gate, out Vector3 p)) p = gate + beyond * 5f;
+                var go = Instantiate(prefab, p + Vector3.up * 0.1f, Quaternion.LookRotation(-beyond), root);
+                var enemy = go.GetComponent<EnemyController>();
+                if (enemy == null) continue;
+                DifficultyCurve.ApplyToEnemy(enemy, gate);
+                enemy.initialState = i == 0 ? EnemyController.EnemyState.Idle : EnemyController.EnemyState.Patrolling;
+            }
         }
 
         public static bool Ground(Chunk chunk, Vector3 probe, Vector3 roadCenter, out Vector3 point)
@@ -147,10 +311,11 @@ namespace EndlessSurvival.Survival
         private void SpawnBuilding(Chunk chunk, RoadSpline spline, Transform root)
         {
             if (chunk.IsMountain && !chunk.IsFoothill) return;
+            if (chunk.HasSettlement) return; // the town / rest stop has its own buildings
             var rng = new SeededRandom(chunk.ChunkSeed).SubStream("survival_building");
             float chance = chunk.biomeType == ChunkBiomeType.RuinedCity ? 0.7f : 0.38f;
             if (!rng.Chance(chance)) return;
-            bool gas = rng.Chance(0.4f);
+            bool gas = rng.Chance(SurvivalSettings.Instance.gasStationShare);
 
             for (int attempt = 0; attempt < 6; attempt++)
             {
@@ -163,6 +328,12 @@ namespace EndlessSurvival.Survival
                 PrepareGround(chunk, p, gas ? 13f : 9f);
                 var building = gas ? Buildings.GasStation(p, rot, root, rng) : Buildings.House(p, rot, root, rng);
                 building.name = gas ? "POI_GasStation" : "POI_AbandonedHouse";
+                // R4: the place's own reward. Houses hold recipe plans, gas stations vehicle plans.
+                if (rng.Chance(gas ? 0.6f : 0.5f))
+                {
+                    Vector3 local = gas ? new Vector3(0f, 0.16f, 5f) : new Vector3(0.6f, 0.05f, 0.4f);
+                    PlanPickup.Create(building.transform, building.transform.TransformPoint(local), gas ? Plans.Kind.VehicleMod : Plans.Kind.Recipe, rng.Range(int.MinValue, int.MaxValue));
+                }
                 return;
             }
         }
@@ -205,11 +376,14 @@ namespace EndlessSurvival.Survival
                 default: animalWeight = 0.3f; break; // wasteland, ruined city, desert: people by the road
             }
 
-            if (rng.Value < animalWeight) SpawnAnimals(chunk, spline, root, rng);
+            bool start = IsStartChunk(chunk);
+            // Early game: mostly animals (at most the rest is human); the start chunk has no humans at all
+            if (DifficultyCurve.EarlyGame) animalWeight = Mathf.Max(animalWeight, SurvivalSettings.Instance.earlyGameAnimalShare);
+            if (start || rng.Value < animalWeight) SpawnAnimals(chunk, spline, root, rng, start);
             else SpawnPatrol(chunk, spline, root, rng);
         }
 
-        private void SpawnAnimals(Chunk chunk, RoadSpline spline, Transform root, SeededRandom rng)
+        private void SpawnAnimals(Chunk chunk, RoadSpline spline, Transform root, SeededRandom rng, bool harmlessOnly = false)
         {
             float roll = rng.Value;
             AnimalKind kind;
@@ -219,6 +393,18 @@ namespace EndlessSurvival.Survival
             else if (roll < 0.7f) { kind = AnimalKind.Rabbit; count = rng.Range(2, 4); }
             else if (roll < 0.9f || !mountain && chunk.biomeType != ChunkBiomeType.Forest) { kind = AnimalKind.Wolf; count = rng.Range(2, 4); }
             else { kind = AnimalKind.Bear; count = 1; }
+            // The start chunk has no predators (wolf, bear): deer and rabbits only
+            // Barren land and towns: no deer or bears, only rabbits and (wild dog) packs
+            if (chunk.biomeType == ChunkBiomeType.Desert || chunk.biomeType == ChunkBiomeType.RuinedCity)
+            {
+                kind = roll < 0.45f ? AnimalKind.Rabbit : AnimalKind.Wolf;
+                count = kind == AnimalKind.Rabbit ? rng.Range(1, 3) : rng.Range(2, 4);
+            }
+            if (harmlessOnly && (kind == AnimalKind.Wolf || kind == AnimalKind.Bear))
+            {
+                kind = roll < 0.85f ? AnimalKind.Deer : AnimalKind.Rabbit;
+                count = rng.Range(2, 4);
+            }
 
             if (!TryRoadsidePoint(chunk, spline, rng, 25f, 55f, out Vector3 center, out _)) return;
             int pack = ++_nextPack;
@@ -235,7 +421,9 @@ namespace EndlessSurvival.Survival
             var prefabs = SurvivalSettings.Instance.humanEnemyPrefabs;
             if (prefabs == null || prefabs.Length == 0) return;
             if (!TryRoadsidePoint(chunk, spline, rng, 6f, 12f, out Vector3 center, out Vector3 road)) return;
-            int count = DifficultyCurve.ScaleEnemyCount(rng.Range(2, 4), center);
+            // Early game: 1-2 people; later 2-3, more with the character level
+            int baseCount = DifficultyCurve.EarlyGame ? rng.Range(1, 3) : rng.Range(2, 4);
+            int count = DifficultyCurve.CapHumans(DifficultyCurve.ScaleEnemyCount(baseCount, center));
             for (int i = 0; i < count; i++)
             {
                 var prefab = DifficultyCurve.PickEnemyPrefab(rng, prefabs, center);
@@ -279,6 +467,7 @@ namespace EndlessSurvival.Survival
 
             Vector3 pos = player.transform.position;
             if (CraftingSystem.NearestBurningFire(pos, 12f) != null) return; // fire keeps them away
+            if (SafeZone.Near(pos, 120f)) return; // and so do the people of a Safe Zone
             foreach (var a in AnimalController.All)
                 if (a != null && a.kind == AnimalKind.Wolf && (a.transform.position - pos).sqrMagnitude < 80f * 80f) return;
             if (Random.value > s.nightWolfChance) return;

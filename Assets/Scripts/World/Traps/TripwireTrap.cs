@@ -106,7 +106,8 @@ namespace EndlessSurvival.World.Traps
                 if (health != null)
                 {
                     GameStatsTracker.Instance?.SetCauseOfDeath("Tuzak Patlaması (Tripwire)");
-                    health.TakeDamage(damage, hit.transform.position, Vector3.up);
+                    EndlessCombat.Combat.Damage.Deal(health, new EndlessCombat.Combat.DamageInfo(damage, EndlessCombat.Combat.DamageType.Trap,
+                        hit.transform.position, Vector3.up) { Source = gameObject });
                 }
             }
 
@@ -121,7 +122,7 @@ namespace EndlessSurvival.World.Traps
         public string GetPrompt()
         {
             if (isDisarmed || isTriggered) return "";
-            return "[E] Tuzağı İmhâ Et";
+            return "Tuzağı imha et";
         }
 
         public string Interact(PlayerInventory user)

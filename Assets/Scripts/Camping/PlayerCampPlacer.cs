@@ -68,16 +68,17 @@ namespace EndlessSurvival.Camping
                 UpdatePlacementGhost();
 
                 // Sol Tık veya Enter: Yerleştir
-                bool confirmPlace = (mouse != null && mouse.leftButton.wasPressedThisFrame) ||
-                                    (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame));
+                // Left click / Enter / gamepad A: place (not in the frame the placement started)
+                bool confirmPlace = Time.unscaledTime - _placingSince > 0.25f &&
+                                    ((mouse != null && mouse.leftButton.wasPressedThisFrame) || EndlessCombat.Combat.GameInput.SubmitPressed);
                 if (confirmPlace)
                 {
                     PlaceCampfire();
                 }
 
                 // Sağ Tık veya ESC: İptal
-                bool cancelPlace = (mouse != null && mouse.rightButton.wasPressedThisFrame) ||
-                                   (keyboard != null && keyboard.escapeKey.wasPressedThisFrame);
+                // Right click / Esc / gamepad B: cancel
+                bool cancelPlace = (mouse != null && mouse.rightButton.wasPressedThisFrame) || EndlessCombat.Combat.GameInput.BackPressed;
                 if (cancelPlace)
                 {
                     CancelPlacement();
@@ -96,11 +97,20 @@ namespace EndlessSurvival.Camping
         {
             _isPlacing = !_isPlacing;
             if (_ghostPreview != null) _ghostPreview.SetActive(_isPlacing);
+            if (_isPlacing)
+            {
+                _placingSince = Time.unscaledTime;
+                EndlessSurvival.Survival.SurvivalNotify.Show(EndlessCombat.Combat.GameInput.UsingPad
+                    ? "Kamp ateşi: yerini seç. A koy, B vazgeç" : "Kamp ateşi: yerini seç. Sol tık koy, sağ tık vazgeç", 4f);
+            }
         }
+
+        private float _placingSince;
 
         private void CancelPlacement()
         {
             _isPlacing = false;
+            EndlessCombat.Combat.GameInput.BlockGameplayBriefly();
             if (_ghostPreview != null) _ghostPreview.SetActive(false);
         }
 

@@ -49,6 +49,8 @@ namespace EndlessCombat.Combat
             }
         }
 
+        public void TakeDamage(DamageInfo info) => TakeDamage(info.Amount, info.Point, info.Normal);
+
         public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
         {
             if (isDead) return;

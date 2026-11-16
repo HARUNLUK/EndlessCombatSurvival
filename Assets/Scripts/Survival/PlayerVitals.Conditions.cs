@@ -49,7 +49,8 @@ namespace EndlessSurvival.Survival
         private float _calmTime;
         private float _falseAlarmTimer = 120f;
         public bool Panicking => _panicTimer > 0f;
-        public float AimSwayDegrees => Panicking ? S.panicAimSway * (0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Time.time * 3.1f))) : 0f;
+        public float AimSwayDegrees => (Panicking ? S.panicAimSway * (0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Time.time * 3.1f))) : 0f)
+            + (_survival != null && _survival.IsCritical ? NeedsTuning.CriticalAimSwayDegrees : 0f);
         /// <summary>Adrenaline during panic: hits hurt a bit less.</summary>
         public float PainMultiplier => Panicking ? 0.85f : 1f;
 

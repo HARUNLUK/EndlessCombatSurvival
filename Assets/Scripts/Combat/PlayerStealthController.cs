@@ -1,5 +1,4 @@
 using UnityEngine;
-using StarterAssets;
 using EndlessCombat.AI;
 using EndlessSurvival.Camping;
 #if ENABLE_INPUT_SYSTEM
@@ -23,7 +22,7 @@ namespace EndlessCombat.Combat
         [Tooltip("Comelirken hareket hizi")]
         public float crouchSpeed = 2.0f;
 
-        [Tooltip("Normal ayakta durma hizi (ThirdPersonController'dan okunur veya ezilir)")]
+        [Tooltip("Normal ayakta durma hizi (EndlessCombat.Character.PlayerMotor'dan okunur veya ezilir)")]
         public float walkSpeed = 4.0f;
         public float sprintSpeed = 7.0f;
 
@@ -56,8 +55,8 @@ namespace EndlessCombat.Combat
 
         private CharacterController _characterController;
         private Animator _animator;
-        private ThirdPersonController _thirdPersonController;
-        private StarterAssetsInputs _inputs;
+        private EndlessCombat.Character.PlayerMotor _thirdPersonController;
+        private EndlessCombat.Character.PlayerInputState _inputs;
 
         private float _defaultSpeed;
         private float _defaultSprintSpeed;
@@ -67,8 +66,8 @@ namespace EndlessCombat.Combat
             Instance = this;
             _characterController = GetComponent<CharacterController>();
             _animator = GetComponentInChildren<Animator>();
-            _thirdPersonController = GetComponent<ThirdPersonController>();
-            _inputs = GetComponent<StarterAssetsInputs>();
+            _thirdPersonController = GetComponent<EndlessCombat.Character.PlayerMotor>();
+            _inputs = GetComponent<EndlessCombat.Character.PlayerInputState>();
 
             if (_thirdPersonController != null)
             {
@@ -106,6 +105,8 @@ namespace EndlessCombat.Combat
             crouchPressed = Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.LeftControl);
             crouchHeld = Input.GetKey(KeyCode.C) || Input.GetKey(KeyCode.LeftControl);
 #endif
+            // Gamepad R3 toggles crouch (also when the keyboard uses hold mode)
+            if (GameInput.CrouchPressed) { SetCrouching(!_isCrouching); crouchPressed = false; crouchHeld = _isCrouching; }
 
             if (toggleCrouch)
             {

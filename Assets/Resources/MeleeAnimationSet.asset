@@ -1,0 +1,266 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef62f3a34b10db428721e6316204a3e, type: 3}
+  m_Name: MeleeAnimationSet
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessCombat.Combat.MeleeAnimationSet
+  clipSetVersion: 4
+  fists:
+    light1:
+      clip: {fileID: -7321412271681594418, guid: 7dfab5aae21e1d144ba18b1b6a4fc466, type: 3}
+      speed: 1
+      hitStart: 0.35
+      hitEnd: 0.55
+      recoverAt: 0.85
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light2:
+      clip: {fileID: 1705686167135224321, guid: 7dfab5aae21e1d144ba18b1b6a4fc466, type: 3}
+      speed: 1
+      hitStart: 0.35
+      hitEnd: 0.55
+      recoverAt: 0.85
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light3:
+      clip: {fileID: 0}
+      speed: 1
+      hitStart: 0.35
+      hitEnd: 0.58
+      recoverAt: 0.9
+      lunge: 0.45
+      damageMultiplier: 1.15
+      staminaMultiplier: 1.1
+      staggerMultiplier: 1.2
+      hyperArmor: 0
+    heavy:
+      clip: {fileID: -8061687084165900903, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1
+      hitStart: 0.45
+      hitEnd: 0.65
+      recoverAt: 0.92
+      lunge: 0.5
+      damageMultiplier: 1.7
+      staminaMultiplier: 1.8
+      staggerMultiplier: 2
+      hyperArmor: 1
+  shortBlade:
+    light1:
+      clip: {fileID: 3094330708855449807, guid: ef751e951ed91ed4fbc94d82726c9eed, type: 3}
+      speed: 1.25
+      hitStart: 0.19833332
+      hitEnd: 0.31833333
+      recoverAt: 0.61833334
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light2:
+      clip: {fileID: 543990450412311274, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1.4
+      hitStart: 0.265
+      hitEnd: 0.385
+      recoverAt: 0.685
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light3:
+      clip: {fileID: 3094330708855449807, guid: ef751e951ed91ed4fbc94d82726c9eed, type: 3}
+      speed: 1.35
+      hitStart: 0.19833332
+      hitEnd: 0.31833333
+      recoverAt: 0.61833334
+      lunge: 0.45
+      damageMultiplier: 1.15
+      staminaMultiplier: 1.1
+      staggerMultiplier: 1.2
+      hyperArmor: 0
+    heavy:
+      clip: {fileID: -1662512729948635066, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1
+      hitStart: 0.415
+      hitEnd: 0.53499997
+      recoverAt: 0.835
+      lunge: 0.5
+      damageMultiplier: 1.7
+      staminaMultiplier: 1.8
+      staggerMultiplier: 2
+      hyperArmor: 1
+  oneHand:
+    light1:
+      clip: {fileID: 3094330708855449807, guid: ef751e951ed91ed4fbc94d82726c9eed, type: 3}
+      speed: 1
+      hitStart: 0.19833332
+      hitEnd: 0.31833333
+      recoverAt: 0.61833334
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light2:
+      clip: {fileID: -1662512729948635066, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1.15
+      hitStart: 0.415
+      hitEnd: 0.53499997
+      recoverAt: 0.835
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light3:
+      clip: {fileID: 543990450412311274, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1.15
+      hitStart: 0.265
+      hitEnd: 0.385
+      recoverAt: 0.685
+      lunge: 0.45
+      damageMultiplier: 1.15
+      staminaMultiplier: 1.1
+      staggerMultiplier: 1.2
+      hyperArmor: 0
+    heavy:
+      clip: {fileID: 3625414872004886998, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 0.8
+      hitStart: 0.46666667
+      hitEnd: 0.6166667
+      recoverAt: 0.9166667
+      lunge: 0.5
+      damageMultiplier: 1.7
+      staminaMultiplier: 1.8
+      staggerMultiplier: 2
+      hyperArmor: 1
+  twoHand:
+    light1:
+      clip: {fileID: 3625414872004886998, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 0.95
+      hitStart: 0.46666667
+      hitEnd: 0.6166667
+      recoverAt: 0.9166667
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 1
+    light2:
+      clip: {fileID: -1662512729948635066, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1
+      hitStart: 0.415
+      hitEnd: 0.53499997
+      recoverAt: 0.835
+      lunge: 0.35
+      damageMultiplier: 1
+      staminaMultiplier: 1
+      staggerMultiplier: 1
+      hyperArmor: 0
+    light3:
+      clip: {fileID: 543990450412311274, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+      speed: 1
+      hitStart: 0.265
+      hitEnd: 0.385
+      recoverAt: 0.685
+      lunge: 0.45
+      damageMultiplier: 1.15
+      staminaMultiplier: 1.1
+      staggerMultiplier: 1.2
+      hyperArmor: 0
+    heavy:
+      clip: {fileID: 3094330708855449807, guid: a3b2bd75dc433e742844e9c7e0ecb01e, type: 3}
+      speed: 0.8
+      hitStart: 0.28166667
+      hitEnd: 0.40166667
+      recoverAt: 0.7016667
+      lunge: 0.5
+      damageMultiplier: 1.7
+      staminaMultiplier: 1.8
+      staggerMultiplier: 2
+      hyperArmor: 1
+  dodgeLeft:
+    clip: {fileID: 0}
+    speed: 1
+    distance: 2
+    iFrameStart: 0.05
+    iFrameEnd: 0.4
+    recoverAt: 0.75
+    staminaCost: 15
+  dodgeRight:
+    clip: {fileID: 0}
+    speed: 1
+    distance: 2
+    iFrameStart: 0.05
+    iFrameEnd: 0.4
+    recoverAt: 0.75
+    staminaCost: 15
+  dodgeForward:
+    clip: {fileID: 0}
+    speed: 1
+    distance: 2.2
+    iFrameStart: 0.05
+    iFrameEnd: 0.35
+    recoverAt: 0.75
+    staminaCost: 15
+  backstep:
+    clip: {fileID: 0}
+    speed: 1
+    distance: 1.8
+    iFrameStart: 0.05
+    iFrameEnd: 0.35
+    recoverAt: 0.75
+    staminaCost: 13
+  heavyShieldDodge: 0.8
+  heavyShieldStamina: 1.5
+  hitLight:
+    clip: {fileID: -203655887218126122, guid: 6cbcdce612288d14ab3f11926d16638d, type: 3}
+    speed: 1
+    fallbackDuration: 0.35
+    recoverAt: 0.8
+  hitHeavy:
+    clip: {fileID: -4463400670643769103, guid: bba9c60ad1947c54cad2c1e6eee0102a, type: 3}
+    speed: 1
+    fallbackDuration: 0.8
+    recoverAt: 0.8
+  guardHit:
+    clip: {fileID: 3094330708855449807, guid: e191b1e6013333f4f8fcf7db4018a4d2, type: 3}
+    speed: 1
+    fallbackDuration: 0.25
+    recoverAt: 0.7
+  guardBreak:
+    clip: {fileID: 7967110328740518756, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+    speed: 1
+    fallbackDuration: 1.2
+    recoverAt: 0.9
+  rebound:
+    clip: {fileID: 4050334072264406587, guid: cb39cc081e8c25949933de84478f43a8, type: 3}
+    speed: 1
+    fallbackDuration: 0.6
+    recoverAt: 0.8
+  shieldGuard:
+    clip: {fileID: -209083552512460135, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+    holdAt: -1
+  shieldCarry:
+    clip: {fileID: 0}
+    holdAt: -1
+  weaponGuard:
+    clip: {fileID: 5047704512850479675, guid: 1fca9551fa8dc6c41ac0ebee637e9ad6, type: 3}
+    holdAt: 0.5
+  twoHandCarry:
+    clip: {fileID: 3094330708855449807, guid: ce335e3672a166b4294bc9de4004a190, type: 3}
+    holdAt: -1

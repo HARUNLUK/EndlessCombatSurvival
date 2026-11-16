@@ -163,7 +163,7 @@ namespace EndlessSurvival.World
 
             int worldSeed = chunk.WorldSeed;
             float length = chunk.chunkLength;
-            float halfWidth = terrain != null && terrain.terrainData != null ? terrain.terrainData.size.x * 0.5f : 250f;
+            float halfWidth = terrain != null && terrain.terrainData != null ? terrain.terrainData.size.x * 0.5f : Chunk.HalfWidth;
 
             var container = new GameObject(CONTAINER_NAME);
             container.transform.SetPositionAndRotation(chunk.transform.position, chunk.transform.rotation);

@@ -14,7 +14,8 @@ namespace EndlessSurvival.World
         OnSide,         // Yan yatmış
         Flipped,        // Ters dönmüş (tavan üstü)
         Ditch,          // Yoldan çıkıp hendeğe burnunu gömmüş
-        OffRoad         // Yoldan uzağa, araziye savrulmuş
+        OffRoad,        // Yoldan uzağa, araziye savrulmuş
+        BarrierCrash    // Bariyere çarpıp açmış, burnu bariyer hattının dışında (yalnızca bariyer açıklıklarına konur)
     }
 
     public enum WreckVehicleType
@@ -49,6 +50,10 @@ namespace EndlessSurvival.World
 
         [Header("Biyom Çarpanları")]
         public float forestMultiplier = 1f;
+        [Tooltip("Harabe Kasaba: orman çarpanının üstüne (kasabada terk edilmiş araç çok)")]
+        public float townMultiplier = 1.6f;
+        [Tooltip("Çorak Arazi: orman çarpanının üstüne")]
+        public float desertMultiplier = 0.8f;
         public float fieldMultiplier = 1.2f;
         public float coastMultiplier = 0.8f;
         public float mountainMultiplier = 0.6f;
@@ -197,6 +202,15 @@ namespace EndlessSurvival.World
             var mb = new BoxMeshBuilder(SubmeshCount);
             bool hazard = _chunk.roadType == ChunkRoadType.HazardZone;
 
+            // 0) Bariyeri kırıp açmış araçlar: yol üreticisinin "Crash" açıklıklarına
+            var gaps = roadGen.GuardrailGaps;
+            for (int g = 0; g < gaps.Count; g++)
+            {
+                if (gaps[g].kind != RoadGenerator.GuardrailGapKind.Crash) continue;
+                WreckVehicleType crashType = PickCarType(rng);
+                TrySpawnVehicle(rng, mb, container, crashType, WreckPose.BarrierCrash, gaps[g].TMid, gaps[g].side, 6f, debris: true);
+            }
+
             // 1) Kaza yığını: tek noktada, yolun bir tarafında toplanmış birkaç araç
             if (rng.Chance(hazard ? Mathf.Min(1f, pileupChance * 2f) : pileupChance))
             {
@@ -327,6 +341,10 @@ namespace EndlessSurvival.World
                 case WreckPose.Ditch:
                     lateral = _edgeHalf + width * 0.5f + rng.Range(1.5f, 8f);
                     break;
+                case WreckPose.BarrierCrash:
+                    // Gövde bariyer hattında, burun açıklıktan dışarı taşıyor
+                    lateral = Mathf.Max(_asphaltHalf * 0.5f, _edgeHalf - rng.Range(0.2f, 0.9f));
+                    break;
                 default: // OffRoad
                     lateral = rng.Range(offRoadMinDistance, offRoadMaxDistance);
                     break;
@@ -335,6 +353,7 @@ namespace EndlessSurvival.World
             // Yol üstü: önce bu tarafta, olmazsa karşı tarafta dene. Yol dışı: su/uçurum/dağ içi kontrolü.
             if (!TryGetGround(t, side, lateral, offRoad, length, width, out Vector3 groundPos, out Quaternion groundRot, out float localZ))
             {
+                if (pose == WreckPose.BarrierCrash) return false; // tied to this side's opening
                 side = -side;
                 if (offRoad && _chunk.IsMountain && _chunk.mountainLayout == MountainLayout.Ledge) return false;
                 if (!TryGetGround(t, side, lateral, offRoad, length, width, out groundPos, out groundRot, out localZ)) return false;
@@ -345,6 +364,7 @@ namespace EndlessSurvival.World
 
             // Trafik yönü: sağ şeritteki araç ileri, sol şeritteki geri bakar (biraz rastgele)
             float facing = (side > 0f) == (rng.Value < 0.85f) ? 0f : 180f;
+            if (pose == WreckPose.BarrierCrash) facing = side > 0f ? 0f : 180f; // kendi şeridinden savrulup bariyere girmiş
             Quaternion poseRot = PoseRotation(pose, rng, side, facing);
 
             // Eksik tekerlek: araç o köşeye doğru hafif çöker
@@ -429,6 +449,13 @@ namespace EndlessSurvival.World
                     float yaw = side * rng.Range(10f, 45f);
                     if (facing > 90f) yaw = 180f - yaw;
                     return Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(rng.Range(4f, 12f), 0f, rng.Range(-6f, 6f));
+                case WreckPose.BarrierCrash:
+                {
+                    // Burun dışarı (bariyer tarafına) dönük, hafif öne/dışa yatmış
+                    float crashYaw = side * rng.Range(30f, 60f);
+                    if (facing > 90f) crashYaw = 180f - crashYaw;
+                    return Quaternion.Euler(0f, crashYaw, 0f) * Quaternion.Euler(rng.Range(3f, 8f), 0f, rng.Range(-4f, 4f));
+                }
                 default: // OffRoad
                     Quaternion yawRot = Quaternion.Euler(0f, rng.Range(0f, 360f), 0f);
                     float roll = rng.Value;
@@ -459,7 +486,8 @@ namespace EndlessSurvival.World
             localZ = chunkLocal.z;
             groundRot = Quaternion.identity;
 
-            if (localZ < 12f || localZ > _chunk.chunkLength - 12f || Mathf.Abs(chunkLocal.x) > 240f) return false;
+            if (localZ < 12f || localZ > _chunk.chunkLength - 12f || Mathf.Abs(chunkLocal.x) > Chunk.HalfWidth - 10f) return false;
+            if (offRoad && _chunk.NearSideRoad(groundPos, 3f)) return false; // side roads stay clear
 
             if (!offRoad)
             {
@@ -510,7 +538,7 @@ namespace EndlessSurvival.World
             if (localZ <= 0f) localZ = _chunk.transform.InverseTransformPoint(roadWorld).z;
 
             // Oyuncunun başladığı ilk chunk'ın başı boş kalır
-            if (_chunk.Manager != null && _chunk.ChunkIndex == 0 && localZ < startClearLength) return false;
+            if (_chunk.Manager != null && _chunk.ChunkIndex == _chunk.Manager.StartChunkIndex && localZ < startClearLength) return false;
 
             if (_fieldEdges != null && _fieldEdges.IsNearRiver(_chunk.transform.InverseTransformPoint(roadWorld), 10f)) return false;
             // River valley bridge: no wrecks on the bridge deck
@@ -798,11 +826,20 @@ namespace EndlessSurvival.World
 
         private float BiomeMultiplier()
         {
+            // A town set into a run (Chunk.inset) has more wrecks whatever the run is
+            float town = _chunk.inset != null && _chunk.Settlement == SettlementKind.Town ? townMultiplier : 1f;
+            return BaseBiomeMultiplier() * town;
+        }
+
+        private float BaseBiomeMultiplier()
+        {
             switch (_chunk.biomeType)
             {
                 case ChunkBiomeType.Field: return fieldMultiplier;
                 case ChunkBiomeType.Coast: return coastMultiplier;
                 case ChunkBiomeType.Mountain: return mountainMultiplier;
+                case ChunkBiomeType.RuinedCity: return forestMultiplier * townMultiplier;
+                case ChunkBiomeType.Desert: return forestMultiplier * desertMultiplier;
                 default: return forestMultiplier;
             }
         }

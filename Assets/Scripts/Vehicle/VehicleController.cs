@@ -167,8 +167,12 @@ namespace EndlessSurvival.Vehicle
         [Tooltip("Current fuel amount")]
         public float currentFuel = 100f;
         public float maxFuel = 100f;
-        [Tooltip("Fuel consumed per second at full throttle")]
+        [Tooltip("Fuel burnt per second at full throttle when the vehicle hardly moves (stuck, spinning wheels). On the move the distance decides: Fuel Per Km")]
         public float fuelConsumptionRate = 0.1f;
+        [Tooltip("Fuel burnt per kilometre driven. A full tank lasts maxFuel / this km (100 / 28 = about 3.5 km), so the road cannot be driven without stopping for fuel")]
+        public float fuelPerKm = 9f;
+        [Tooltip("Fuel burnt per second while the engine idles")]
+        public float idleFuelPerSecond = 0.01f;
 
         [Tooltip("Vehicle body health")]
         public float currentHealth = 100f;
@@ -242,6 +246,13 @@ namespace EndlessSurvival.Vehicle
         private float _trackWidth = 1.5f;
         private float _wheelRadius = 0.45f;
         private float _flipTimer;
+        private float _stuckTimer;
+        private const float GroundCastLift = 0.4f;
+
+        /// <summary>Stuck help: full gas, engine running, not moving for StuckHelpDelay seconds -> a small hop forward.</summary>
+        public static bool StuckHelp = true;
+        public static float StuckHelpDelay = 1.5f;
+        public static int StuckHelpCount { get; private set; }
 
         public float CurrentSpeedKmh => _rb != null ? _rb.linearVelocity.magnitude * 3.6f : 0f;
         public float ForwardSpeed => _rb != null ? Vector3.Dot(_rb.linearVelocity, transform.forward) : 0f;
@@ -288,6 +299,8 @@ namespace EndlessSurvival.Vehicle
 
         public int WheelCount => _wheels.Length;
 
+        public void TakeDamage(DamageInfo info) => TakeDamage(info.Amount, info.Point, info.Normal);
+
         public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
         {
             float amount = damage * bulletDamageMultiplier;
@@ -299,6 +312,14 @@ namespace EndlessSurvival.Vehicle
         {
             if (amount <= 0f || IsBroken) return;
             currentHealth = Mathf.Max(0f, currentHealth - amount);
+        }
+
+        /// <summary>Non-bullet impact damage with the usual Damaged event (parts react to it): ramming people, animals, roadblocks.</summary>
+        public void ApplyImpact(float amount, Vector3 point, float impactSpeedMs)
+        {
+            if (amount <= 0f || IsBroken) return;
+            ApplyDamage(amount);
+            Damaged?.Invoke(amount, false, point, impactSpeedMs);
         }
 
         /// <summary>Adds fuel up to the tank capacity and returns the amount actually added.</summary>
@@ -345,7 +366,16 @@ namespace EndlessSurvival.Vehicle
             {
                 gameObject.AddComponent<VehicleModifications>();
             }
+
+            if (GetComponent<VehicleRam>() == null)
+            {
+                gameObject.AddComponent<VehicleRam>();
+            }
+
+            RegisterTuning();
         }
+
+        private void Start() => FindTiltParts();
 
         private void SetupPhysicsProperties()
         {
@@ -457,6 +487,8 @@ namespace EndlessSurvival.Vehicle
                 _hardBrakeRaw = false;
             }
 
+            // Body tilt first: the wheels are placed in world space right after, so they do not tilt with it
+            UpdateBodyTilt();
             UpdateWheelVisuals();
         }
 
@@ -466,6 +498,19 @@ namespace EndlessSurvival.Vehicle
 
             float dt = Time.fixedDeltaTime;
             float forwardSpeed = ForwardSpeed;
+
+            if (Model == DriveModel.Arcade)
+            {
+                UpdateArcadeControls(dt, forwardSpeed);
+                UpdateSuspension(dt);
+                ApplyAntiRollBars();
+                ApplyArcadeDrive(dt, forwardSpeed);
+                ApplyAirGravity();
+                UpdateFlipRecovery(dt);
+                UpdateStuckHelp(dt, forwardSpeed);
+                MeasureBodyAcceleration(dt);
+                return;
+            }
 
             UpdateControls(dt, forwardSpeed);
             UpdateGearbox(dt, forwardSpeed);
@@ -479,6 +524,29 @@ namespace EndlessSurvival.Vehicle
             ApplyStabilityAssist(forwardSpeed);
             ApplyAirGravity();
             UpdateFlipRecovery(dt);
+            UpdateStuckHelp(dt, forwardSpeed);
+        }
+
+        /// <summary>
+        /// A parked truck sometimes would not move after a sleep or a repair (engine running, gas held, nothing)
+        /// until the player pushed it. Wake the body; after StuckHelpDelay s of full gas without motion, a small
+        /// hop in the driving direction frees it, like the push did.
+        /// </summary>
+        private void UpdateStuckHelp(float dt, float forwardSpeed)
+        {
+            bool pushing = isDriven && EngineRunning && (_gear < 0 ? _brakeRaw : _throttleRaw) > 0.6f;
+            if (!StuckHelp || !pushing || Mathf.Abs(forwardSpeed) > 0.4f || Vector3.Dot(transform.up, Vector3.up) < 0.5f)
+            {
+                _stuckTimer = 0f;
+                return;
+            }
+            if (_rb.IsSleeping()) _rb.WakeUp();
+            _stuckTimer += dt;
+            if (_stuckTimer < StuckHelpDelay) return;
+            _stuckTimer = -1f; // one more try only after another full delay
+            StuckHelpCount++;
+            Vector3 dir = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * (_gear < 0 ? -1f : 1f);
+            _rb.AddForce(Vector3.up * 2.2f + dir * 1.5f, ForceMode.VelocityChange);
         }
 
         // ---------------------------------------------------------------- Input
@@ -561,11 +629,20 @@ namespace EndlessSurvival.Vehicle
 
         private void ConsumeFuel()
         {
-            if (currentFuel > 0f && !IsBroken && _throttle > 0.05f)
+            if (currentFuel <= 0f || !EngineRunning) return;
+
+            // Distance based: what matters is how far the tank takes you, not how long the pedal is down.
+            // Idling costs a little; revving without moving (stuck) costs the old per-second rate.
+            float dt = Time.deltaTime;
+            float burn = idleFuelPerSecond * dt;
+            if (_throttle > 0.05f)
             {
-                currentFuel -= fuelConsumptionRate * Mathf.Lerp(0.4f, 1f, _throttle) * Time.deltaTime;
-                if (currentFuel < 0f) currentFuel = 0f;
+                float metres = _rb != null ? _rb.linearVelocity.magnitude * dt : 0f;
+                float byDistance = fuelPerKm * metres / 1000f * Mathf.Lerp(0.85f, 1.15f, _throttle);
+                float byRevving = fuelConsumptionRate * 0.5f * _throttle * dt;
+                burn += Mathf.Max(byDistance, byRevving);
             }
+            currentFuel = Mathf.Max(0f, currentFuel - burn);
         }
 
         // ---------------------------------------------------------------- Powertrain
@@ -744,11 +821,14 @@ namespace EndlessSurvival.Vehicle
             foreach (Wheel w in _wheels)
             {
                 Vector3 origin = w.anchor.transform.position;
-                w.grounded = CastGround(origin, -up, suspensionDistance + w.radius, out w.hit);
+                // The ray starts a little above the wheel anchor: a truck that settled low (its anchor at or under the
+                // ground, e.g. parked a long time on a soft spot) used to start the ray inside the ground, find
+                // nothing, lose every wheel and sit there with the engine running until pushed.
+                w.grounded = CastGround(origin + up * GroundCastLift, -up, suspensionDistance + w.radius + GroundCastLift, out w.hit);
 
                 if (w.grounded)
                 {
-                    w.springLength = Mathf.Clamp(w.hit.distance - w.radius, 0f, suspensionDistance);
+                    w.springLength = Mathf.Clamp(w.hit.distance - GroundCastLift - w.radius, 0f, suspensionDistance);
                     w.compression = suspensionDistance - w.springLength;
                     float compressionVelocity = (w.compression - w.lastCompression) / dt;
                     float force = w.compression * suspensionSpring + compressionVelocity * suspensionDamper;
@@ -988,6 +1068,317 @@ namespace EndlessSurvival.Vehicle
             _rb.rotation = Quaternion.LookRotation(heading.normalized, Vector3.up);
         }
 
+        // ---------------------------------------------------------------- Arcade drive (Core_Feel_Plan stage 3)
+        //
+        // Suspension stays (raycast springs keep the truck on the ground). Everything else is direct:
+        //   push      one curve: acceleration by speed, high from a standstill, zero at top speed. No gearbox.
+        //   brake     one number (m/s2). Stopped + LT: reverse.
+        //   steering  stick dead zone + curve, then a target turn rate by speed (sharp slow, gentle fast).
+        //   grip      one number: how much of the sideways speed is killed per second. Off-road and handbrake scale it.
+        //   body      squat / dive / lean are small tilts of the body visual, not physics (no flipping).
+        // Parts and mods are read through the same fields (partsPowerFactor, partsTopSpeedKmh, wheelGripFactor,
+        // wheelDragTorque). The old model is kept behind the panel choice "Sürüş modeli" for comparison.
+
+        public enum DriveModel { Arcade = 0, Old = 1 }
+        private const float StockEngineTorque = 380f;
+        private const float StockSidewaysGrip = 1.7f;
+
+        // ---- tuning (panel page "Araç"), shared by all vehicles ----
+        public static DriveModel Model = DriveModel.Arcade;
+        public static float ArcadeLaunchAccel = 6f;       // m/s2 from a standstill
+        public static float ArcadeTopSpeedKmh = 130f;
+        public static float ArcadeCurve = 1.6f;           // higher = keeps pulling closer to top speed
+        public static float ArcadeBrake = 12f;            // m/s2
+        public static float ArcadeCoast = 1.2f;           // m/s2 off the pedals (engine braking)
+        public static float ArcadeTurnSlow = 110f;        // deg/s at low speed, full lock
+        public static float ArcadeTurnFast = 35f;         // deg/s at ArcadeTurnFadeKmh and above
+        public static float ArcadeTurnFadeKmh = 90f;
+        public static float ArcadeSteerResponse = 0.12f;  // s
+        public static float ArcadeGrip = 6f;              // 1/s
+        public static float ArcadeOffroadGrip = 0.7f;
+        public static float ArcadeOffroadAccel = 0.75f;
+        public static float ArcadeHandbrakeGrip = 0.3f;
+        public static float ArcadeStickDeadzone = 0.12f;
+        public static float ArcadeStickCurve = 1.6f;      // 1 = linear, higher = finer around the centre
+        public static float BodyTiltDegrees = 4f;
+
+        /// <summary>The vehicle the player drives now (panel readouts).</summary>
+        public static VehicleController Driven { get; private set; }
+
+        private static bool s_tuningRegistered;
+        private float _arcadeSteer;     // smoothed, after the stick curve
+        private bool _arcadeSliding;
+        private float _offRoadShare;
+        private Vector3 _lastVelocity;
+        private Vector3 _bodyAccelLocal;
+        private Vector2 _tilt;          // x = pitch, y = roll (degrees, smoothed)
+        private Transform[] _tiltParts = new Transform[0];
+        private Vector3[] _tiltBasePos = new Vector3[0];
+        private Quaternion[] _tiltBaseRot = new Quaternion[0];
+
+        public bool IsSliding => Model == DriveModel.Arcade ? _arcadeSliding : _drivenWheelsSlipping;
+
+        private static void RegisterTuning()
+        {
+            if (s_tuningRegistered) return;
+            s_tuningRegistered = true;
+            const string P = "Araç";
+            EndlessCombat.Tuning.TuningPanel.RegisterChoice(P, "Sürüş modeli", new[] { "Arcade", "Eski" }, () => (int)Model, v => Model = (DriveModel)v);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Kalkış ivmesi (m/sn²)", () => ArcadeLaunchAccel, v => ArcadeLaunchAccel = v, 1f, 20f, 0.25f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Azami hız (km/s)", () => ArcadeTopSpeedKmh, v => ArcadeTopSpeedKmh = v, 40f, 220f, 5f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Eğri sertliği", () => ArcadeCurve, v => ArcadeCurve = v, 0.5f, 5f, 0.1f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Fren (m/sn²)", () => ArcadeBrake, v => ArcadeBrake = v, 2f, 30f, 0.5f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Pedalsız yavaşlama (m/sn²)", () => ArcadeCoast, v => ArcadeCoast = v, 0f, 6f, 0.1f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Dönüş keskinliği yavaş (°/sn)", () => ArcadeTurnSlow, v => ArcadeTurnSlow = v, 20f, 250f, 5f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Dönüş keskinliği hızlı (°/sn)", () => ArcadeTurnFast, v => ArcadeTurnFast = v, 5f, 150f, 1f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Hızlı dönüş başladığı hız (km/s)", () => ArcadeTurnFadeKmh, v => ArcadeTurnFadeKmh = v, 20f, 200f, 5f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Direksiyon tepki süresi (sn)", () => ArcadeSteerResponse, v => ArcadeSteerResponse = v, 0f, 0.6f, 0.01f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Tutuş", () => ArcadeGrip, v => ArcadeGrip = v, 0.5f, 25f, 0.25f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Arazi tutuş çarpanı", () => ArcadeOffroadGrip, v => ArcadeOffroadGrip = v, 0.1f, 1.5f, 0.05f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Arazi ivme çarpanı", () => ArcadeOffroadAccel, v => ArcadeOffroadAccel = v, 0.1f, 1.5f, 0.05f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "El freni tutuş çarpanı", () => ArcadeHandbrakeGrip, v => ArcadeHandbrakeGrip = v, 0.05f, 1f, 0.05f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Çubuk ölü bölge", () => ArcadeStickDeadzone, v => ArcadeStickDeadzone = v, 0f, 0.4f, 0.01f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Çubuk eğrisi", () => ArcadeStickCurve, v => ArcadeStickCurve = v, 1f, 3f, 0.05f);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Gövde eğimi (°)", () => BodyTiltDegrees, v => BodyTiltDegrees = v, 0f, 12f, 0.5f);
+            EndlessCombat.Tuning.TuningPanel.RegisterToggle(P, "Takılma kurtarma (tam gazda kıpırdamazsa zıplat)", () => StuckHelp, v => StuckHelp = v);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Takılma bekleme (sn)", () => StuckHelpDelay, v => StuckHelpDelay = v, 0.5f, 5f, 0.1f);
+
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Hız", () => Driven == null ? "-" : Driven.CurrentSpeedKmh.ToString("0") + " km/s");
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Vites / devir", () => Driven == null ? "-" : Driven.GearLabel + " / " + Driven.EngineRpm.ToString("0"));
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Gaz", () => Driven == null ? "-" : Mathf.RoundToInt(Driven.Throttle * 100f) + "%");
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Güç çarpanı (parça / hasar)", () => Driven == null ? "-" : Driven.GetPowerFactor().ToString("0.00"));
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Parça hız sınırı", () => Driven == null ? "-" : Driven.partsTopSpeedKmh > 0f ? Driven.partsTopSpeedKmh.ToString("0") + " km/s" : "yok");
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Yere basan teker", () => Driven == null ? "-" : Driven.GroundedWheelCount + " / " + Driven.WheelCount);
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Yol dışı teker oranı", () => Driven == null ? "-" : Mathf.RoundToInt(Driven._offRoadShare * 100f) + "%");
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Kayıyor", () => Driven == null ? "-" : Driven.IsSliding ? "evet" : "hayır");
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Eğilen gövde parçası", () => Driven == null ? "-" : Driven._tiltParts.Length.ToString());
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Takılma kurtarma sayısı", () => StuckHelpCount.ToString());
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Gövde uyuyor / kinematik", () => Driven == null || Driven._rb == null ? "-" : (Driven._rb.IsSleeping() ? "uyuyor" : "uyanık") + " / " + (Driven._rb.isKinematic ? "EVET" : "hayır"));
+        }
+
+        /// <summary>Stick dead zone and curve: small movements near the centre steer finely, the rim is full lock.</summary>
+        private static float ShapeStick(float x)
+        {
+            float a = Mathf.Abs(x);
+            float dz = Mathf.Clamp(ArcadeStickDeadzone, 0f, 0.9f);
+            if (a <= dz) return 0f;
+            float t = Mathf.Clamp01((a - dz) / (1f - dz));
+            return Mathf.Sign(x) * Mathf.Pow(t, Mathf.Max(1f, ArcadeStickCurve));
+        }
+
+        private void UpdateArcadeControls(float dt, float forwardSpeed)
+        {
+            _shiftTimer = 0f;
+            // Stopped (or nearly) + only the brake: reverse. Only the gas while rolling back slowly: forward again.
+            if (_gear >= 0)
+            {
+                if (_brakeRaw > 0.1f && _throttleRaw < 0.1f && forwardSpeed < ReverseSwitchSpeed && isDriven) _gear = -1;
+            }
+            else if (_throttleRaw > 0.1f && _brakeRaw < 0.1f && forwardSpeed > -ReverseSwitchSpeed) _gear = 1;
+
+            float accelPedal = _gear < 0 ? _brakeRaw : _throttleRaw;
+            float brakePedal = _gear < 0 ? _throttleRaw : _brakeRaw;
+            if (_hardBrakeRaw) brakePedal = 1f;
+            if (!EngineRunning) accelPedal = 0f;
+
+            _throttle = MoveTowardsRate(_throttle, accelPedal, throttleRiseSpeed * 2f, throttleFallSpeed * 2f, dt);
+            _brake = MoveTowardsRate(_brake, brakePedal, brakeRiseSpeed * 2f, brakeFallSpeed, dt);
+            _handbrake = Mathf.MoveTowards(_handbrake, _handbrakeRaw ? 1f : 0f, dt * 8f);
+
+            float target = ShapeStick(_steerRaw);
+            float k = ArcadeSteerResponse > 0.001f ? 1f - Mathf.Exp(-dt / ArcadeSteerResponse) : 1f;
+            _arcadeSteer = Mathf.Lerp(_arcadeSteer, target, k);
+            _steer = _arcadeSteer;
+        }
+
+        private void ApplyArcadeDrive(float dt, float forwardSpeed)
+        {
+            int grounded = 0, offRoad = 0;
+            Vector3 normal = Vector3.zero;
+            float gripFactor = 0f;
+            for (int i = 0; i < _wheels.Length; i++)
+            {
+                if (!_wheels[i].grounded) continue;
+                grounded++;
+                normal += _wheels[i].hit.normal;
+                if (_wheels[i].hit.collider is TerrainCollider) offRoad++;
+                gripFactor += wheelGripFactor != null && i < wheelGripFactor.Length ? Mathf.Max(0.05f, wheelGripFactor[i]) : 1f;
+            }
+            float groundShare = _wheels.Length > 0 ? grounded / (float)_wheels.Length : 0f;
+            _offRoadShare = grounded > 0 ? offRoad / (float)grounded : 0f;
+            gripFactor = grounded > 0 ? gripFactor / grounded : 1f;
+
+            float speedAbs = Mathf.Abs(forwardSpeed);
+            float speedT = Mathf.Clamp01(speedAbs * 3.6f / Mathf.Max(10f, ArcadeTurnFadeKmh));
+            UpdateArcadeDisplay(dt, forwardSpeed);
+
+            // Wheel visuals: steer angle and spin from the road speed
+            float visualLock = maxSteerAngle * Mathf.Lerp(1f, 0.35f, speedT);
+            foreach (Wheel w in _wheels)
+            {
+                w.steerAngle = w.front ? _steer * visualLock : 0f;
+                w.spin = forwardSpeed / Mathf.Max(0.1f, w.radius);
+                w.driveTorque = 0f;
+                w.brakeTorque = 0f;
+            }
+
+            if (grounded == 0)
+            {
+                _arcadeSliding = false;
+                return;
+            }
+
+            normal.Normalize();
+            Vector3 fwd = Vector3.ProjectOnPlane(transform.forward, normal).normalized;
+            Vector3 right = Vector3.Cross(normal, fwd);
+            Vector3 v = _rb.linearVelocity;
+            float vLong = Vector3.Dot(v, fwd);
+            float vLat = Vector3.Dot(v, right);
+            float offAccel = Mathf.Lerp(1f, ArcadeOffroadAccel, _offRoadShare);
+            float offGrip = Mathf.Lerp(1f, ArcadeOffroadGrip, _offRoadShare);
+
+            // ---- push: one curve over speed
+            float dir = _gear < 0 ? -1f : 1f;
+            float topKmh = _gear < 0 ? topReverseSpeedKmh : ArcadeTopSpeedKmh;
+            if (partsTopSpeedKmh > 0f) topKmh = Mathf.Min(topKmh, partsTopSpeedKmh);
+            float top = Mathf.Max(1f, topKmh / 3.6f);
+            float along = vLong * dir; // speed in the driving direction
+            if (_throttle > 0.01f && EngineRunning)
+            {
+                float x = Mathf.Clamp01(along / top);
+                float curve = along < 0f ? 1f : 1f - Mathf.Pow(x, Mathf.Max(0.2f, ArcadeCurve));
+                // Engine upgrades (maxEngineTorque over the stock 380 Nm) scale the push
+                float upgrade = Mathf.Clamp(maxEngineTorque / StockEngineTorque, 0.3f, 3f);
+                float accel = ArcadeLaunchAccel * upgrade * curve * _throttle * GetPowerFactor() * offAccel * groundShare;
+                _rb.AddForce(fwd * (accel * dir), ForceMode.Acceleration);
+            }
+
+            // ---- brake / coasting / parking hold
+            float decel = _brake * ArcadeBrake;
+            if (_throttle < 0.05f) decel += ArcadeCoast;
+            if (!isDriven) decel = Mathf.Max(decel, ArcadeBrake);
+            bool hold = (!isDriven || (_throttle < 0.05f && _brake < 0.05f)) && Mathf.Abs(vLong) < 0.6f;
+            float dvLong = hold ? Mathf.Abs(vLong) : Mathf.Min(Mathf.Abs(vLong), decel * groundShare * dt);
+            if (dvLong > 0f) _rb.AddForce(-fwd * (Mathf.Sign(vLong) * dvLong), ForceMode.VelocityChange);
+
+            // Flat tyre drag: a force at that wheel pulls the truck to its side
+            if (wheelDragTorque != null && speedAbs > 0.5f)
+            {
+                for (int i = 0; i < _wheels.Length && i < wheelDragTorque.Length; i++)
+                {
+                    if (!_wheels[i].grounded || wheelDragTorque[i] <= 0f) continue;
+                    _rb.AddForceAtPosition(-fwd * (Mathf.Sign(vLong) * wheelDragTorque[i] / Mathf.Max(0.1f, _wheels[i].radius)), _wheels[i].hit.point);
+                }
+            }
+
+            // ---- sideways grip: kill a share of the sideways speed each second
+            // Tyre mods and the camp load (sidewaysGrip over the stock 1.7) scale the grip; a parked truck never slides
+            float tyres = Mathf.Clamp(sidewaysGrip / StockSidewaysGrip, 0.3f, 3f);
+            float grip = ArcadeGrip * tyres * offGrip * gripFactor * Mathf.Lerp(1f, ArcadeHandbrakeGrip, isDriven ? _handbrake : 0f);
+            float dvLat = vLat * (1f - Mathf.Exp(-grip * dt)) * groundShare;
+            _rb.AddForce(-right * dvLat, ForceMode.VelocityChange);
+            _arcadeSliding = Mathf.Abs(vLat) > 1.5f;
+
+            // ---- steering: aim at a turn rate (sharp slow, gentle fast), nothing when standing
+            float rate = Mathf.Lerp(ArcadeTurnSlow, ArcadeTurnFast, speedT) * Mathf.Deg2Rad;
+            float standScale = Mathf.Clamp01(speedAbs / 3f);
+            float targetYaw = _steer * rate * standScale * Mathf.Sign(vLong == 0f ? 1f : vLong);
+            Vector3 av = _rb.angularVelocity;
+            float yaw = Vector3.Dot(av, normal);
+            float follow = 1f - Mathf.Exp(-12f * dt);
+            av += normal * ((targetYaw - yaw) * follow * groundShare);
+            _rb.angularVelocity = av;
+
+            // Downforce keeps the springs loaded at speed
+            if (downforceCoefficient > 0f) _rb.AddForce(-normal * (downforceCoefficient * v.sqrMagnitude), ForceMode.Force);
+        }
+
+        /// <summary>Gauge only: a gear and an RPM derived from the speed (the arcade model has no gearbox).</summary>
+        private void UpdateArcadeDisplay(float dt, float forwardSpeed)
+        {
+            float target = idleRpm;
+            if (_gear >= 0)
+            {
+                int gears = ForwardGearCount;
+                float frac = Mathf.Clamp01(Mathf.Abs(forwardSpeed) * 3.6f / Mathf.Max(10f, ArcadeTopSpeedKmh));
+                float band = frac * gears;
+                _gear = Mathf.Clamp(Mathf.FloorToInt(band) + 1, 1, gears);
+                float inBand = Mathf.Clamp01(band - (_gear - 1));
+                target = Mathf.Lerp(Mathf.Max(idleRpm, launchRpm * 0.6f), maxRpm * 0.85f, inBand);
+            }
+            else target = Mathf.Lerp(idleRpm, launchRpm, Mathf.Clamp01(Mathf.Abs(forwardSpeed) / Mathf.Max(1f, topReverseSpeedKmh / 3.6f)));
+            if (!EngineRunning) target = 0f;
+            else target = Mathf.Lerp(Mathf.Min(target, idleRpm + 600f), target, Mathf.Max(_throttle, 0.4f));
+            _engineRpm = Mathf.Lerp(_engineRpm, target, dt * rpmResponse);
+            _pendingGear = _gear;
+        }
+
+        private void MeasureBodyAcceleration(float dt)
+        {
+            Vector3 v = _rb.linearVelocity;
+            Vector3 a = (v - _lastVelocity) / Mathf.Max(0.0001f, dt);
+            _lastVelocity = v;
+            if (GroundedWheelCount == 0) a = Vector3.zero;
+            _bodyAccelLocal = Vector3.Lerp(_bodyAccelLocal, transform.InverseTransformDirection(a), 0.25f);
+        }
+
+        /// <summary>
+        /// The tilting parts: direct children with renderers and no solid collider (so the physics shape never moves),
+        /// not the wheels, not the camera target. Their rest pose is kept and the tilt is applied on top of it.
+        /// </summary>
+        private void FindTiltParts()
+        {
+            var parts = new System.Collections.Generic.List<Transform>();
+            foreach (Transform child in transform)
+            {
+                if (child.GetComponentInChildren<Renderer>(true) == null) continue;
+                if (child.GetComponentInChildren<VehicleCameraOrbit>(true) != null) continue;
+                if (IsWheelMesh(child)) continue;
+                bool solid = false;
+                foreach (var c in child.GetComponentsInChildren<Collider>(true))
+                    if (!c.isTrigger) { solid = true; break; }
+                if (solid) continue;
+                parts.Add(child);
+            }
+            _tiltParts = parts.ToArray();
+            _tiltBasePos = new Vector3[_tiltParts.Length];
+            _tiltBaseRot = new Quaternion[_tiltParts.Length];
+            for (int i = 0; i < _tiltParts.Length; i++)
+            {
+                _tiltBasePos[i] = _tiltParts[i].localPosition;
+                _tiltBaseRot[i] = _tiltParts[i].localRotation;
+            }
+        }
+
+        private bool IsWheelMesh(Transform t)
+        {
+            return t == frontLeftMesh || t == frontRightMesh || t == rearLeftMesh || t == rearRightMesh;
+        }
+
+        /// <summary>Squat on the gas, dive on the brake, lean in corners: a small tilt of the body visual.</summary>
+        private void UpdateBodyTilt()
+        {
+            if (_tiltParts.Length == 0) return;
+            float g = Physics.gravity.magnitude;
+            Vector2 want = Vector2.zero;
+            if (Model == DriveModel.Arcade && BodyTiltDegrees > 0.01f)
+            {
+                want.x = Mathf.Clamp(-_bodyAccelLocal.z / g * 2f, -1f, 1f) * BodyTiltDegrees; // nose up on the gas
+                want.y = Mathf.Clamp(_bodyAccelLocal.x / g * 2f, -1f, 1f) * BodyTiltDegrees;  // lean out of the turn
+            }
+            _tilt = Vector2.Lerp(_tilt, want, 1f - Mathf.Exp(-8f * Time.deltaTime));
+
+            Vector3 pivot = transform.InverseTransformPoint(_rb != null ? _rb.worldCenterOfMass : transform.position);
+            Quaternion q = Quaternion.Euler(_tilt.x, 0f, _tilt.y);
+            for (int i = 0; i < _tiltParts.Length; i++)
+            {
+                Transform p = _tiltParts[i];
+                if (p == null) continue;
+                p.localPosition = pivot + q * (_tiltBasePos[i] - pivot);
+                p.localRotation = q * _tiltBaseRot[i];
+            }
+        }
+
         // ---------------------------------------------------------------- Visuals
 
         private void UpdateWheelVisuals()
@@ -1009,6 +1400,8 @@ namespace EndlessSurvival.Vehicle
         public void SetDriving(bool driving)
         {
             isDriven = driving;
+            if (driving) Driven = this;
+            else if (Driven == this) Driven = null;
             _throttleRaw = 0f;
             _brakeRaw = 0f;
             _steerRaw = 0f;
@@ -1020,6 +1413,13 @@ namespace EndlessSurvival.Vehicle
 
             if (isDriven)
             {
+                // A body held still (Journey parks a far truck as kinematic) or asleep must move again at once
+                if (_rb != null)
+                {
+                    if (_rb.isKinematic) _rb.isKinematic = false;
+                    _rb.WakeUp();
+                }
+                _stuckTimer = 0f;
                 _gear = 1;
                 _pendingGear = 1;
                 _shiftTimer = 0f;

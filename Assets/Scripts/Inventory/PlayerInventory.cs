@@ -8,7 +8,7 @@ namespace EndlessSurvival.Inventory
     /// Player carried inventory: a weight limited backpack, a money wallet and a link to the weapon reserve ammo.
     /// Ammo and Currency items never enter the backpack; they are converted on pickup.
     /// </summary>
-    public class PlayerInventory : MonoBehaviour
+    public class PlayerInventory : MonoBehaviour, IAmmoPool
     {
         [Header("Backpack")]
         [Tooltip("Maximum backpack weight in kilograms")]
@@ -55,20 +55,75 @@ namespace EndlessSurvival.Inventory
             _money = startingMoney;
         }
 
-        /// <summary>Rounds carried while no weapon is equipped. Handed to the next equipped weapon.</summary>
-        public int LooseAmmo { get; private set; }
+        // ------------------------------------------------------------------ Ammo pools (one per kind)
 
-        public void AddLooseAmmo(int rounds)
+        [Header("Ammo")]
+        [Tooltip("Weight of one round per kind (pistol, rifle, shotgun shell). Carried rounds count toward the weight limit.")]
+        public float pistolRoundWeight = 0.012f;
+        public float rifleRoundWeight = 0.02f;
+        public float shellWeight = 0.04f;
+
+        private readonly int[] _ammo = new int[4];
+
+        /// <summary>Raised when any ammo pool changes.</summary>
+        public event Action AmmoChanged;
+
+        public int Count(AmmoKind kind) => kind == AmmoKind.None ? 0 : _ammo[(int)kind];
+        public int Count(AmmoType kind) => Count((AmmoKind)(int)kind);
+
+        public void Add(AmmoKind kind, int amount)
         {
-            if (rounds > 0) LooseAmmo += rounds;
+            if (kind == AmmoKind.None || amount <= 0) return;
+            _ammo[(int)kind] += amount;
+            OnAmmoChanged();
         }
 
-        public int TakeLooseAmmo()
+        public int Take(AmmoKind kind, int amount)
         {
-            int rounds = LooseAmmo;
-            LooseAmmo = 0;
-            return rounds;
+            if (kind == AmmoKind.None || amount <= 0) return 0;
+            int taken = Mathf.Min(amount, _ammo[(int)kind]);
+            _ammo[(int)kind] -= taken;
+            if (taken > 0) OnAmmoChanged();
+            return taken;
         }
+
+        /// <summary>Sets a pool directly (loading a save).</summary>
+        public void SetAmmo(AmmoKind kind, int amount)
+        {
+            if (kind == AmmoKind.None) return;
+            _ammo[(int)kind] = Mathf.Max(0, amount);
+            OnAmmoChanged();
+        }
+
+        private void OnAmmoChanged()
+        {
+            Storage.ExtraWeight = AmmoWeight + CarriedWeight;
+            AmmoChanged?.Invoke();
+            var weapon = FindWeapon();
+            if (weapon != null) weapon.RefreshAmmo();
+        }
+
+        public float AmmoWeight =>
+            _ammo[(int)AmmoKind.Pistol] * pistolRoundWeight + _ammo[(int)AmmoKind.Rifle] * rifleRoundWeight + _ammo[(int)AmmoKind.Shotgun] * shellWeight;
+
+        private float _carriedWeight;
+
+        /// <summary>Weight of the worn and carried equipment (weapons on the body, shield, clothes). Set by PlayerEquipment.</summary>
+        public float CarriedWeight
+        {
+            get => _carriedWeight;
+            set
+            {
+                _carriedWeight = Mathf.Max(0f, value);
+                Storage.ExtraWeight = AmmoWeight + _carriedWeight;
+            }
+        }
+
+        /// <summary>All rounds together (old save field).</summary>
+        public int LooseAmmo => _ammo[1] + _ammo[2] + _ammo[3];
+
+        /// <summary>Old single pool: rounds without a kind go to the rifle pool.</summary>
+        public void AddLooseAmmo(int rounds) => Add(AmmoKind.Rifle, rounds);
 
         private WeaponController FindWeapon()
         {
@@ -79,22 +134,26 @@ namespace EndlessSurvival.Inventory
         private string UseSurvivalItem(ItemDefinition item)
         {
             var survival = GetComponent<PlayerSurvival>();
-            if (survival == null) return "Cannot use this right now";
+            if (survival == null) return "Şu an kullanılamaz";
 
             bool isFood = item.category == ItemCategory.Food;
             float missing = isFood ? survival.maxHunger - survival.Hunger : survival.maxThirst - survival.Thirst;
 
             // Salt water and similar: drinking is allowed even when it makes things worse
-            if (missing < 0.5f && item.thirstPenalty <= 0f && !EndlessSurvival.Survival.SurvivalTest.FreeResources) // test mode: eat/drink any time
-                return isFood ? "Not hungry" : "Not thirsty";
+            bool thirstHelps = isFood && item.bonusThirst > 0f && survival.maxThirst - survival.Thirst >= 0.5f;
+            if (missing < 0.5f && item.thirstPenalty <= 0f && !thirstHelps && !EndlessSurvival.Survival.SurvivalTest.FreeResources) // test mode: eat/drink any time
+                return isFood ? "Aç değilsin" : "Susamadın";
 
             Storage.Remove(item, 1);
             float restored = isFood ? survival.Eat(item.useAmount) : survival.Drink(item.useAmount);
+            float quenched = 0f;
+            if (isFood && item.bonusThirst > 0f) quenched = survival.Drink(item.bonusThirst);
             if (item.thirstPenalty > 0f) survival.SetValues(survival.Hunger, survival.Thirst - item.thirstPenalty, survival.Bladder);
             GiveBack(item);
             ItemConsumed?.Invoke(item, this);
-            string penalty = item.thirstPenalty > 0f ? $" (-{Mathf.RoundToInt(item.thirstPenalty)} thirst, salty!)" : "";
-            return $"{(isFood ? "Ate" : "Drank")} {item.DisplayName} (+{Mathf.RoundToInt(restored)} {(isFood ? "hunger" : "thirst")}){penalty}";
+            string penalty = item.thirstPenalty > 0f ? $" (susuzluk -{Mathf.RoundToInt(item.thirstPenalty)}, tuzlu!)" : "";
+            string bonus = quenched >= 0.5f ? $", su +{Mathf.RoundToInt(quenched)}" : "";
+            return $"{item.DisplayName} {(isFood ? "yendi" : "içildi")} ({(isFood ? "tokluk" : "su")} +{Mathf.RoundToInt(restored)}{bonus}){penalty}";
         }
 
         /// <summary>Raised after a consumable was used (food, drink, medicine). Survival systems apply extra effects.</summary>
@@ -106,6 +165,20 @@ namespace EndlessSurvival.Inventory
         /// <summary>First aid stat: multiplier for health restored by medical items.</summary>
         public static Func<float> HealMultiplier = () => 1f;
 
+        /// <summary>
+        /// Non-consumable items with their own "Use" action (binoculars: a Gear item that is not used up).
+        /// Survival systems add a check; the inventory shows a Use button when any check says yes.
+        /// </summary>
+        public static event Func<ItemDefinition, bool> CustomUsable;
+
+        public static bool IsCustomUsable(ItemDefinition item)
+        {
+            if (item == null || CustomUsable == null) return false;
+            foreach (Func<ItemDefinition, bool> check in CustomUsable.GetInvocationList())
+                if (check(item)) return true;
+            return false;
+        }
+
         private void GiveBack(ItemDefinition item)
         {
             if (item.leavesItem != null) Storage.Add(item.leavesItem, 1);
@@ -114,7 +187,8 @@ namespace EndlessSurvival.Inventory
         /// <summary>Consumes one consumable from the backpack. Returns a feedback message.</summary>
         public string UseItem(ItemDefinition item)
         {
-            if (item == null || !item.IsConsumable || Storage.GetCount(item) <= 0) return null;
+            if (item == null || Storage.GetCount(item) <= 0) return null;
+            if (!item.IsConsumable && !IsCustomUsable(item)) return null;
 
             // Items with their own action (cigarette: smoking). A handler returns a message, or null when not its item.
             if (CustomUse != null)
@@ -123,16 +197,17 @@ namespace EndlessSurvival.Inventory
                     string custom = handler(item, this);
                     if (custom != null) return custom;
                 }
+            if (!item.IsConsumable) return null;
 
             if (item.category == ItemCategory.Food || item.category == ItemCategory.Drink)
                 return UseSurvivalItem(item);
 
             var health = GetComponent<PlayerHealth>();
-            if (health == null) return "Cannot use this right now";
+            if (health == null) return "Şu an kullanılamaz";
             if (health.IsDead) return null;
             bool hasEffect = item.effects != ConsumableEffect.None;
             if (!hasEffect && health.CurrentHealth >= health.maxHealth - 0.5f && !health.isBleeding && !EndlessSurvival.Survival.SurvivalTest.FreeResources)
-                return "Health is already full";
+                return "Canın zaten dolu";
 
             Storage.Remove(item, 1);
             float healed = item.useAmount > 0 ? health.Heal(item.useAmount * Mathf.Max(0.1f, HealMultiplier())) : 0f;
@@ -146,9 +221,9 @@ namespace EndlessSurvival.Inventory
             GiveBack(item);
             ItemConsumed?.Invoke(item, this);
 
-            string bleedNote = stoppedBleed ? " & Kanama durduruldu!" : "";
-            string healNote = healed > 0f ? $" (+{Mathf.RoundToInt(healed)} health{bleedNote})" : bleedNote;
-            return $"Used {item.DisplayName}{healNote}";
+            string bleedNote = stoppedBleed ? ", kanama durdu!" : "";
+            string healNote = healed > 0f ? $" (can +{Mathf.RoundToInt(healed)}{bleedNote})" : bleedNote;
+            return $"{item.DisplayName} kullanıldı{healNote}";
         }
 
         /// <summary>Adds items and returns how many units were accepted.</summary>
@@ -165,10 +240,8 @@ namespace EndlessSurvival.Inventory
             if (item.category == ItemCategory.Ammo)
             {
                 int rounds = amount * Mathf.Max(1, item.useAmount);
-                WeaponController weapon = FindWeapon();
-                // Melee weapons carry no rounds: keep them loose for the next firearm
-                if (weapon != null && weapon.IsFirearm) weapon.AddReserveAmmo(rounds);
-                else AddLooseAmmo(rounds);
+                // Rounds go to the pool of their kind; every firearm of that kind reloads from it
+                Add((AmmoKind)(int)item.AmmoKind, rounds);
                 return amount;
             }
 
@@ -184,6 +257,14 @@ namespace EndlessSurvival.Inventory
         {
             EnsureMoney();
             _money += amount;
+            MoneyChanged?.Invoke(_money);
+        }
+
+        /// <summary>Sets the wallet directly (loading a save).</summary>
+        public void SetMoney(int amount)
+        {
+            EnsureMoney();
+            _money = Mathf.Max(0, amount);
             MoneyChanged?.Invoke(_money);
         }
 

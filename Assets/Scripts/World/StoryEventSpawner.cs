@@ -69,7 +69,7 @@ namespace EndlessSurvival.World
                 if (evt == null) continue;
 
                 // Minimum chunk aralığı ve başlangıç kontrolü
-                if (chunkIndex < evt.minChunkIndex) continue;
+                if (chunkIndex - (chunk.Manager != null ? chunk.Manager.StartChunkIndex : 0) < evt.minChunkIndex) continue;
                 if (chunkIndex - _lastSpawnedChunkIndex < evt.minChunkInterval) continue;
 
                 // Şans kontrolü

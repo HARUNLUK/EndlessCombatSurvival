@@ -320,6 +320,8 @@ MonoBehaviour:
   - {fileID: 3070826875746469233, guid: 8d114212c90229c45b8c9bf75555234c, type: 3}
   - {fileID: 2981841693167374466, guid: 175b110ebf7e64c498ce31db9688368f, type: 3}
   - {fileID: 4206012342966105189, guid: 6efc534e767934848bb354938586b593, type: 3}
+  - {fileID: 2835151294463922982, guid: a3c9bce6906458447a9d6d82cec17747, type: 3}
+  - {fileID: 8072887932211142014, guid: cb8e90b5017ef884d9046dea5a472db2, type: 3}
   minEnemies: 3
   maxEnemies: 5
   spawnRadius: 10

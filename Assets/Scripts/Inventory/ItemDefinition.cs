@@ -38,7 +38,20 @@ namespace EndlessSurvival.Inventory
         Arms,
         Legs,
         Feet,
-        Weapon
+        Weapon,  // old single weapon slot: kept so saved assets keep their numbers; weapons now go to the three slots below
+        Shield,  // left arm (category Apparel, equipSlot Shield); numbers in ItemDefinition.shield
+        LongGun, // back: one long, two handed firearm
+        Pistol,  // right hip
+        Melee    // left hip (heavy ones crossed on the back)
+    }
+
+    /// <summary>Ammunition kinds. Each firearm uses one; the player keeps one pool per kind.</summary>
+    public enum AmmoType
+    {
+        None = 0,
+        Pistol = 1,   // pistol, smg
+        Rifle = 2,    // assault rifle
+        Shotgun = 3   // hunting shotgun shells
     }
 
     /// <summary>
@@ -73,6 +86,35 @@ namespace EndlessSurvival.Inventory
         [Tooltip("Weapon prefab spawned in the hand when this weapon is equipped")]
         public WeaponController weaponPrefab;
 
+        [Tooltip("Shield numbers (only used when Equip Slot is Shield). worldScale is the shield size: width, height, thickness")]
+        public EndlessCombat.Combat.ShieldStats shield;
+        public bool IsShield => equipSlot == EquipSlot.Shield && category == ItemCategory.Apparel;
+
+        [Tooltip("Ammo items: which pool the rounds go to. Weapons: leave None, the kind comes from the weapon prefab.")]
+        public AmmoType ammoType = AmmoType.None;
+
+        /// <summary>Ammo kind of an ammo item (old assets without a kind count as rifle rounds).</summary>
+        public AmmoType AmmoKind => ammoType != AmmoType.None ? ammoType : (category == ItemCategory.Ammo ? AmmoType.Rifle : WeaponAmmo);
+
+        /// <summary>Ammo kind used by this weapon item (None for melee weapons).</summary>
+        public AmmoType WeaponAmmo => weaponPrefab != null ? (AmmoType)(int)weaponPrefab.AmmoKind : AmmoType.None;
+
+        /// <summary>Carry slot of a weapon item: long gun (back), pistol (hip) or melee. Apparel returns its equipSlot.</summary>
+        public EquipSlot CarrySlot
+        {
+            get
+            {
+                if (category != ItemCategory.Weapon) return equipSlot;
+                if (weaponPrefab == null) return EquipSlot.Melee;
+                switch (weaponPrefab.Type)
+                {
+                    case WeaponType.Rifle: return EquipSlot.LongGun;
+                    case WeaponType.Pistol: return EquipSlot.Pistol;
+                    default: return EquipSlot.Melee;
+                }
+            }
+        }
+
         [Header("World Visual (placeholder cube)")]
         public Color worldColor = Color.white;
         public Vector3 worldScale = new Vector3(0.35f, 0.35f, 0.35f);
@@ -83,6 +125,10 @@ namespace EndlessSurvival.Inventory
         [Tooltip("Uniform scale applied when a world model is used")]
         public float worldModelScale = 1f;
 
+        [Tooltip("Optional model carried on the body / in the hand (shield on the arm, torch, rock or grenade in the hand). " +
+                 "Made by the menu Survival > Silahlar > Basit Modelleri Kur. Empty: the world model or a placeholder")]
+        public GameObject heldModel;
+
         [Header("Survival: food and drink")]
         [Tooltip("Game hours until this item spoils (0 = never)")]
         public float spoilHours = 0f;
@@ -92,6 +138,8 @@ namespace EndlessSurvival.Inventory
         [Range(0f, 1f)] public float poisonChance = 0f;
         [Tooltip("Extra thirst lost when drinking this (salt water)")]
         public float thirstPenalty = 0f;
+        [Tooltip("Thirst this food also quenches (berries and other juicy food)")]
+        public float bonusThirst = 0f;
         [Tooltip("Stress removed when consumed (cooked food, alcohol). Negative adds stress.")]
         public float stressRelief = 0f;
         [Tooltip("Body warmth gained when consumed (hot food/tea), degrees for a short while")]

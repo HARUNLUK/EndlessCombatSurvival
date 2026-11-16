@@ -112,3 +112,15 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# --- Endless Combat Survival: local-only files (2026-11-16) ---
+# Play Mode capture screenshots
+/PoseShots/
+# Backups / removed pack leftovers kept outside Assets
+/_PackExtras_Removed/
+/_Backup_*/
+/_Removed_*/
+# Batch / capture logs written next to the project
+*_log.txt
+*_log*.txt
+batch_log*.txt

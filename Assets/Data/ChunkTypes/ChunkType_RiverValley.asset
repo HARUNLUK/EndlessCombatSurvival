@@ -16,6 +16,17 @@ MonoBehaviour:
   biome: 0
   flatSeamEdges: 0
   allowSpecialChunks: 0
+  neighbours:
+  - {fileID: 11400000, guid: b0a0bb3ab767c2749889885646bf16ec, type: 2}
+  - {fileID: 11400000, guid: b0ed9d987030bd943ae82e236dbcfff6, type: 2}
+  - {fileID: 11400000, guid: 4f7f0a43f96aa0c4b953d105384b05a5, type: 2}
+  - {fileID: 11400000, guid: 7ee0e00bb12a3554eb097861d4d24b53, type: 2}
+  inset:
+    enabled: 0
+    hosts: []
+    chancePerRun: 0.35
+    minLength: 1
+    maxLength: 2
   elevationConfig:
     elevationChance: 0.5
     maxHillHeight: 10
@@ -90,6 +101,30 @@ MonoBehaviour:
     flowSpeed: 1.1
     flowTile: 14
     ambientScale: 0.45
+  settlement:
+    kind: 0
+    townDensity: 0.72
+    townSetbackMin: 12
+    townSetbackMax: 17
+    townBackRowChance: 0.3
+    townRuinShare: 0.55
+    stopFuelChance: 0.8
+    stopTraderChance: 0.3
+    stopOppositeSideChance: 0.4
+  sideRoads:
+    enabled: 0
+    style: 1
+    chance: 0.5
+    minCount: 1
+    maxCount: 2
+    halfWidth: 2.2
+    minLength: 120
+    maxLength: 260
+    crossChance: 0.35
+    endContentChance: 0.25
+    surfaceColor: {r: 0.36, g: 0.3, b: 0.23, a: 1}
+    pavedChance: 0.3
+    pavedColor: {r: 0.22, g: 0.22, b: 0.23, a: 1}
   boundary:
     biome: 0
     cliffWeight: 40
@@ -99,8 +134,8 @@ MonoBehaviour:
     maxCliffHeight: 70
     minRampWidth: 18
     maxRampWidth: 38
-    minInnerEdge: 185
-    maxInnerEdge: 210
+    minInnerEdge: 380
+    maxInnerEdge: 440
     minRockSize: 14
     maxRockSize: 30
     rockSpacing: 22

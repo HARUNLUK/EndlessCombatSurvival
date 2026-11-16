@@ -51,8 +51,8 @@ namespace EndlessSurvival.Camping
             if (_instance == null) CreateUI();
             _instance._activeFire = fire;
             _instance._activeUser = user;
-            if (action == CampAction.AddFuel || action == CampAction.CookMeat || action == CampAction.CookStew || action == CampAction.BoilWater)
-                EndlessSurvival.Survival.PlayerSurvivalAnimator.PlayOneShot(EndlessSurvival.Survival.SurvAnim.KneelFire, 3f);
+            // No pose change for campfire jobs: the player already sits by the fire ([E] sits down). Only sleeping
+            // switches to the sleep pose.
             switch (action)
             {
                 case CampAction.AddFuel: _instance.OnAddFuelClicked(); break;
@@ -92,7 +92,7 @@ namespace EndlessSurvival.Camping
             Cursor.visible = true;
 
             // Kamera dönüşünü durdur (menü etkileşimi için)
-            var inputs = Object.FindAnyObjectByType<StarterAssets.StarterAssetsInputs>();
+            var inputs = Object.FindAnyObjectByType<EndlessCombat.Character.PlayerInputState>();
             if (inputs != null)
             {
                 inputs.cursorInputForLook = false;
@@ -116,7 +116,7 @@ namespace EndlessSurvival.Camping
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
 
-                var inputs = Object.FindAnyObjectByType<StarterAssets.StarterAssetsInputs>();
+                var inputs = Object.FindAnyObjectByType<EndlessCombat.Character.PlayerInputState>();
                 if (inputs != null)
                 {
                     inputs.cursorInputForLook = true;
@@ -165,6 +165,9 @@ namespace EndlessSurvival.Camping
             _instance._fadeText.fontStyle = FontStyle.Bold;
             _instance._fadeText.color = new Color(1f, 0.92f, 0.75f, 1f);
             _instance._fadeText.text = "";
+            // Full-screen text: must not take clicks, otherwise every uGUI button (the inventory) stops working
+            // as soon as the campfire was used once.
+            _instance._fadeText.raycastTarget = false;
 
             // Main Modal Window
             GameObject panel = new GameObject("ModalPanel");
@@ -353,15 +356,36 @@ namespace EndlessSurvival.Camping
         private void OnSitClicked()
         {
             var player = _activeUser != null ? _activeUser.gameObject : GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
+            if (player == null) return;
+            var sittingCtrl = player.GetComponent<PlayerSittingController>();
+            if (sittingCtrl != null && sittingCtrl.IsSitting)
             {
-                var sittingCtrl = player.GetComponent<PlayerSittingController>();
-                if (sittingCtrl == null) sittingCtrl = player.AddComponent<PlayerSittingController>();
-
-                Vector3 dirToFire = (_activeFire != null) ? (_activeFire.transform.position - player.transform.position) : player.transform.forward;
-                sittingCtrl.SitDown(dirToFire);
+                sittingCtrl.StandUp();
+                Close();
+                return;
             }
-            Close();
+            SitAt(_activeFire, player);
+        }
+
+        /// <summary>Sits the player down facing the fire (used by [E] on a fire and the Kamp tab button).</summary>
+        public static void SitAt(PlayerCampfire fire, GameObject player)
+        {
+            if (player == null) return;
+            if (EndlessSurvival.Survival.SurvivalDirector.PlayerInVehicle) return;
+            var sittingCtrl = player.GetComponent<PlayerSittingController>();
+            if (sittingCtrl == null) sittingCtrl = player.AddComponent<PlayerSittingController>();
+            Vector3 dirToFire = fire != null ? fire.transform.position - player.transform.position : player.transform.forward;
+            sittingCtrl.SitDown(dirToFire);
+        }
+
+        public static bool PlayerSitting
+        {
+            get
+            {
+                var p = EndlessSurvival.Survival.SurvivalDirector.Player;
+                var s = p != null ? p.GetComponent<PlayerSittingController>() : null;
+                return s != null && s.IsSitting;
+            }
         }
 
         private void OnRestClicked()
@@ -428,8 +452,7 @@ namespace EndlessSurvival.Camping
                 var survival = player.GetComponent<PlayerSurvival>();
                 if (survival != null)
                 {
-                    survival.Eat(-10f);  // Uyurken hafif açlık harcanır
-                    survival.Drink(-12f);
+                    survival.Spend(10f, 12f); // Uyurken hafif açlık ve susuzluk harcanır
                 }
             }
 
@@ -575,6 +598,7 @@ namespace EndlessSurvival.Camping
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = col;
+            txt.raycastTarget = false; // labels never take clicks (the button image does)
             return txt;
         }
 

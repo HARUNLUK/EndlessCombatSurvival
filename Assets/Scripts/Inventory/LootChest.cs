@@ -77,13 +77,28 @@ namespace EndlessSurvival.Inventory
 
         public string GetPrompt()
         {
-            return Storage.IsEmpty ? emptyPrompt : openPrompt;
+            return Tr(Storage.IsEmpty ? emptyPrompt : openPrompt);
+        }
+
+        /// <summary>Turkish for the English prompts/titles still serialized in older prefabs.</summary>
+        public static string Tr(string s)
+        {
+            switch (s)
+            {
+                case "Open chest": return "Sandığı aç";
+                case "Open chest (empty)": return "Sandığı aç (boş)";
+                case "Search vehicle": return "Aracı ara";
+                case "Search vehicle (empty)": return "Aracı ara (boş)";
+                case "CHEST": return "SANDIK";
+                case "VEHICLE": return "ARAÇ";
+                default: return s;
+            }
         }
 
         public string Interact(PlayerInventory user)
         {
             InventoryUI ui = InventoryUI.Instance;
-            if (ui == null) return "Inventory screen is not set up";
+            if (ui == null) return "Envanter ekranı kurulmamış";
 
             ui.OpenChest(this);
             return null;

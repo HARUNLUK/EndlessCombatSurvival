@@ -25,7 +25,8 @@ namespace EndlessSurvival.Vehicle
         TowRope,            // Çekme halatı: saplanınca kurtarma, enkaz/barikat çekme
         SnowChains,         // Kar zinciri: karda tutuş, asfaltta yavaşlatır
         BatteryInsulation,  // Akü yalıtımı: soğukta marş tutar
-        CabinInsulation     // Battaniye ve yalıtım: kabin ısısını tutar
+        CabinInsulation,    // Battaniye ve yalıtım: kabin ısısını tutar
+        DewCollector        // Çiy toplayıcı: sabah serinliğinde depoya su biriktirir (yağmur brandasıyla birlikte takılmaz)
     }
 
     [Serializable]
@@ -87,7 +88,9 @@ namespace EndlessSurvival.Vehicle
         {
             // Tavan projektörünü [L] tuşu ile açıp kapatabilme
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            if (keyboard != null && keyboard.lKey.wasPressedThisFrame)
+            bool lightKey = (keyboard != null && keyboard.lKey.wasPressedThisFrame)
+                            || (vehicleController != null && vehicleController.isDriven && EndlessCombat.Combat.GameInput.PadDpadPressed.x < 0); // L / D-pad left while driving
+            if (lightKey)
             {
                 if (IsInstalled(VehicleModType.RoofLightbar) && _roofLightComponent != null)
                 {
@@ -120,13 +123,19 @@ namespace EndlessSurvival.Vehicle
             AddIfMissing(VehicleModType.SpareTireMount, "Yedek Lastik Askısı", "Arka kapıya bağlanan lastik askısı. Lastiği Parçalar bölümünden asarsın.",
                 "Yanında 1 yedek lastik taşırsın (bagajda yer kaplamaz, 8 kg).", 2, "", 0);
             AddIfMissing(VehicleModType.TowRope, "Çekme Halatı", "Arka çekme kancasına sarılmış kalın halat.",
-                "[T]: saplanınca aracı kurtar, yoldaki enkazı veya barikatı çekip kaldır.", 1, "Rope", 1);
+                "[T]: saplanınca aracı kurtar, yoldaki enkazı çekip kaldır.", 1, "Rope", 1);
             AddIfMissing(VehicleModType.SnowChains, "Kar Zinciri", "Tekerleklere sarılan zincirler.",
                 "Karda ve buzda tutuş artar; asfaltta yavaşlatır (en fazla 70 km/s).", 1, "Chain", 2);
             AddIfMissing(VehicleModType.BatteryInsulation, "Akü Yalıtımı", "Akünün etrafına sarılmış kalın keçe.",
                 "Akü geç soğur; soğukta marş daha kolay tutar.", 0, "Cloth", 3);
             AddIfMissing(VehicleModType.CabinInsulation, "Battaniye ve Yalıtım", "Kapı içlerine ve tavana gerilmiş battaniyeler.",
                 "Kabin ısısı daha yüksek olur ve motor kapalıyken daha geç soğur.", 0, "Blanket", 2);
+            AddIfMissing(VehicleModType.DewCollector, "Çiy Toplayıcı", "Sabah serinliğinde su tankına çiy biriktirir. Yağmur brandasıyla aynı anda takılamaz.",
+                "Sabah 05:00-08:30 arası yağmur yokken su deposu dolar (sabah başına yaklaşık 4 şişe).", 2, "Cloth", 3);
+
+            // The bullbar no longer "crushes" through collision callbacks: the ram system (VehicleRam) does it
+            var bullbar = GetModItem(VehicleModType.Bullbar);
+            if (bullbar != null) bullbar.statBenefit = "Çarpma hasarını %70 azaltır";
         }
 
         private void AddIfMissing(VehicleModType type, string name, string desc, string benefit, int scrap, string keyword, int keywordCost)
@@ -148,7 +157,7 @@ namespace EndlessSurvival.Vehicle
                     type = VehicleModType.Bullbar,
                     displayName = "Ön Koruma Demiri (Ram Bumper)",
                     description = "Aracın önüne kaynaklanmış ağır çelik ızgara ve tampon desteği.",
-                    statBenefit = "Çarpışma hasarını %70 azaltır, düşmanları ezer.",
+                    statBenefit = "Çarpma hasarını %70 azaltır",
                     scrapCost = 4,
                     secondaryItemKeyword = "",
                     secondaryItemCost = 0
@@ -219,6 +228,8 @@ namespace EndlessSurvival.Vehicle
         {
             var item = GetModItem(type);
             if (item == null || item.isInstalled) return false;
+            // R4: a mod can only be built once its plan is known (restoring a saved vehicle passes freeCost)
+            if (!freeCost && !EndlessSurvival.Survival.Plans.Knows(type)) return false;
 
             if (!freeCost && !EndlessSurvival.Survival.SurvivalTest.FreeResources) // test mode: mods are free
             {
@@ -232,6 +243,18 @@ namespace EndlessSurvival.Vehicle
                 }
 
                 ConsumeMaterials(item, inv, stash);
+            }
+
+            // Rain tarp and dew collector exclude each other: the older one is removed without a refund
+            if (type == VehicleModType.DewCollector && IsInstalled(VehicleModType.RainTarp))
+            {
+                UninstallModification(VehicleModType.RainTarp);
+                if (!freeCost) EndlessSurvival.Survival.SurvivalNotify.Show("Yağmur brandası söküldü");
+            }
+            else if (type == VehicleModType.RainTarp && IsInstalled(VehicleModType.DewCollector))
+            {
+                UninstallModification(VehicleModType.DewCollector);
+                if (!freeCost) EndlessSurvival.Survival.SurvivalNotify.Show("Çiy toplayıcı söküldü");
             }
 
             item.isInstalled = true;
@@ -746,27 +769,7 @@ namespace EndlessSurvival.Vehicle
             return mat;
         }
 
-        // ==========================================
-        // ÇARPIŞMA DARBE HASARI ARTIRMA (RAM DAMAGE)
-        // ==========================================
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            // Eğer Ön Koruma Demiri takılıysa ve araba hızlı gidiyorsa düşmanlara ezme hasarı vur
-            if (!IsInstalled(VehicleModType.Bullbar)) return;
-
-            float speed = vehicleController != null ? vehicleController.CurrentSpeedKmh : 0f;
-            if (speed > 15f && collision.gameObject != null)
-            {
-                var damageable = collision.gameObject.GetComponentInParent<IDamageable>();
-                if (damageable != null && !collision.gameObject.CompareTag("Player"))
-                {
-                    float ramDamage = speed * 3.5f; // Örn 50 km/h = 175 hasar (tek vuruşta öldürür)
-                    damageable.TakeDamage(ramDamage, collision.contacts[0].point, collision.contacts[0].normal);
-                    Debug.Log($"<color=orange>[Bullbar] Çarpma darbesi vuruldu: {ramDamage} Hasar!</color>");
-                }
-            }
-        }
+        // Ram damage (people, animals, roadblocks) lives in VehicleRam now.
 
         // ==========================================
         // SAVE / LOAD SİSTEMİ VERİLERİ
@@ -789,6 +792,8 @@ namespace EndlessSurvival.Vehicle
             foreach (var mod in modifications)
             {
                 bool shouldBeInstalled = installedModNames.Contains(mod.type.ToString());
+                // A save with both exclusive mods keeps only the first (rain tarp)
+                if (mod.type == VehicleModType.DewCollector && installedModNames.Contains(VehicleModType.RainTarp.ToString())) shouldBeInstalled = false;
                 if (shouldBeInstalled)
                 {
                     InstallModification(mod.type, freeCost: true);

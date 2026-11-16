@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using StarterAssets;
 using EndlessCombat.Combat;
 using EndlessSurvival.Inventory;
 using EndlessSurvival.World;
@@ -20,8 +19,8 @@ namespace EndlessSurvival.Survival
         public static PlayerVitals Instance { get; private set; }
 
         private GameObject _player;
-        private ThirdPersonController _tpc;
-        private StarterAssetsInputs _inputs;
+        private EndlessCombat.Character.PlayerMotor _tpc;
+        private EndlessCombat.Character.PlayerInputState _inputs;
         private PlayerSurvival _survival;
         private PlayerHealth _health;
         private PlayerInventory _inventory;
@@ -86,8 +85,8 @@ namespace EndlessSurvival.Survival
         {
             _player = SurvivalDirector.Player;
             if (_player == null) return;
-            _tpc = _player.GetComponent<ThirdPersonController>();
-            _inputs = _player.GetComponent<StarterAssetsInputs>();
+            _tpc = _player.GetComponent<EndlessCombat.Character.PlayerMotor>();
+            _inputs = _player.GetComponent<EndlessCombat.Character.PlayerInputState>();
             _survival = _player.GetComponent<PlayerSurvival>();
             _health = _player.GetComponent<PlayerHealth>();
             _inventory = _player.GetComponent<PlayerInventory>();
@@ -138,7 +137,11 @@ namespace EndlessSurvival.Survival
 
         private bool WantsSprint =>
             PlayerActive && _inputs != null && _inputs.sprint && _inputs.move.sqrMagnitude > 0.01f &&
-            (_stealth == null || !_stealth.IsCrouching) && !ToiletActive;
+            (_stealth == null || !_stealth.IsCrouching) && !ToiletActive &&
+            !EndlessCombat.Combat.CombatBody.PlayerLocked && !GuardSlowed;
+
+        // Raised guard walks slowly (no sprint drain)
+        private bool GuardSlowed => _tpc != null && _tpc.MoveSpeedMultiplier < 0.99f;
 
         public bool Exhausted => _exhausted;
         public bool CanSprint => !_exhausted && !Overloaded && !ToiletActive;
@@ -158,7 +161,7 @@ namespace EndlessSurvival.Survival
             }
 
             // Jump costs stamina; blocked when empty
-            if (PlayerActive && _inputs != null && _inputs.jump && grounded)
+            if (PlayerActive && _inputs != null && _inputs.jump && grounded && !EndlessCombat.Combat.CombatBody.PlayerLocked)
             {
                 if (ToiletActive || Stamina < S.jumpCost * 0.5f) _inputs.jump = false;
                 else Spend(S.jumpCost);
@@ -170,7 +173,7 @@ namespace EndlessSurvival.Survival
             if (Time.time - _lastStaminaUse > S.regenDelay)
             {
                 float regen = S.regenPerSecond;
-                if (_survival != null && (_survival.Hunger < _survival.maxHunger * 0.2f || _survival.Thirst < _survival.maxThirst * 0.2f))
+                if (_survival != null && (_survival.HungerRatio < NeedsTuning.LowNeedThreshold || _survival.ThirstRatio < NeedsTuning.LowNeedThreshold))
                     regen *= S.lowNeedRegenMultiplier;
                 if (ToiletNeglected) regen *= S.toiletNeglectStaminaRegen;
                 regen *= Mathf.Lerp(1f, 0.5f, ColdSeverity);
@@ -303,6 +306,13 @@ namespace EndlessSurvival.Survival
                             CharacterStats.Frac(StatType.Strength) * StatSettings.Instance.maxValue * S.carryPerStrength;
             float hard = ComfortWeight * Mathf.Max(1f, S.hardLimitMultiplier);
             var storage = _inventory.Storage;
+            if (SurvivalTest.FreeResources) // test mode: unlimited carry, never overloaded
+            {
+                if (storage.MaxWeight != 0f) storage.MaxWeight = 0f;
+                Overloaded = false;
+                OverloadRatio = 0f;
+                return;
+            }
             if (Mathf.Abs(storage.MaxWeight - hard) > 0.01f) storage.MaxWeight = hard;
 
             float weight = storage.TotalWeight;

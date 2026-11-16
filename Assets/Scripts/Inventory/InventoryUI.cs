@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using StarterAssets;
 using EndlessSurvival.Vehicle;
+using EndlessSurvival.Survival;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -34,7 +34,7 @@ namespace EndlessSurvival.Inventory
 
         [Header("Input Lock")]
         [Tooltip("Starter Assets input component; look input is disabled while the screen is open")]
-        public StarterAssetsInputs playerInputs;
+        public EndlessCombat.Character.PlayerInputState playerInputs;
 
         [Tooltip("Vehicle speed (km/h) above which the screen cannot be opened")]
         public float maxOpenSpeedKmh = 3f;
@@ -87,6 +87,31 @@ namespace EndlessSurvival.Inventory
             Instance = this;
         }
 
+        /// <summary>
+        /// The panel was built by the setup tool with English labels that are saved in the scene; swap them for
+        /// Turkish at runtime. The duplicate close hint goes away (the Tab screen has its own).
+        /// </summary>
+        private void TranslateStaticTexts()
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Transform root = canvas != null ? canvas.rootCanvas.transform : (inventoryPanel != null ? inventoryPanel.transform : transform);
+            foreach (Text t in root.GetComponentsInChildren<Text>(true))
+            {
+                switch (t.text)
+                {
+                    case "Store All": t.text = "Hepsini bagaja koy"; break;
+                    case "Refuel": t.text = "Yakıt doldur"; break;
+                    case "Repair": t.text = "Tamir et"; break;
+                    case "Upgrade": t.text = "Yükselt"; break;
+                    case "YOU DIED": t.text = "ÖLDÜN"; break;
+                    case "BACKPACK": t.text = "ÇANTA"; break;
+                    case "EQUIPPED": t.text = "KUŞANILAN"; break;
+                    case "VEHICLE STORAGE": t.text = "ARAÇ BAGAJI"; break;
+                    case "TAB / ESC: close": t.gameObject.SetActive(false); break;
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
@@ -105,9 +130,11 @@ namespace EndlessSurvival.Inventory
             // One row per database item: items added after the panel was built get copies of the last row
             playerRows = ExtendRows(playerRows, "PlayerRow");
             vehicleRows = ExtendRows(vehicleRows, "VehicleRow");
+            equipRows = ExtendEquipRows(equipRows);
 
             WireRows();
             WireActions();
+            TranslateStaticTexts();
 
             if (playerInventory != null)
             {
@@ -135,6 +162,30 @@ namespace EndlessSurvival.Inventory
                 // Rows sit in a VerticalLayoutGroup, so a copy under the same parent stacks below the others
                 ItemRowUI copy = Instantiate(template, template.transform.parent);
                 copy.name = $"{prefix}_{list.Count}";
+                list.Add(copy);
+            }
+            return list.ToArray();
+        }
+
+        /// <summary>
+        /// Equip slots added after the panel was built (Shield): a copy of the last row one line below it.
+        /// </summary>
+        private static ItemRowUI[] ExtendEquipRows(ItemRowUI[] rows)
+        {
+            int slotCount = System.Enum.GetValues(typeof(EquipSlot)).Length;
+            if (rows == null || rows.Length == 0 || rows.Length >= slotCount) return rows;
+            ItemRowUI template = rows[rows.Length - 1];
+            if (template == null) return rows;
+
+            var list = new System.Collections.Generic.List<ItemRowUI>(rows);
+            var templateRect = template.GetComponent<RectTransform>();
+            while (list.Count < slotCount)
+            {
+                ItemRowUI copy = Instantiate(template, template.transform.parent);
+                copy.name = $"EquipRow_{(EquipSlot)list.Count}";
+                var rect = copy.GetComponent<RectTransform>();
+                if (rect != null && templateRect != null)
+                    rect.anchoredPosition = templateRect.anchoredPosition + new Vector2(0f, -34f * (list.Count - rows.Length + 1));
                 list.Add(copy);
             }
             return list.ToArray();
@@ -201,12 +252,99 @@ namespace EndlessSurvival.Inventory
             }
 
             if (IsOpen && _chest != null && !ChestInReach()) Close();
+            if (IsOpen) UpdatePadFocus();
 
             if (IsOpen && Time.unscaledTime >= _nextRefresh)
             {
                 _nextRefresh = Time.unscaledTime + 0.25f;
                 Refresh();
             }
+        }
+
+        // ------------------------------------------------------------------ Gamepad focus (backpack tab)
+
+        private bool _padColorsSet;
+        private GameObject _lastSelected;
+
+        /// <summary>
+        /// Backpack tab with a gamepad: one button always has the focus (orange), the D-pad / left stick moves it
+        /// (Unity UI navigation), A presses it. A hidden row loses the focus, so it is given back to the nearest
+        /// visible button. The list scrolls to keep the focused button in view.
+        /// </summary>
+        private void UpdatePadFocus()
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null || inventoryPanel == null) return;
+            if (!inventoryPanel.activeInHierarchy)
+            {
+                // Another tab is shown: nothing of the hidden window may keep the focus
+                if (es.currentSelectedGameObject != null && es.currentSelectedGameObject.transform.IsChildOf(inventoryPanel.transform))
+                    es.SetSelectedGameObject(null);
+                return;
+            }
+
+            if (!_padColorsSet)
+            {
+                _padColorsSet = true;
+                foreach (var sel in inventoryPanel.GetComponentsInChildren<Selectable>(true))
+                {
+                    var c = sel.colors;
+                    c.selectedColor = new Color(1f, 0.72f, 0.25f, 1f);
+                    c.highlightedColor = new Color(1f, 0.9f, 0.7f, 1f);
+                    sel.colors = c;
+                    var nav = sel.navigation;
+                    nav.mode = Navigation.Mode.Automatic;
+                    sel.navigation = nav;
+                }
+            }
+
+            if (!EndlessCombat.Combat.GameInput.UsingPad) return;
+
+            GameObject cur = es.currentSelectedGameObject;
+            bool valid = cur != null && cur.activeInHierarchy && cur.transform.IsChildOf(inventoryPanel.transform);
+            if (valid)
+            {
+                var s = cur.GetComponent<Selectable>();
+                valid = s != null && s.IsInteractable();
+            }
+            if (!valid)
+            {
+                Selectable best = null;
+                float bestDist = float.MaxValue;
+                Vector3 from = _lastSelected != null ? _lastSelected.transform.position : new Vector3(float.MinValue, float.MaxValue, 0f);
+                foreach (var sel in inventoryPanel.GetComponentsInChildren<Selectable>(false))
+                {
+                    if (!sel.IsInteractable() || !sel.gameObject.activeInHierarchy) continue;
+                    float d;
+                    if (_lastSelected != null) d = (sel.transform.position - from).sqrMagnitude;
+                    else d = -sel.transform.position.y * 10000f + sel.transform.position.x; // top left first
+                    if (d < bestDist) { bestDist = d; best = sel; }
+                }
+                if (best != null) es.SetSelectedGameObject(best.gameObject);
+                cur = best != null ? best.gameObject : null;
+            }
+            if (cur != null && cur != _lastSelected) ScrollIntoView(cur.transform as RectTransform);
+            if (cur != null) _lastSelected = cur;
+        }
+
+        private static readonly Vector3[] CornersA = new Vector3[4], CornersB = new Vector3[4];
+
+        private static void ScrollIntoView(RectTransform target)
+        {
+            if (target == null) return;
+            var scroll = target.GetComponentInParent<ScrollRect>();
+            if (scroll == null || scroll.content == null) return;
+            RectTransform view = scroll.viewport != null ? scroll.viewport : scroll.transform as RectTransform;
+            target.GetWorldCorners(CornersA);
+            view.GetWorldCorners(CornersB);
+            float above = CornersA[1].y - CornersB[1].y; // target top above the view top
+            float below = CornersB[0].y - CornersA[0].y; // target bottom under the view bottom
+            float scale = Mathf.Max(0.0001f, view.lossyScale.y);
+            Vector2 pos = scroll.content.anchoredPosition;
+            if (above > 0f) pos.y -= above / scale + 6f;
+            else if (below > 0f) pos.y += below / scale + 6f;
+            else return;
+            scroll.content.anchoredPosition = pos;
         }
 
         private bool ChestInReach()
@@ -218,7 +356,7 @@ namespace EndlessSurvival.Inventory
         private static bool TogglePressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
+            return (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame) || EndlessCombat.Combat.GameInput.InventoryPressed; // Tab / gamepad View
 #else
             return Input.GetKeyDown(KeyCode.Tab);
 #endif
@@ -227,7 +365,8 @@ namespace EndlessSurvival.Inventory
         private static bool ClosePressed()
         {
 #if ENABLE_INPUT_SYSTEM
-            return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+            return (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                || (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame && !EndlessSurvival.Survival.SurvivalPanel.PadBackConsumed); // Esc / gamepad B
 #else
             return Input.GetKeyDown(KeyCode.Escape);
 #endif
@@ -240,6 +379,12 @@ namespace EndlessSurvival.Inventory
         }
 
         /// <summary>Opens the screen with the chest contents shown in the right column.</summary>
+        /// <summary>True while the screen shows a chest (it opens on the backpack tab).</summary>
+        public bool HasChest => _chest != null;
+
+        /// <summary>True while the screen is open on exactly this chest.</summary>
+        public bool IsShowing(LootChest chest) => IsOpen && _chest != null && _chest == chest;
+
         public void OpenChest(LootChest chest)
         {
             _chest = chest;
@@ -261,7 +406,8 @@ namespace EndlessSurvival.Inventory
                 playerInputs.look = Vector2.zero;
             }
 
-            if (inventoryPanel != null) inventoryPanel.SetActive(true);
+            // The window itself stays hidden when the Tab screen draws the backpack (it only lends its rectangle)
+            if (inventoryPanel != null) inventoryPanel.SetActive(EndlessSurvival.Survival.SurvivalPanel.Instance == null);
             if (statusText != null) statusText.text = string.Empty;
             Refresh();
         }
@@ -272,6 +418,10 @@ namespace EndlessSurvival.Inventory
             _chest = null;
 
             if (inventoryPanel != null) inventoryPanel.SetActive(false);
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null) es.SetSelectedGameObject(null);
+            _lastSelected = null;
+            EndlessCombat.Combat.GameInput.BlockGameplayBriefly();
 
             if (playerInputs != null) playerInputs.cursorInputForLook = true;
 
@@ -281,6 +431,12 @@ namespace EndlessSurvival.Inventory
                 Cursor.visible = false;
             }
         }
+
+        /// <summary>The chest that is open, or the vehicle trunk when it is in reach (null when neither).</summary>
+        public ItemStorage ContainerStorage => GetContainer();
+
+        /// <summary>Title of the right column (chest name or the trunk).</summary>
+        public string ContainerTitle => _chest != null ? LootChest.Tr(_chest.containerTitle) : "ARAÇ BAGAJI";
 
         /// <summary>The inventory window; the Tab panel's other tabs are drawn in the same rectangle.</summary>
         public RectTransform PanelRect => inventoryPanel != null ? inventoryPanel.transform as RectTransform : null;
@@ -316,10 +472,10 @@ namespace EndlessSurvival.Inventory
         private void UpdateHud()
         {
             if (moneyText != null && playerInventory != null)
-                moneyText.text = $"MONEY: {playerInventory.Money}";
+                moneyText.text = $"Para: {playerInventory.Money}";
 
             if (weightText != null && playerInventory != null)
-                weightText.text = $"BACKPACK: {playerInventory.Storage.TotalWeight:0.0} / {playerInventory.Storage.MaxWeight:0.#} kg";
+                weightText.text = $"Çanta: {playerInventory.Storage.TotalWeight:0.0} / {(playerInventory.Storage.IsUnlimited ? "sınırsız" : playerInventory.Storage.MaxWeight.ToString("0.#") + " kg")}";
         }
 
         public void Refresh()
@@ -333,7 +489,7 @@ namespace EndlessSurvival.Inventory
             ItemStorage backpack = playerInventory.Storage;
 
             if (playerTitleText != null)
-                playerTitleText.text = $"BACKPACK  {backpack.TotalWeight:0.0} / {backpack.MaxWeight:0.#} kg   Money: {playerInventory.Money}";
+                playerTitleText.text = $"ÇANTA  {backpack.TotalWeight:0.0} / {(backpack.IsUnlimited ? "sınırsız" : backpack.MaxWeight.ToString("0.#") + " kg")}   Para: {playerInventory.Money}";
 
             CheckRowCount();
 
@@ -350,27 +506,27 @@ namespace EndlessSurvival.Inventory
                 }
 
                 string useText = null;
-                if (item.IsEquippable) useText = "Equip";
-                else if (item.category == ItemCategory.Food) useText = "Eat";
-                else if (item.category == ItemCategory.Drink) useText = "Drink";
-                else if (item.IsConsumable) useText = "Use";
+                if (item.IsEquippable) useText = "Kuşan";
+                else if (item.category == ItemCategory.Food) useText = "Ye";
+                else if (item.category == ItemCategory.Drink) useText = "İç";
+                else if (item.IsConsumable || PlayerInventory.IsCustomUsable(item)) useText = "Kullan";
                 bool many = count > 1;
-                string putWord = chestMode ? "Put" : "Store";
+                string putWord = chestMode ? "Koy" : "Araca";
 
                 playerRows[i].Show($"{item.DisplayName} x{count}  ({item.weight * count:0.0} kg)",
                     new ItemRowUI.RowButton(useText, true),
                     new ItemRowUI.RowButton($"{putWord} 1", hasContainer),
-                    new ItemRowUI.RowButton(many ? $"{putWord} All" : null, hasContainer),
-                    new ItemRowUI.RowButton("Drop 1", true),
-                    new ItemRowUI.RowButton(many ? "Drop All" : null, true));
+                    new ItemRowUI.RowButton(many ? "Tümünü koy" : null, hasContainer),
+                    new ItemRowUI.RowButton("At 1", true),
+                    new ItemRowUI.RowButton(many ? "Hepsini at" : null, true));
             }
 
             RefreshEquipment();
 
             if (vehicleTitleText != null)
             {
-                if (chestMode) vehicleTitleText.text = container.IsEmpty ? _chest.containerTitle + " (empty)" : _chest.containerTitle;
-                else vehicleTitleText.text = hasContainer ? "VEHICLE STORAGE (unlimited)" : "VEHICLE STORAGE (out of reach)";
+                if (chestMode) vehicleTitleText.text = container.IsEmpty ? LootChest.Tr(_chest.containerTitle) + " (boş)" : LootChest.Tr(_chest.containerTitle);
+                else vehicleTitleText.text = hasContainer ? "ARAÇ BAGAJI (sınırsız)" : "ARAÇ BAGAJI (uzakta)";
             }
 
             for (int i = 0; vehicleRows != null && i < vehicleRows.Length; i++)
@@ -386,8 +542,8 @@ namespace EndlessSurvival.Inventory
                 }
 
                 vehicleRows[i].Show($"{item.DisplayName} x{count}",
-                    new ItemRowUI.RowButton("Take 1", true),
-                    new ItemRowUI.RowButton(count > 1 ? "Take All" : null, true));
+                    new ItemRowUI.RowButton("Al 1", true),
+                    new ItemRowUI.RowButton(count > 1 ? "Hepsini al" : null, true));
             }
 
             RefreshVehicleInfo(VehicleAccessible(), chestMode);
@@ -398,20 +554,26 @@ namespace EndlessSurvival.Inventory
             if (equipment == null) return;
 
             if (equipTitleText != null)
-                equipTitleText.text = $"EQUIPPED   Armor {equipment.TotalArmor:0}  (-{equipment.DamageReduction * 100f:0}% damage)";
+                equipTitleText.text = $"KUŞANILAN   Zırh {equipment.TotalArmor:0}  (hasar -%{equipment.DamageReduction * 100f:0})";
 
             for (int i = 0; equipRows != null && i < equipRows.Length; i++)
             {
                 if (equipRows[i] == null) continue;
 
                 var slot = (EquipSlot)i;
+                if (slot == EquipSlot.Weapon)
+                {
+                    // Old single weapon row: the three weapon slots below replace it (details in the Karakter tab)
+                    equipRows[i].Hide();
+                    continue;
+                }
                 ItemDefinition worn = equipment.Get(slot);
                 if (worn == null)
-                    equipRows[i].Show($"{slot}: (empty)", new ItemRowUI.RowButton(null, false));
-                else if (slot == EquipSlot.Weapon)
-                    equipRows[i].Show($"{slot}: {worn.DisplayName}", new ItemRowUI.RowButton("Unequip", true));
+                    equipRows[i].Show($"{TurkishText.Slot(slot)}: (boş)", new ItemRowUI.RowButton(null, false));
+                else if (slot == EquipSlot.Shield || slot == EquipSlot.LongGun || slot == EquipSlot.Pistol || slot == EquipSlot.Melee)
+                    equipRows[i].Show($"{TurkishText.Slot(slot)}: {worn.DisplayName}", new ItemRowUI.RowButton("Çıkar", true));
                 else
-                    equipRows[i].Show($"{slot}: {worn.DisplayName} (+{worn.armor:0})", new ItemRowUI.RowButton("Unequip", true));
+                    equipRows[i].Show($"{TurkishText.Slot(slot)}: {worn.DisplayName} (+{worn.armor:0})", new ItemRowUI.RowButton("Çıkar", true));
             }
         }
 
@@ -427,8 +589,8 @@ namespace EndlessSurvival.Inventory
                 }
                 else
                 {
-                    string state = vehicle.IsBroken ? "  [BROKEN]" : (vehicle.currentFuel <= 0f ? "  [NO FUEL]" : string.Empty);
-                    vehicleInfoText.text = $"Fuel {vehicle.currentFuel:0} / {vehicle.maxFuel:0}    Hull {vehicle.currentHealth:0} / {vehicle.maxHealth:0}{state}";
+                    string state = vehicle.IsBroken ? "  [BOZUK]" : (vehicle.currentFuel <= 0f ? "  [YAKIT YOK]" : string.Empty);
+                    vehicleInfoText.text = $"Yakıt {vehicle.currentFuel:0} / {vehicle.maxFuel:0}    Gövde {vehicle.currentHealth:0} / {vehicle.maxHealth:0}{state}";
                 }
             }
 
@@ -474,8 +636,8 @@ namespace EndlessSurvival.Inventory
             if (item == null) return;
 
             if (item.IsEquippable)
-                ShowStatus(equipment != null ? equipment.Equip(item) : "Equipment is not set up");
-            else if (item.IsConsumable)
+                ShowStatus(equipment != null ? equipment.Equip(item) : "Ekipman sistemi kurulmamış");
+            else if (item.IsConsumable || PlayerInventory.IsCustomUsable(item))
                 ShowStatus(playerInventory.UseItem(item));
         }
 
@@ -488,7 +650,7 @@ namespace EndlessSurvival.Inventory
         private void OnStoreClicked(int index, int amount)
         {
             ItemStorage container = GetContainer();
-            if (container == null) { ShowStatus("Nothing in reach to store items in"); return; }
+            if (container == null) { ShowStatus("Yakında eşya koyacak yer yok"); return; }
 
             ItemDefinition item = database.Get(index);
             if (item == null) return;
@@ -501,7 +663,7 @@ namespace EndlessSurvival.Inventory
         private void OnTakeClicked(int index, int amount)
         {
             ItemStorage container = GetContainer();
-            if (container == null) { ShowStatus("Nothing in reach"); return; }
+            if (container == null) { ShowStatus("Yakında bir şey yok"); return; }
 
             ItemDefinition item = database.Get(index);
             if (item == null) return;
@@ -510,12 +672,12 @@ namespace EndlessSurvival.Inventory
             int accepted = playerInventory.AddItem(item, wanted);
             if (accepted <= 0)
             {
-                ShowStatus("Backpack is too heavy");
+                ShowStatus("Çanta çok ağır");
                 return;
             }
 
             container.Remove(item, accepted);
-            ShowStatus($"Took {item.DisplayName} x{accepted}");
+            ShowStatus($"Alındı: {item.DisplayName} x{accepted}");
         }
 
         private void OnDropClicked(int index, int amount)
@@ -524,13 +686,13 @@ namespace EndlessSurvival.Inventory
             if (item == null) return;
 
             int dropped = playerInventory.DropItem(item, Mathf.Min(amount, playerInventory.Storage.GetCount(item)));
-            if (dropped > 0) ShowStatus($"Dropped {item.DisplayName} x{dropped}");
+            if (dropped > 0) ShowStatus($"Atıldı: {item.DisplayName} x{dropped}");
         }
 
         private void OnStoreEverythingClicked()
         {
             ItemStorage container = GetContainer();
-            if (container == null) { ShowStatus("Vehicle is out of reach"); return; }
+            if (container == null) { ShowStatus("Araç uzakta"); return; }
 
             int stacks = 0;
             for (int i = 0; i < database.Count; i++)
@@ -547,7 +709,7 @@ namespace EndlessSurvival.Inventory
                 playerInventory.Storage.Remove(item, accepted);
                 stacks++;
             }
-            ShowStatus(stacks > 0 ? "Stored everything" : "Nothing to store");
+            ShowStatus(stacks > 0 ? "Hepsi bagaja kondu" : "Konacak bir şey yok");
         }
 
         private void ShowStatus(string message)

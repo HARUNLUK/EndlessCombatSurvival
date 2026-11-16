@@ -89,8 +89,8 @@ namespace EndlessSurvival.World.Editor
             // Valley sides: the cliffs stand further out (beyond the far bank) and a little higher
             var b = profile.boundary ?? new BiomeBoundarySettings();
             b.biome = ChunkBiomeType.Forest;
-            b.minInnerEdge = 185f;
-            b.maxInnerEdge = 210f;
+            b.minInnerEdge = 380f;
+            b.maxInnerEdge = 440f;
             b.minCliffHeight = 40f;
             b.maxCliffHeight = 70f;
             profile.boundary = b;

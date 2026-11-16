@@ -23,6 +23,7 @@ MonoBehaviour:
     knockback: 1.5
     staggerTime: 0.35
     stab: 1
+    category: 0
   rockItem: {fileID: 11400000, guid: ae1e544301340934ab8c9c9c3eef854d, type: 2}
   grenadeItem: {fileID: 11400000, guid: ed4af06b2f310994da846bcc72730dfb, type: 2}
   throwSpeed: 15
@@ -41,18 +42,20 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0139aa29386c2044a9952bd99d62927e, type: 2}
   - {fileID: 11400000, guid: e732868079b1f9e4ba188fab99d27044, type: 2}
   - {fileID: 11400000, guid: 2da8fbfe795b5db40a3274f01dd12ced, type: 2}
+  - {fileID: 11400000, guid: c236881b89cc01d4ea757016e4b69f5c, type: 2}
+  - {fileID: 11400000, guid: 79c04bee4baefbf4ea73591d6f042e91, type: 2}
   footstepClips:
-  - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
-  - {fileID: 8300000, guid: 85016e0f2b01da248b9663dd49a161b0, type: 3}
-  - {fileID: 8300000, guid: 186de84b3207156479abe98f4958fed0, type: 3}
-  - {fileID: 8300000, guid: 1a91fcd19acf1e54bba0945d9f390849, type: 3}
-  - {fileID: 8300000, guid: 14e8a8d2158bec840b56c54f5266e692, type: 3}
-  - {fileID: 8300000, guid: 29841e7d5bbfb5b419c9ad16ca8bc4c1, type: 3}
-  - {fileID: 8300000, guid: dd1af302b8902684d9381de1f2d3a5af, type: 3}
-  - {fileID: 8300000, guid: 67c8b33e424ccdc4486edf538ab91c5a, type: 3}
-  - {fileID: 8300000, guid: 274649b0e221539409070ebf6c18918b, type: 3}
-  - {fileID: 8300000, guid: a3194b8bbc96ef84fab1f98f4b7dae3e, type: 3}
-  landingClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  landingClip: {fileID: 0}
   footstepVolume: 0.18
   strideLength: {x: 0.6, y: 0.85, z: 1.25}
   gaitVolume: {x: 0.4, y: 0.75, z: 1}

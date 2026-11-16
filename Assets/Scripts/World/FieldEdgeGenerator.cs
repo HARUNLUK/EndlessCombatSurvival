@@ -38,11 +38,11 @@ namespace EndlessSurvival.World
         [Tooltip("Arazinin doğal dalgalanmasından düzlükte kalan oran (0 = tamamen düz)")]
         public float ambientScale = 0.12f;
         [Tooltip("Oyuncunun alan dışına yürümemesi için kenarlardaki görünmez duvarın yeri")]
-        public float edgeWallDistance = 248f;
+        public float edgeWallDistance = 498f;
 
         [Header("Tel Çit")]
         [Tooltip("Çitin chunk merkez çizgisine uzaklığı (tüm düzlük chunk'larında aynı, böylece çit kesintisiz devam eder)")]
-        public float fenceLine = 150f;
+        public float fenceLine = 300f;
         public float postSpacing = 2.8f;
         public float fenceHeight = 1.4f;
         [Range(0f, 0.5f)] [Tooltip("Bir çit aralığının kopuk/eksik olma ihtimali")]
@@ -91,7 +91,7 @@ namespace EndlessSurvival.World
 
         [Header("Dere")]
         [Tooltip("Dere orta çizgisinin chunk merkezine uzaklığı (chunk birleşimlerinde sabit)")]
-        public float streamCenter = 175f;
+        public float streamCenter = 360f;
         public float streamMeander = 18f;
         public float streamBedHalfWidth = 3f;
         public float streamBankWidth = 6f;
@@ -165,7 +165,7 @@ namespace EndlessSurvival.World
         private bool _hasRiver;
         private float _riverZ, _riverTan, _riverCos, _riverPhase;
         private float _riverWaterY, _riverBedY, _riverBank, _riverDeckY;
-        private float _halfWidth = 250f;
+        private float _halfWidth = Chunk.HalfWidth;
         private float _baseline = 20f;
         private readonly List<Vector2> _keepouts = new List<Vector2>();
         private readonly List<Mesh> _ownedMeshes = new List<Mesh>();

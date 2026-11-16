@@ -30,7 +30,7 @@ namespace EndlessSurvival.World
 
                 var tex = CreateSolidTexture("Tex_" + layerName, color);
                 UnityEditor.AssetDatabase.CreateAsset(tex, $"{TextureFolder}/Tex_{layerName}.asset");
-                var layer = new TerrainLayer { name = layerName, diffuseTexture = tex, tileSize = new Vector2(12f, 12f) };
+                var layer = new TerrainLayer { name = layerName, diffuseTexture = tex, tileSize = new Vector2(12f, 12f), smoothness = 0.05f, smoothnessSource = TerrainLayerSmoothnessSource.ConstantOnly, metallic = 0f, specular = Color.black };
                 UnityEditor.AssetDatabase.CreateAsset(layer, layerPath);
                 UnityEditor.AssetDatabase.SaveAssets();
                 return layer;
@@ -42,7 +42,11 @@ namespace EndlessSurvival.World
                 {
                     name = layerName + "_Runtime",
                     diffuseTexture = CreateSolidTexture("Tex_" + layerName + "_Runtime", color),
-                    tileSize = new Vector2(12f, 12f)
+                    tileSize = new Vector2(12f, 12f),
+                    smoothness = 0.05f, // matte like the prefab layers: the default (smoothness from albedo alpha = 1) gave a white glare
+                    smoothnessSource = TerrainLayerSmoothnessSource.ConstantOnly,
+                    metallic = 0f,
+                    specular = Color.black
                 };
                 s_runtimeLayers[layerName] = runtime;
             }

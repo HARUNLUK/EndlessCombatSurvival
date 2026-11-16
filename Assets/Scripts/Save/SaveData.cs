@@ -32,8 +32,18 @@ namespace EndlessSurvival.Save
         public float playerThirst;
         public float playerBladder;
         public int playerMoney;
-        public int playerLooseAmmo;
+        public int playerLooseAmmo;      // all rounds together (old field)
+        public int playerPistolAmmo;
+        public int playerRifleAmmo;
+        public int playerShotgunAmmo;
         public List<SavedItemSlot> playerInventory = new List<SavedItemSlot>();
+
+        // Worn clothes, the weapons on the body, the shield (false in saves made before this was stored)
+        public bool hasPlayerEquipment;
+        public List<SavedEquipSlot> playerEquipment = new List<SavedEquipSlot>();
+        public int playerActiveSlot = -1;   // PlayerLoadout.Slot in the hand
+        public bool playerWeaponStowed;
+        public string playerQuickItem;
 
         [Header("Vehicle State")]
         public bool hasVehicle;
@@ -68,6 +78,15 @@ namespace EndlessSurvival.Save
             itemName = name;
             amount = count;
         }
+    }
+
+    [Serializable]
+    public class SavedEquipSlot
+    {
+        public int slot;          // EquipSlot
+        public string itemName;
+        public int magazine;      // rounds in the magazine (firearms)
+        public bool twoHand;      // grip (weapon slots)
     }
 
     [Serializable]

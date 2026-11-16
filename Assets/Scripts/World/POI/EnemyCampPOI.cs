@@ -193,6 +193,20 @@ namespace EndlessSurvival.World.POI
             }
 
             int spawnCount = EndlessSurvival.Survival.DifficultyCurve.ScaleEnemyCount(rng.Range(minEnemies, maxEnemies + 1), transform.position);
+            spawnCount = EndlessSurvival.Survival.DifficultyCurve.CapHumans(spawnCount);
+
+            // Lone camper: a single person sitting by the fire, no guards (the fire still burns, so it shows from afar).
+            // Common for a new character, rare later. Always one rng call so the camp keeps its seed stream.
+            var survivalSettings = EndlessSurvival.Survival.SurvivalSettings.Instance;
+            float loneShare = EndlessSurvival.Survival.DifficultyCurve.EarlyGame ? survivalSettings.loneCamperShare : survivalSettings.loneCamperShareLate;
+            bool loneCamper = rng.Value < loneShare;
+            float placeRadius = spawnRadius;
+            if (loneCamper)
+            {
+                spawnCount = 1;
+                guardSpots.Clear();
+                placeRadius = Mathf.Min(spawnRadius, 3f);
+            }
             spawnedSpeakers.Clear();
 
             int seatIndex = 0;
@@ -220,7 +234,7 @@ namespace EndlessSurvival.World.POI
                 }
                 else
                 {
-                    Vector2 randomCircle = rng.InsideUnitCircle * spawnRadius;
+                    Vector2 randomCircle = rng.InsideUnitCircle * placeRadius;
                     spawnPos = campCenter + new Vector3(randomCircle.x, 0, randomCircle.y);
                     
                     if (tComponent != null)
@@ -244,7 +258,8 @@ namespace EndlessSurvival.World.POI
                         shouldSit = true;
                     }
                 }
-                
+                if (loneCamper) shouldSit = true;
+
                 GameObject prefab = EndlessSurvival.Survival.DifficultyCurve.PickEnemyPrefab(rng, enemyPrefabs, transform.position);
                 GameObject spawnedEnemy = null;
 #if UNITY_EDITOR

@@ -413,6 +413,102 @@ namespace EndlessSurvival.World
         [Tooltip("Nehir Vadisi tipi ayarları (nehir genişliği, kıyı, köprülü geçiş, su görünümü)")]
         public RiverValleySettings riverValleySettings = new RiverValleySettings();
 
+        [Tooltip("Yerleşim (kasaba / mola yeri). Düzen her chunk'ta seed'den yeniden kurulur.")]
+        public SettlementSettings settlementSettings = new SettlementSettings();
+
+        public bool HasSettlement => settlementSettings != null && settlementSettings.Enabled;
+
+        [Tooltip("Yan yollar (ana yoldan ayrılan sokak / toprak yol). Tip profilinden gelir.")]
+        public SideRoadSettings sideRoadSettings = new SideRoadSettings();
+        /// <summary>Side roads built for this chunk (chunk-local paths); empty until SideRoads.Build ran.</summary>
+        public readonly System.Collections.Generic.List<SideRoad> sideRoads = new System.Collections.Generic.List<SideRoad>();
+
+        /// <summary>A world point lies on (or within margin of) one of this chunk's side roads.</summary>
+        public bool NearSideRoad(Vector3 worldPosition, float margin)
+        {
+            if (sideRoads.Count == 0) return false;
+            Vector3 local = transform.InverseTransformPoint(worldPosition);
+            foreach (var road in sideRoads)
+                if (road.Distance(local.x, local.z) < road.halfWidth + margin) return true;
+            return false;
+        }
+        public SettlementKind Settlement => settlementSettings != null ? settlementSettings.kind : SettlementKind.None;
+
+        /// <summary>Ground painted by <see cref="GroundThemePainter"/> (çorak arazi, kasaba).</summary>
+        public bool HasGroundTheme => IsThemedBiome(biomeType);
+        public static bool IsThemedBiome(ChunkBiomeType b) => b == ChunkBiomeType.Desert || b == ChunkBiomeType.RuinedCity;
+
+        /// <summary>The inset type (town / rest stop) set into this chunk of its run, or null.</summary>
+        [System.NonSerialized] public ChunkTypeProfile inset;
+        /// <summary>The same inset settlement continues into the previous / next chunk (no town edge at that seam).</summary>
+        [System.NonSerialized] public bool settlementContinuesBefore;
+        [System.NonSerialized] public bool settlementContinuesAfter;
+        public bool SettlementContinuesBefore => inset != null ? settlementContinuesBefore : PrevSameType;
+        public bool SettlementContinuesAfter => inset != null ? settlementContinuesAfter : NextSameType;
+
+        /// <summary>
+        /// Sets an inset type (town, rest stop) into this chunk: the run's terrain, colours and backdrop stay; the
+        /// settlement and the road's cross-section (town sidewalks) come from the inset profile. Call after ApplyProfile.
+        /// </summary>
+        public void ApplyInset(ChunkTypeProfile insetType)
+        {
+            if (insetType == null) return;
+            inset = insetType;
+            typeName = insetType.DisplayName;
+            settlementSettings = CloneSettings(insetType.settlement) ?? new SettlementSettings();
+            // A town inset brings its streets; a rest stop keeps the host's side roads
+            if (insetType.sideRoads != null && insetType.sideRoads.enabled) sideRoadSettings = CloneSettings(insetType.sideRoads);
+            roadStyle = CloneSettings(insetType.roadStyle) ?? roadStyle;
+        }
+
+        // ---------------------------------------------------------------- transition between types
+        // The first chunk of a run is the transition from the previous type: ground colour, trees and desert scatter
+        // change gradually over most of its length (the seams themselves already match: heights, edges, backdrop).
+
+        /// <summary>This chunk starts a run that follows a different type (procedural neighbours only).</summary>
+        public bool IsTransitionChunk => hasNeighborInfo && !PrevSameType && prevType.IsValid && !prevType.IsSpecial && !sourceType.IsSpecial;
+
+        /// <summary>How far the transition reaches into the chunk (metres from the entry seam).</summary>
+        public float TransitionLength => chunkLength * 0.8f;
+
+        /// <summary>
+        /// 0 at the entry seam (looks like the previous type) to 1 (fully this type) at <see cref="TransitionLength"/>.
+        /// The edge wanders with world-space noise, so it is not a straight line across the road. 1 when not a transition.
+        /// </summary>
+        public float TransitionT(Vector3 worldPosition)
+        {
+            if (!IsTransitionChunk) return 1f;
+            float localZ = transform.InverseTransformPoint(worldPosition).z;
+            // No wobble right at the seam: there it must be exactly 0 to match the previous chunk's end
+            float wobble = (Mathf.PerlinNoise(worldPosition.x * 0.012f + 7.3f, worldPosition.z * 0.004f + 2.1f) - 0.5f) * 140f
+                           * Mathf.Clamp01(localZ / 80f);
+            return Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((localZ + wobble) / TransitionLength));
+        }
+
+        /// <summary>Biome whose forest trees grow here (Forest, Coast, Mountain incl. foothills).</summary>
+        public static bool HasForestTrees(ChunkBiomeType b) => b == ChunkBiomeType.Forest || b == ChunkBiomeType.Coast || b == ChunkBiomeType.Mountain;
+
+        /// <summary>
+        /// Share of forest trees kept at a point: a wooded chunk after a treeless themed run (desert) starts bare and
+        /// grows its forest; a desert chunk after a wooded run keeps thinning trees (see ChunkVegetationSpawner).
+        /// </summary>
+        public float TreeTransitionKeep(Vector3 worldPosition)
+        {
+            if (!IsTransitionChunk) return 1f;
+            bool hereTrees = HasForestTrees(biomeType), prevTrees = HasForestTrees(prevBiome);
+            if (hereTrees && IsThemedBiome(prevBiome)) return TransitionT(worldPosition);
+            if (IsThemedBiome(biomeType) && prevTrees) return 1f - TransitionT(worldPosition);
+            return 1f;
+        }
+
+        /// <summary>Weight of desert scatter (shrubs, rocks) at a point, including the transition on either side of a desert run.</summary>
+        public float DesertScatterWeight(Vector3 worldPosition)
+        {
+            if (biomeType == ChunkBiomeType.Desert) return IsTransitionChunk && prevBiome != ChunkBiomeType.Desert ? TransitionT(worldPosition) : 1f;
+            if (IsTransitionChunk && prevBiome == ChunkBiomeType.Desert) return 1f - TransitionT(worldPosition);
+            return 0f;
+        }
+
         /// <summary>
         /// Makes this instance the given procedural type: identity, road settings and the boundary/backdrop look are
         /// copied from the profile (copies, so the asset is never changed through the instance). Call right after
@@ -430,6 +526,8 @@ namespace EndlessSurvival.World
             roadStyle = CloneSettings(type.roadStyle) ?? new ChunkRoadStyle();
             mountainSettings = CloneSettings(type.mountainSettings) ?? new MountainTypeSettings();
             riverValleySettings = CloneSettings(type.riverValley) ?? new RiverValleySettings();
+            settlementSettings = CloneSettings(type.settlement) ?? new SettlementSettings();
+            sideRoadSettings = CloneSettings(type.sideRoads) ?? new SideRoadSettings();
             ApplyLook(type);
         }
 
@@ -471,6 +569,29 @@ namespace EndlessSurvival.World
 
         [Tooltip("Generated hill height or dip depth for this chunk in meters")]
         public float currentElevationParam = 0f;
+
+        /// <summary>
+        /// Half the chunk's width across the road (m). The prefab's terrain is still 500 m wide; at runtime every chunk's
+        /// cloned terrain is widened to 2 * HalfWidth (see RoadTerrainAdapter.EnsureRuntimeTerrainClone).
+        /// </summary>
+        public const float HalfWidth = 500f;
+        /// <summary>Heightmap resolution of the widened runtime terrain (~3.9 m across, ~2 m along the road).</summary>
+        public const int RuntimeHeightmapResolution = 257;
+
+        /// <summary>
+        /// Moves the prefab's side walls (LeftBoundary / RightBoundary, built for the old 500 m width) to the widened
+        /// terrain's edges.
+        /// </summary>
+        public void ApplyRuntimeWidth()
+        {
+            foreach (Transform child in transform)
+            {
+                if (child.name != "LeftBoundary" && child.name != "RightBoundary") continue;
+                Vector3 p = child.localPosition;
+                p.x = child.name == "LeftBoundary" ? -HalfWidth : HalfWidth;
+                child.localPosition = p;
+            }
+        }
 
         [Header("Dimensions & Sockets")]
         [Tooltip("Length of the chunk along the forward Z axis (standard 500 units)")]
@@ -864,7 +985,17 @@ namespace EndlessSurvival.World
 
         public void NotifySealPassageRequested()
         {
-            SealBackwardPassage();
+            // The wall closes one chunk further back: entering chunk N seals the wall at the start of chunk N-1,
+            // so the chunk the player is in and the one before it stay fully open. The start chunk never closes.
+            if (_manager != null)
+            {
+                int previousIndex = ChunkIndex - 1;
+                if (previousIndex > _manager.StartChunkIndex)
+                {
+                    Chunk previous = _manager.GetActiveChunkByIndex(previousIndex);
+                    if (previous != null) previous.SealBackwardPassage();
+                }
+            }
 
             if (_manager != null)
             {
