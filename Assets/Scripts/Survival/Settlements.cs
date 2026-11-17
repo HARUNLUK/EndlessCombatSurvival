@@ -1319,6 +1319,7 @@ namespace EndlessSurvival.Survival
             int baseCount = DifficultyCurve.EarlyGame ? rng.Range(1, 3) : rng.Range(2, 4);
             int count = DifficultyCurve.CapHumans(DifficultyCurve.ScaleEnemyCount(baseCount, home.pos));
             Vector3 front = home.rot * Vector3.forward;
+            var squad = EnemySquad.Create(SquadKind.Occupants, home.pos); // Enemy_AI_Deep_Plan.md 12.1
             for (int i = 0; i < count; i++)
             {
                 var prefab = DifficultyCurve.PickEnemyPrefab(rng, prefabs, home.pos);
@@ -1331,6 +1332,7 @@ namespace EndlessSurvival.Survival
                 var go = Object.Instantiate(prefab, p + Vector3.up * 0.1f, Quaternion.LookRotation(front), root);
                 var enemy = go.GetComponent<EnemyController>();
                 if (enemy == null) continue;
+                squad.Add(enemy);
                 DifficultyCurve.ApplyToEnemy(enemy, home.pos);
                 enemy.initialState = i == 0 ? EnemyController.EnemyState.Idle : EnemyController.EnemyState.Patrolling;
             }

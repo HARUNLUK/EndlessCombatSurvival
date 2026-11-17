@@ -53,6 +53,8 @@ namespace EndlessSurvival.Testing.Editor
             string previous = EditorSceneManager.GetActiveScene().path;
 
             if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/Scenes", "Test");
+            if (AssetDatabase.IsValidFolder(GeneratedFolder)) AssetDatabase.DeleteAsset(GeneratedFolder);
+            AssetDatabase.CreateFolder(Folder, "Generated");
 
             foreach (var (file, mode) in Scenes)
             {
@@ -65,13 +67,16 @@ namespace EndlessSurvival.Testing.Editor
                 }
 
                 var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-                foreach (var chunks in Object.FindObjectsByType<ChunkManager>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                    chunks.enabled = false;
-                foreach (var populator in Object.FindObjectsByType<EndlessSurvival.Survival.WorldPopulator>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                    populator.enabled = false;
+                StripToEssentials(scene, file);
 
+                // The test content lives in the scene itself (visible and editable in the hierarchy):
+                //   TestArena (mode) > Arena (ground, walls, cover...) and > NPCs (squad groups > NPC markers)
                 var go = new GameObject("TestArena (" + mode + ")");
-                go.AddComponent<TestArena>().mode = mode;
+                var arena = go.AddComponent<TestArena>();
+                arena.mode = mode;
+                arena.BuildWorld();
+                arena.BuildNpcMarkers();
+                PersistGenerated(go, file);
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log($"[TestSceneBuilder] {path} kuruldu ({mode}).");
@@ -84,6 +89,64 @@ namespace EndlessSurvival.Testing.Editor
                 EditorSceneManager.OpenScene(previous, OpenSceneMode.Single);
             if (!quiet) EditorUtility.DisplayDialog("Test sahneleri",
                 "Kuruldu: Assets/Scenes/Test/Test_Savas, Test_Gizlilik, Test_Surus.\n\nAçmak için: Endless Survival > Test Sahneleri menüsü. Play'e bas; test düğmeleri ayar panelinde (L3 + R3 / F1), \"Test\" sayfası. Bu sahnelerde kayıt yapılmaz.", "Tamam");
+        }
+
+        private const string GeneratedFolder = Folder + "/Generated";
+
+        /// <summary>
+        /// What a test scene keeps from Game.unity: the player, cameras, light, post volume, UI, the day / night
+        /// manager and the player's vehicle. Everything else (ChunkManager and its chunks, EditorPreview with its
+        /// vegetation and preview enemies, the ground plane, notes) is deleted: the test scene has no endless world.
+        /// </summary>
+        private static readonly HashSet<string> KeepRoots = new HashSet<string>
+        {
+            "PlayerArmature", "MainCamera", "PlayerFollowCamera", "VehicleFollowCamera", "Directional Light", "Global Volume",
+            "EventSystem", "UI", "InventoryCanvas", "CombatUI_Canvas", "TimeHUD_Canvas", "StealthHUD", "DayNightCycle_Manager",
+        };
+
+        private static void StripToEssentials(UnityEngine.SceneManagement.Scene scene, string file)
+        {
+            var removed = new List<string>();
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                if (KeepRoots.Contains(root.name)) continue;
+                if (root.GetComponentInChildren<EndlessSurvival.Vehicle.VehicleController>(true) != null) continue; // the player's car
+                removed.Add(root.name);
+                Object.DestroyImmediate(root);
+            }
+            Debug.Log($"[TestSceneBuilder] {file}: Game.unity'den silinenler: {string.Join(", ", removed)}");
+        }
+
+        /// <summary>
+        /// Materials and terrain data made by the arena code are saved as assets next to the scenes, so the scene
+        /// keeps them (an unsaved TerrainData or Material would be lost on reopen).
+        /// </summary>
+        private static void PersistGenerated(GameObject root, string prefix)
+        {
+            var saved = new Dictionary<Material, Material>();
+            int n = 0;
+            Material Save(Material m)
+            {
+                if (m == null || EditorUtility.IsPersistent(m)) return m;
+                if (saved.TryGetValue(m, out var done)) return done;
+                AssetDatabase.CreateAsset(m, $"{GeneratedFolder}/{prefix}_Mat{n++}.mat");
+                saved[m] = m;
+                return m;
+            }
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++) mats[i] = Save(mats[i]);
+                r.sharedMaterials = mats;
+            }
+            foreach (var t in root.GetComponentsInChildren<Terrain>(true))
+            {
+                if (t.terrainData != null && !EditorUtility.IsPersistent(t.terrainData))
+                    AssetDatabase.CreateAsset(t.terrainData, $"{GeneratedFolder}/{prefix}_Terrain.asset");
+                t.materialTemplate = Save(t.materialTemplate);
+                var col = t.GetComponent<TerrainCollider>();
+                if (col != null) col.terrainData = t.terrainData;
+            }
         }
 
         /// <summary>Death reloads the active scene by build index, so the test scenes must be in the build list.</summary>

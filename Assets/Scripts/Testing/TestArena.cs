@@ -62,16 +62,13 @@ namespace EndlessSurvival.Testing
             foreach (var p in FindObjectsByType<WorldPopulator>(FindObjectsSortMode.None)) p.enabled = false;
             foreach (var j in FindObjectsByType<Journey>(FindObjectsSortMode.None)) j.enabled = false;
 
-            _root = new GameObject("TestArena_World").transform;
+            // The arena is built in the editor (TestSceneBuilder) and saved in the scene, child "Arena". An old scene
+            // without it is built here at runtime as before.
+            _root = transform.Find(ArenaName);
+            if (_root == null) BuildWorld();
+            else MakeMaterials(); // cones / loose crates spawned at runtime use them
             _spawned = new GameObject("TestArena_Spawned").transform;
-            MakeMaterials();
-            BuildGround();
-            switch (mode)
-            {
-                case Mode.Combat: BuildCombat(); break;
-                case Mode.Stealth: BuildStealth(); break;
-                case Mode.Driving: BuildDriving(); break;
-            }
+            if (mode == Mode.Driving) SpawnCones();
             RegisterTuning();
 
             // Other systems find the player and the vehicle in their own Start; place them a few frames later
@@ -83,13 +80,126 @@ namespace EndlessSurvival.Testing
                 cycle.timeSpeedMultiplier = 0f;
                 SetHour(mode == Mode.Stealth ? 22.5f : 12f);
             }
+            // No chunks here: the weather took the fixed seed with the clock stopped and was full fog for good, which
+            // halved every enemy's sight (17 Nov AI playtest). Test scenes run in clear weather, held: setting the hour
+            // starts a new weather segment at once, and in the stealth scene it then rained (guards sheltered at home).
+            if (WeatherSystem.Instance != null) WeatherSystem.Instance.DebugForce(WeatherType.Clear, true);
             ResetPlayer();
             ResetVehicle();
-            if (mode == Mode.Stealth) SpawnCamp();
+            // NPCs from the spawn markers placed in the scene (hierarchy: TestArena > NPCs > squad > NPC)
+            if (!SpawnFromMarkers() && mode == Mode.Stealth) SpawnCamp();
             SurvivalNotify.Show(Title + ": test düğmeleri ayar panelinde (L3 + R3 / F1), \"Test\" sayfası. Burada kayıt yapılmaz.", new Color(0.6f, 0.9f, 1f), 8f);
         }
 
         private string Title => mode == Mode.Combat ? "Savaş testi" : mode == Mode.Stealth ? "Gizlilik testi" : "Sürüş testi";
+
+        public const string ArenaName = "Arena";
+        public const string NpcRootName = "NPCs";
+
+        /// <summary>Builds the arena geometry under the child "Arena" (edit mode by TestSceneBuilder, or at runtime).</summary>
+        public void BuildWorld()
+        {
+            var old = transform.Find(ArenaName);
+            if (old != null) DestroyImmediate(old.gameObject);
+            _root = new GameObject(ArenaName).transform;
+            _root.SetParent(transform, false);
+            MakeMaterials();
+            BuildGround();
+            switch (mode)
+            {
+                case Mode.Combat: BuildCombat(); break;
+                case Mode.Stealth: BuildStealth(); break;
+                case Mode.Driving: BuildDriving(); break;
+            }
+        }
+
+        /// <summary>
+        /// Default NPC spawn markers (edit mode, TestSceneBuilder). They stay in the scene: move, add or delete them in
+        /// the hierarchy; at Play each squad group becomes a real squad of the new AI.
+        /// </summary>
+        public void BuildNpcMarkers()
+        {
+            var old = transform.Find(NpcRootName);
+            if (old != null) DestroyImmediate(old.gameObject);
+            var root = new GameObject(NpcRootName).transform;
+            root.SetParent(transform, false);
+            if (mode == Mode.Combat)
+            {
+                var patrol = Group(root, "Takım - devriye (görmemiş)", SquadKind.Patrol, EnemyController.EnemyState.Patrolling);
+                Marker(patrol, Kind.Rifle, new Vector3(-6f, 0f, 30f), 180f);
+                Marker(patrol, Kind.Pistol, new Vector3(-2f, 0f, 32f), 180f);
+                Marker(patrol, Kind.Bat, new Vector3(2f, 0f, 31f), 180f);
+                Marker(patrol, Kind.Rifle, new Vector3(6f, 0f, 33f), 180f);
+
+                var camp = Group(root, "Takım - kamp (oturuyor / nöbette)", SquadKind.Camp, EnemyController.EnemyState.Idle);
+                Marker(camp, Kind.Rifle, new Vector3(-14f, 0f, 50f), 180f);
+                Marker(camp, Kind.Knife, new Vector3(-10f, 0f, 52f), 160f, EnemyController.EnemyState.Sitting);
+                Marker(camp, Kind.ShieldPistol, new Vector3(10f, 0f, 50f), 200f);
+                Marker(camp, Kind.Pistol, new Vector3(14f, 0f, 53f), 200f, EnemyController.EnemyState.Sitting);
+                Marker(camp, Kind.ShieldMelee, new Vector3(0f, 0f, 54f), 180f);
+            }
+            else if (mode == Mode.Stealth)
+            {
+                Vector3 c = new Vector3(0f, 0f, 45f);
+                var camp = Group(root, "Takım - kamp", SquadKind.Camp, EnemyController.EnemyState.Idle);
+                Marker(camp, Kind.Rifle, c + new Vector3(0f, 0f, -12f), 0f, EnemyController.EnemyState.Patrolling);
+                Marker(camp, Kind.Pistol, c + new Vector3(10f, 0f, 0f), 270f, EnemyController.EnemyState.Patrolling);
+                Marker(camp, Kind.Knife, c + new Vector3(-10f, 0f, 0f), 90f, EnemyController.EnemyState.Patrolling);
+                Marker(camp, Kind.Rifle, c + new Vector3(-2f, 0f, -16.5f), 180f);
+                Marker(camp, Kind.Bat, c + new Vector3(6f, 0f, 4f), 200f, EnemyController.EnemyState.Sitting);
+                Marker(camp, Kind.Pistol, c + new Vector3(-6f, 0f, 9f), 160f);
+            }
+        }
+
+        private static TestSquadSpawn Group(Transform root, string name, SquadKind kind, EnemyController.EnemyState state)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(root, false);
+            var g = go.AddComponent<TestSquadSpawn>();
+            g.squadKind = kind;
+            g.state = state;
+            return g;
+        }
+
+        private static void Marker(TestSquadSpawn group, Kind kind, Vector3 position, float yaw, EnemyController.EnemyState? state = null)
+        {
+            var go = new GameObject("NPC - " + kind);
+            go.transform.SetParent(group.transform, false);
+            go.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+            var m = go.AddComponent<TestNpcSpawn>();
+            m.kind = kind;
+            m.useSquadState = !state.HasValue;
+            if (state.HasValue) m.state = state.Value;
+        }
+
+        /// <summary>Spawns every enabled squad group of the scene's markers. False when the scene has none.</summary>
+        private bool SpawnFromMarkers()
+        {
+            var groups = GetComponentsInChildren<TestSquadSpawn>(false);
+            if (groups.Length == 0) return false;
+            foreach (var g in groups)
+            {
+                if (!g.spawnOnStart) continue;
+                var markers = g.GetComponentsInChildren<TestNpcSpawn>(false);
+                if (markers.Length == 0) continue;
+                Vector3 home = Vector3.zero;
+                foreach (var m in markers) home += m.transform.position;
+                home /= markers.Length;
+                var squad = EnemySquad.Create(g.squadKind, home);
+                foreach (var m in markers)
+                {
+                    var state = m.useSquadState ? g.state : m.state;
+                    SpawnEnemy(m.kind, m.transform.position, state, m.transform.eulerAngles.y, squad);
+                }
+            }
+            return true;
+        }
+
+        private void RespawnMarkers()
+        {
+            ClearSpawned();
+            if (!SpawnFromMarkers()) SurvivalNotify.Warn("Bu sahnede NPC işareti yok (Endless Survival > Test Sahneleri > Kur - Yenile)");
+        }
 
         // ================================================================== building blocks
 
@@ -166,9 +276,9 @@ namespace EndlessSurvival.Testing
             Box("PlayerCover_R", new Vector3(3.5f, 0.6f, 5.5f), new Vector3(1.2f, 1.2f, 1.2f), _matCover);
         }
 
-        private enum Kind { Rifle, Pistol, Knife, Bat, ShieldMelee, ShieldPistol }
+        public enum Kind { Rifle, Pistol, Knife, Bat, ShieldMelee, ShieldPistol }
 
-        private EnemyController SpawnEnemy(Kind kind, Vector3 position, EnemyController.EnemyState state, float yaw)
+        private EnemyController SpawnEnemy(Kind kind, Vector3 position, EnemyController.EnemyState state, float yaw, EnemySquad squad = null)
         {
             GameObject prefab = PrefabFor(kind);
             if (prefab == null)
@@ -182,6 +292,7 @@ namespace EndlessSurvival.Testing
             enemy.initialState = state == EnemyController.EnemyState.Combat ? EnemyController.EnemyState.Idle : state;
             if (kind == Kind.ShieldMelee || kind == Kind.ShieldPistol)
                 enemy.heldShieldItem = SurvivalSettings.Instance.Item(kind == Kind.ShieldPistol ? "Item_RiotShield" : "Item_WoodenShield");
+            squad?.Add(enemy); // Enemy_AI_Deep_Plan.md U25: test squads are set up with their kind
             DifficultyCurve.ApplyToEnemy(enemy, position); // limited ammo like on the road
             if (state == EnemyController.EnemyState.Combat) StartCoroutine(AlertNextFrame(enemy));
             return enemy;
@@ -191,7 +302,10 @@ namespace EndlessSurvival.Testing
         {
             yield return null;
             yield return null;
-            if (enemy != null && !enemy.IsDead) enemy.SetState(EnemyController.EnemyState.Combat);
+            if (enemy == null || enemy.IsDead || AITarget.Player == null) yield break;
+            // The wave knows where the player is (it was sent at him), then fights by its own senses
+            enemy.Belief.Note(AITarget.Player, AITarget.Player.Position, Vector3.zero, 0.8f, BeliefSource.Told);
+            enemy.EnterCombat(AITarget.Player);
         }
 
         private static GameObject PrefabFor(Kind kind)
@@ -214,8 +328,18 @@ namespace EndlessSurvival.Testing
 
         private void SpawnWave(params Kind[] kinds)
         {
+            var squad = EnemySquad.Create(SquadKind.Raid, new Vector3(0f, 0f, 36f));
             for (int i = 0; i < kinds.Length; i++)
-                SpawnEnemy(kinds[i], CombatSpawnPoint(i, kinds.Length), EnemyController.EnemyState.Combat, 180f);
+                SpawnEnemy(kinds[i], CombatSpawnPoint(i, kinds.Length), EnemyController.EnemyState.Combat, 180f, squad);
+        }
+
+        /// <summary>A squad that has not seen the player yet (patrol: robbery test 21.4; ambush: holds fire 21.5).</summary>
+        private void SpawnQuiet(SquadKind squadKind, params Kind[] kinds)
+        {
+            var squad = EnemySquad.Create(squadKind, new Vector3(0f, 0f, 36f));
+            var state = squadKind == SquadKind.Patrol ? EnemyController.EnemyState.Patrolling : EnemyController.EnemyState.Idle;
+            for (int i = 0; i < kinds.Length; i++)
+                SpawnEnemy(kinds[i], CombatSpawnPoint(i, kinds.Length), state, 180f, squad);
         }
 
         private void SpawnAnimals(AnimalKind kind, int count)
@@ -260,12 +384,13 @@ namespace EndlessSurvival.Testing
         {
             ClearSpawned();
             Vector3 c = new Vector3(0f, 0f, 45f);
-            SpawnEnemy(Kind.Rifle, c + new Vector3(0f, 0f, -12f), EnemyController.EnemyState.Patrolling, 0f);
-            SpawnEnemy(Kind.Pistol, c + new Vector3(10f, 0f, 0f), EnemyController.EnemyState.Patrolling, 270f);
-            SpawnEnemy(Kind.Knife, c + new Vector3(-10f, 0f, 0f), EnemyController.EnemyState.Patrolling, 90f);
-            SpawnEnemy(Kind.Rifle, c + new Vector3(-2f, 0f, -16.5f), EnemyController.EnemyState.Idle, 180f);   // gate guard
-            SpawnEnemy(Kind.Bat, c + new Vector3(6f, 0f, 4f), EnemyController.EnemyState.Sitting, 200f);
-            SpawnEnemy(Kind.Pistol, c + new Vector3(-6f, 0f, 9f), EnemyController.EnemyState.Idle, 160f);
+            var squad = EnemySquad.Create(SquadKind.Camp, c);
+            SpawnEnemy(Kind.Rifle, c + new Vector3(0f, 0f, -12f), EnemyController.EnemyState.Patrolling, 0f, squad);
+            SpawnEnemy(Kind.Pistol, c + new Vector3(10f, 0f, 0f), EnemyController.EnemyState.Patrolling, 270f, squad);
+            SpawnEnemy(Kind.Knife, c + new Vector3(-10f, 0f, 0f), EnemyController.EnemyState.Patrolling, 90f, squad);
+            SpawnEnemy(Kind.Rifle, c + new Vector3(-2f, 0f, -16.5f), EnemyController.EnemyState.Idle, 180f, squad);   // gate guard
+            SpawnEnemy(Kind.Bat, c + new Vector3(6f, 0f, 4f), EnemyController.EnemyState.Sitting, 200f, squad);
+            SpawnEnemy(Kind.Pistol, c + new Vector3(-6f, 0f, 9f), EnemyController.EnemyState.Idle, 160f, squad);
         }
 
         // ================================================================== driving
@@ -289,7 +414,6 @@ namespace EndlessSurvival.Testing
             Box("CrashWall", new Vector3(28f, 1.5f, 90f), new Vector3(0.8f, 3f, 20f), _matWall);
 
             BuildOffroad();
-            SpawnCones();
         }
 
         /// <summary>Hilly terrain east of the road: a real TerrainCollider, so the arcade model counts it as off-road.</summary>
@@ -438,12 +562,13 @@ namespace EndlessSurvival.Testing
             EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "En yakın düşman", () =>
             {
                 var e = NearestEnemy();
-                return e == null ? "-" : $"{e.State}, şüphe {Mathf.RoundToInt(e.suspicionMeter)}";
+                return e == null ? "-" : $"{EnemyController.StateText(e.State)}, şüphe {Mathf.RoundToInt(e.suspicionMeter)}";
             });
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Oyuncuyu başa al ve iyileştir", () => Instance?.ResetPlayer());
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Aracı başa al (yakıt ve can dolu)", () => Instance?.ResetVehicle());
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Aracın yanına ışınlan", () => Instance?.PlayerToVehicle());
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Hepsini temizle (düşman, hayvan, duba)", () => Instance?.ClearSpawned());
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Sahnedeki NPC'leri yeniden kur (işaretlerden)", () => Instance?.RespawnMarkers());
 
             // Combat
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Savaş: tüfekli asker", () => Instance?.SpawnWave(Kind.Rifle));
@@ -451,11 +576,18 @@ namespace EndlessSurvival.Testing
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Savaş: bıçaklı + sopalı", () => Instance?.SpawnWave(Kind.Knife, Kind.Bat));
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Savaş: kalkanlı (sopa) + kalkanlı (tabanca)", () => Instance?.SpawnWave(Kind.ShieldMelee, Kind.ShieldPistol));
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Savaş: karışık grup (6, jeton testi)", () => Instance?.SpawnWave(Kind.Rifle, Kind.Pistol, Kind.Knife, Kind.ShieldMelee, Kind.Rifle, Kind.Bat));
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "AI: devriye (4, görmemiş; soygun denenebilir)", () => Instance?.SpawnQuiet(SquadKind.Patrol, Kind.Rifle, Kind.Pistol, Kind.Rifle, Kind.Bat));
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "AI: pusu takımı (4, ateşi tutar)", () => Instance?.SpawnQuiet(SquadKind.Ambush, Kind.Rifle, Kind.Rifle, Kind.Pistol, Kind.Rifle));
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Savaş: kurt sürüsü (3)", () => Instance?.SpawnAnimals(AnimalKind.Wolf, 3));
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Savaş: ayı", () => Instance?.SpawnAnimals(AnimalKind.Bear, 1));
 
             // Stealth
-            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Gizlilik: kampı yeniden kur", () => Instance?.SpawnCamp());
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Gizlilik: kampı yeniden kur", () =>
+            {
+                if (Instance == null) return;
+                Instance.ClearSpawned();
+                if (!Instance.SpawnFromMarkers()) Instance.SpawnCamp();
+            });
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Gece / gündüz", () =>
             {
                 var cycle = DayNightCycle.Instance;

@@ -126,23 +126,20 @@ namespace EndlessSurvival.Camping
         /// </summary>
         public bool RollAmbushOnSleep(Vector3 campPosition)
         {
-            var cycle = DayNightCycle.Instance;
-            bool isNight = cycle != null && cycle.IsNight;
-            float chance = isNight ? nightAmbushChance : dayAmbushChance;
-
-            if (Random.value <= chance)
-            {
-                TriggerAmbush(campPosition);
-                return true;
-            }
-
-            return false;
+            // Enemy_AI_Deep_Plan.md 19.4: no dice any more. Someone must be near and the camp must be visible
+            // (fire, openness, roof, sleeping in the vehicle). Nobody around: a safe night.
+            if (!AbstractGroups.CampThreat(campPosition, out int count)) return false;
+            TriggerAmbush(campPosition, count);
+            return true;
         }
 
         /// <summary>
-        /// Belirtilen kamp koordinatında düşman baskın dalgası başlatır.
+        /// Belirtilen kamp koordinatında düşman baskın dalgası başlatır. The raiders come to look (Suspicious, belief
+        /// at the fire, not at the player); with the fire out and the player in the vehicle they search (19.4).
         /// </summary>
-        public void TriggerAmbush(Vector3 campPosition)
+        public void TriggerAmbush(Vector3 campPosition) => TriggerAmbush(campPosition, 0);
+
+        public void TriggerAmbush(Vector3 campPosition, int wantCount)
         {
             if (IsAmbushActive) return;
             if (EndlessSurvival.Survival.SafeZone.Near(campPosition)) return; // nobody raids a camp inside a Safe Zone
@@ -153,8 +150,11 @@ namespace EndlessSurvival.Camping
 
             var player = GameObject.FindGameObjectWithTag("Player");
             Vector3 playerPos = player != null ? player.transform.position : campPosition;
+            var squad = EnemySquad.Create(SquadKind.Raid, campPosition);
+            bool fireOut = EndlessSurvival.Survival.CraftingSystem.NearestBurningFire(campPosition, 8f) == null;
+            bool hiddenInCar = fireOut && EndlessSurvival.Survival.SurvivalDirector.PlayerInVehicle;
 
-            int count = Random.Range(minEnemies, maxEnemies + 1);
+            int count = wantCount > 0 ? wantCount : Random.Range(minEnemies, maxEnemies + 1);
             // Early game: a new character is never raided by more than a couple of people
             count = EndlessSurvival.Survival.DifficultyCurve.CapHumans(count);
             float baseAngle = Random.Range(0f, 360f);
@@ -164,7 +164,8 @@ namespace EndlessSurvival.Camping
                 // Kamp etrafında 90 derecelik bir yay açısı boyunca düşmanları grupla
                 float angle = baseAngle + (i - (count - 1) * 0.5f) * (80f / Mathf.Max(1, count));
                 float rad = angle * Mathf.Deg2Rad;
-                Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * (spawnDistance + Random.Range(-3f, 4f));
+                float dist = hiddenInCar ? 12f : spawnDistance;
+                Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * (dist + Random.Range(-3f, 4f));
                 Vector3 spawnPos = campPosition + offset;
 
                 // Arazi yüksekliğini raycast veya Terrain ile belirle
@@ -189,16 +190,30 @@ namespace EndlessSurvival.Camping
                     if (enemyCtrl != null)
                     {
                         if (player != null) enemyCtrl.target = player.transform;
-                        enemyCtrl.SetState(EnemyController.EnemyState.Combat);
-                        enemyCtrl.suspicionMeter = 100f;
-                        enemyObj.transform.LookAt(new Vector3(playerPos.x, enemyObj.transform.position.y, playerPos.z));
+                        squad.Add(enemyCtrl);
+                        enemyObj.transform.LookAt(new Vector3(campPosition.x, enemyObj.transform.position.y, campPosition.z));
                         _activeAmbushEnemies.Add(enemyCtrl);
                     }
                 }
             }
 
+            // They know a camp is there, not where the player is
+            squad.Shared.target = AITarget.Player;
+            squad.Shared.position = campPosition;
+            squad.Shared.confidence = hiddenInCar ? 0.3f : 0.5f;
+            squad.Shared.time = Time.time;
+            squad.Shared.source = BeliefSource.Told;
+            StartCoroutine(RaiseNextFrame(squad, campPosition, hiddenInCar));
+
             ShowBanner("KAMP BASKINI!", $"Düşmanlar kamp ateşini bastı! ({_activeAmbushEnemies.Count} Düşman)", new Color(0.85f, 0.15f, 0.15f, 0.92f), 8f);
             Debug.Log($"<color=red>[CampAmbushManager] Kamp Baskını Başladı! {_activeAmbushEnemies.Count} düşman kampa saldırıyor.</color>");
+        }
+
+        private static IEnumerator RaiseNextFrame(EnemySquad squad, Vector3 camp, bool search)
+        {
+            yield return null;
+            yield return null;
+            squad.SetPhase(search ? AlertPhase.Searching : AlertPhase.Suspicious, camp);
         }
 
         private void UpdateAmbushState()

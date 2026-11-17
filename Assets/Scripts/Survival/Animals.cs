@@ -143,6 +143,21 @@ namespace EndlessSurvival.Survival
             var stealth = PlayerStealthController.Instance;
             if (stealth != null && stealth.IsCrouching) sight *= 0.5f;
 
+            // Enemy_AI_Deep_Plan.md U13: a predator goes for the nearest person, not only the player. A human
+            // enemy closer than the player becomes the prey (it is treated like the player on foot).
+            if (IsPredator)
+            {
+                _preyCheck -= dt;
+                if (_preyCheck <= 0f) { _preyCheck = 0.5f; _prey = FindHumanPrey(sight * (_state == State.Hunt ? 2.2f : 1f)); }
+                if (_prey != null && (!_prey.IsAlive)) _prey = null;
+                if (_prey != null)
+                {
+                    float pd = Vector3.Distance(transform.position, _prey.Position);
+                    if (!playerOnFoot || pd < dist) { target = _prey.Position; dist = pd; playerOnFoot = true; }
+                    else _prey = null;
+                }
+            }
+
             _stateTimer -= dt;
             switch (_state)
             {
@@ -189,9 +204,36 @@ namespace EndlessSurvival.Survival
             if (_body != null) _body.localPosition = new Vector3(0f, Mathf.Abs(Mathf.Sin(_bob)) * 0.05f, 0f);
         }
 
+        private EndlessCombat.AI.AITarget _prey;
+        private float _preyCheck;
+
+        private EndlessCombat.AI.AITarget FindHumanPrey(float range)
+        {
+            EndlessCombat.AI.AITarget best = null;
+            float bestSq = range * range;
+            foreach (var t in EndlessCombat.AI.AITarget.All)
+            {
+                if (t == null || t.kind != EndlessCombat.AI.AITargetKind.Human || !t.IsAlive) continue;
+                float sq = (t.Position - transform.position).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = t; }
+            }
+            return best;
+        }
+
         private void Bite()
         {
             _nextAttack = Time.time + _attackCooldown;
+            if (_prey != null)
+            {
+                var d = _prey.GetComponentInParent<IDamageable>();
+                if (d != null && !d.IsDead)
+                {
+                    Vector3 dir = (_prey.Position - transform.position).normalized;
+                    EndlessCombat.Combat.Damage.Deal(d, new EndlessCombat.Combat.DamageInfo(_damage, EndlessCombat.Combat.DamageType.Animal,
+                        _prey.Center, dir) { SourceDirection = -dir, Source = gameObject });
+                }
+                return;
+            }
             var player = SurvivalDirector.Player;
             if (player == null) return;
             var health = player.GetComponent<PlayerHealth>();

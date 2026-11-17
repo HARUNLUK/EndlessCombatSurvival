@@ -115,6 +115,67 @@ namespace EndlessCombat.AI
             _lastRepath = -999f;
         }
 
+        // ------------------------------------------------------------------ route queries (Enemy_AI_Deep_Plan 16.5)
+
+        private static NavMeshPath _queryPath;
+        private static readonly Vector3[] QueryCorners = new Vector3[48];
+        private int _queryCount;
+
+        private int QueryRoute(Vector3 goal)
+        {
+            _queryCount = 0;
+            if (LocalNavMeshBuilder.Instance == null || !LocalNavMeshBuilder.Instance.HasNavMesh) return 0;
+            if (_queryPath == null) _queryPath = new NavMeshPath();
+            float sample = _owner.navMeshSampleDistance;
+            if (!NavMesh.SamplePosition(_t.position, out NavMeshHit from, sample, NavMesh.AllAreas)) return 0;
+            if (!NavMesh.SamplePosition(goal, out NavMeshHit to, sample, NavMesh.AllAreas)) return 0;
+            if (!NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, _queryPath) || _queryPath.status != NavMeshPathStatus.PathComplete) return 0;
+            _queryCount = _queryPath.GetCornersNonAlloc(QueryCorners);
+            return _queryCount;
+        }
+
+        /// <summary>Route length to a goal (sum of corners); without a route the straight distance × 1.4.</summary>
+        public float PathLength(Vector3 goal) => PathLength(goal, out _);
+
+        /// <summary>Same, and whether a complete NavMesh route exists (false also when there is no NavMesh).</summary>
+        public float PathLength(Vector3 goal, out bool routed)
+        {
+            int n = QueryRoute(goal);
+            routed = n >= 2;
+            if (n < 2)
+            {
+                Vector3 d = goal - _t.position;
+                d.y = 0f;
+                return d.magnitude * 1.4f;
+            }
+            float len = 0f;
+            for (int i = 1; i < n; i++) len += Vector3.Distance(QueryCorners[i - 1], QueryCorners[i]);
+            return len;
+        }
+
+        /// <summary>Fraction (0..1) of the route corners not seen from the threat (flank route choice).</summary>
+        public float RouteHiddenFraction(Vector3 goal, Vector3 threat)
+        {
+            int n = QueryRoute(goal);
+            if (n < 2) return 0.5f;
+            int hidden = 0;
+            Vector3 eye = threat + Vector3.up * 1.5f;
+            for (int i = 0; i < n; i++)
+                if (CoverMap.Blocked(eye, QueryCorners[i] + Vector3.up * 1.2f)) hidden++;
+            return hidden / (float)n;
+        }
+
+        /// <summary>The goal can not be reached (partial / no route and more than 2 m away) for 2 s (16.4).</summary>
+        public bool Unreachable => Time.time - _reachableAt > 2f;
+        private float _reachableAt;
+
+        public void NoteReachability(Vector3 goal)
+        {
+            Vector3 d = goal - _t.position;
+            d.y = 0f;
+            if (Route == RouteState.Full || Route == RouteState.None || Route == RouteState.NoNavMesh || d.magnitude < 2f) _reachableAt = Time.time;
+        }
+
         public static bool OnNavMesh(Vector3 p, float radius, out Vector3 snapped)
         {
             snapped = p;

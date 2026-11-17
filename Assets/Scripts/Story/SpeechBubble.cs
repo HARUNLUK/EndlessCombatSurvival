@@ -65,6 +65,12 @@ namespace EndlessSurvival.Story
             gameObject.SetActive(true);
         }
 
+        /// <summary>Text colour (enemy shouts: red threat, yellow state, white info; Enemy_AI_Deep_Plan.md 11.3).</summary>
+        public void SetColor(Color c)
+        {
+            if (textUI != null) textUI.color = c;
+        }
+
         public void Hide()
         {
             isVisible = false;

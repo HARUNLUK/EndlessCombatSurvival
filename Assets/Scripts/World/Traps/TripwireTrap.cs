@@ -50,6 +50,8 @@ namespace EndlessSurvival.World.Traps
             }
         }
 
+        private EndlessCombat.AI.AITarget _trippedBy;
+
         private void OnTriggerEnter(Collider other)
         {
             if (isDisarmed || isTriggered) return;
@@ -65,8 +67,27 @@ namespace EndlessSurvival.World.Traps
                 }
 
                 // Ayaktaysa tuzağa takılır!
+                _trippedBy = EndlessCombat.AI.AITarget.Player;
                 TriggerExplosion();
+                return;
             }
+
+            // Enemy_AI_Deep_Plan.md U14: anyone with an AITarget trips it. The camp's own people know where their
+            // traps are, unless they are running away or panicking.
+            var t = other.GetComponentInParent<EndlessCombat.AI.AITarget>();
+            if (t == null || t.kind == EndlessCombat.AI.AITargetKind.Vehicle) return;
+            var enemy = t.GetComponent<EndlessCombat.AI.EnemyController>();
+            if (enemy != null)
+            {
+                if (enemy.IsDead) return;
+                var squad = enemy.Squad;
+                bool ownCamp = squad != null && (squad.kind == EndlessCombat.AI.SquadKind.Camp || squad.kind == EndlessCombat.AI.SquadKind.Occupants)
+                               && (squad.home - transform.position).sqrMagnitude < 45f * 45f;
+                bool lostHead = enemy.Fleeing || (enemy.Nerve != null && enemy.Nerve.Level >= EndlessCombat.AI.NerveLevel.Panic);
+                if (ownCamp && !lostHead) return;
+            }
+            _trippedBy = t;
+            TriggerExplosion();
         }
 
         public void TriggerExplosion()
@@ -98,25 +119,28 @@ namespace EndlessSurvival.World.Traps
 
             Destroy(explosionEffect, 0.35f);
 
-            // Hasar verme
+            // Hasar verme: everyone in the blast (U14), once each
             Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
+            var done = new System.Collections.Generic.HashSet<IDamageable>();
             foreach (var hit in hits)
             {
-                var health = hit.GetComponent<PlayerHealth>();
-                if (health != null)
-                {
-                    GameStatsTracker.Instance?.SetCauseOfDeath("Tuzak Patlaması (Tripwire)");
-                    EndlessCombat.Combat.Damage.Deal(health, new EndlessCombat.Combat.DamageInfo(damage, EndlessCombat.Combat.DamageType.Trap,
-                        hit.transform.position, Vector3.up) { Source = gameObject });
-                }
+                var target = hit.GetComponentInParent<IDamageable>();
+                if (target == null || target.IsDead || !done.Add(target)) continue;
+                if (target is PlayerHealth) GameStatsTracker.Instance?.SetCauseOfDeath("Tuzak Patlaması (Tripwire)");
+                EndlessCombat.Combat.Damage.Deal(target, new EndlessCombat.Combat.DamageInfo(damage, EndlessCombat.Combat.DamageType.Trap,
+                    hit.transform.position, Vector3.up) { Source = gameObject });
             }
 
-            // Etraftaki düşmanları uyar
-            var stealth = PlayerStealthController.Instance;
-            if (stealth != null)
+            // Etraftaki düşmanları uyar: the blast is heard; when the player tripped it, they know someone is there
+            bool byPlayer = _trippedBy != null && _trippedBy.kind == EndlessCombat.AI.AITargetKind.Player;
+            EndlessCombat.AI.AIStimuli.Raise(new EndlessCombat.AI.Stimulus
             {
-                stealth.AlertNearbyEnemies(transform.position, alertRadius);
-            }
+                kind = EndlessCombat.AI.StimulusKind.Explosion,
+                position = transform.position,
+                radius = alertRadius,
+                source = byPlayer ? _trippedBy : null,
+                certainty = byPlayer ? 0.6f : 0f
+            });
         }
 
         public string GetPrompt()

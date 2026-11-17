@@ -14,12 +14,23 @@ namespace EndlessCombat.AI
             controller = GetComponent<EnemyController>();
         }
 
+        /// <summary>Camp chatter: not while dead or alerted.</summary>
         public void Speak(string text, float duration)
         {
-            // Don't speak if dead or in combat
             if (controller != null && controller.IsDead) return;
             if (controller != null && controller.IsAlerted) return;
+            Show(text, Color.white, duration);
+        }
 
+        /// <summary>Shouts (EnemyBarks): also in combat, with a colour.</summary>
+        public void Shout(string text, Color color, float duration)
+        {
+            if (controller != null && controller.IsDead) return;
+            Show(text, color, duration);
+        }
+
+        private void Show(string text, Color color, float duration)
+        {
             if (speechBubblePrefab == null)
             {
                 speechBubblePrefab = Resources.Load<SpeechBubble>("UI/SpeechBubble");
@@ -33,12 +44,32 @@ namespace EndlessCombat.AI
 
             if (currentBubble != null)
             {
+                currentBubble.SetColor(color);
                 currentBubble.ShowText(text, duration);
             }
+            else
+            {
+                _fallbackText = text;
+                _fallbackColor = color;
+                _fallbackUntil = Time.time + duration;
+            }
+        }
+
+        // No bubble prefab in Resources: the overlay draws the text instead (AISystem)
+        private string _fallbackText;
+        private Color _fallbackColor;
+        private float _fallbackUntil;
+
+        public bool FallbackVisible(out string text, out Color color)
+        {
+            text = _fallbackText;
+            color = _fallbackColor;
+            return currentBubble == null && Time.time < _fallbackUntil && !string.IsNullOrEmpty(text);
         }
 
         public void StopSpeaking()
         {
+            _fallbackUntil = 0f;
             if (currentBubble != null)
             {
                 currentBubble.Hide();

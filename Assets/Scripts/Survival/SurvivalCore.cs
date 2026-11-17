@@ -260,7 +260,9 @@ namespace EndlessSurvival.Survival
         private static void Spawn()
         {
             if (SurvivalDirector.Instance != null) return;
-            if (UnityEngine.Object.FindAnyObjectByType<ChunkManager>() == null) return; // only the game scene
+            // Only the game scene and the test scenes (which have no chunk system at all)
+            if (UnityEngine.Object.FindAnyObjectByType<ChunkManager>() == null
+                && UnityEngine.Object.FindAnyObjectByType<EndlessSurvival.Testing.TestArena>() == null) return;
             GameClock.Reset();
             SurvivalUIState.ResetAll();
             RoadBarricade.ResetAll();

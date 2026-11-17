@@ -191,21 +191,25 @@ namespace EndlessCombat.Combat
         /// </summary>
         public void EmitGunshotNoise(Vector3 origin)
         {
-            AlertNearbyEnemies(origin, gunshotNoiseRadius);
+            // Enemy_AI_Deep_Plan.md 6: every shot (player and enemy) is raised by WeaponController as a Gunshot
+            // stimulus with its shooter; nothing to do here any more.
         }
 
+        /// <summary>
+        /// A noise (melee swing, trap, tool work). At the player: the player's noise (source known); elsewhere: a
+        /// distraction with no source (enemies go and look). Goes through the stimulus bus (AIStimuli).
+        /// </summary>
         public void AlertNearbyEnemies(Vector3 soundOrigin, float radius)
         {
-            CombatHooks.RaiseNoise(soundOrigin, radius);
-            Collider[] hits = Physics.OverlapSphere(soundOrigin, radius);
-            foreach (var hit in hits)
+            bool atPlayer = (soundOrigin - transform.position).sqrMagnitude < 9f;
+            AIStimuli.Raise(new Stimulus
             {
-                var enemy = hit.GetComponent<EnemyController>();
-                if (enemy != null && !enemy.IsDead)
-                {
-                    enemy.HearSound(soundOrigin, radius);
-                }
-            }
+                kind = atPlayer ? StimulusKind.Footstep : StimulusKind.RockLand,
+                position = soundOrigin,
+                radius = radius,
+                source = atPlayer ? AITarget.Player : null,
+                certainty = atPlayer ? 0.6f : 0f
+            });
         }
     }
 }

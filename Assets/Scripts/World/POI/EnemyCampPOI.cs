@@ -211,6 +211,9 @@ namespace EndlessSurvival.World.POI
 
             int seatIndex = 0;
             int guardIndex = 0;
+            // Enemy_AI_Deep_Plan.md 12.1: the camp's people are one squad; its loot chest is the objective
+            EnemySquad squad = Application.isPlaying ? EnemySquad.Create(SquadKind.Camp, campCenter) : null;
+            if (squad != null) StartCoroutine(FindObjectiveNextFrame(squad, campCenter));
 
             for (int i = 0; i < spawnCount; i++)
             {
@@ -283,6 +286,7 @@ namespace EndlessSurvival.World.POI
                     var controller = spawnedEnemy.GetComponent<EnemyController>();
                     if (controller != null)
                     {
+                        squad?.Add(controller);
                         EndlessSurvival.Survival.DifficultyCurve.ApplyToEnemy(controller, transform.position);
                         if (shouldSit)
                         {
@@ -306,6 +310,21 @@ namespace EndlessSurvival.World.POI
             if (Application.isPlaying && possibleDialogues != null && possibleDialogues.Length > 0 && spawnedSpeakers.Count > 0)
             {
                 PickNewDialogue(rng);
+            }
+        }
+
+        private static System.Collections.IEnumerator FindObjectiveNextFrame(EnemySquad squad, Vector3 center)
+        {
+            yield return null;
+            yield return null;
+            if (squad == null || squad.objective != null) yield break;
+            float best = float.MaxValue;
+            foreach (var c in Physics.OverlapSphere(center, 15f, ~0, QueryTriggerInteraction.Collide))
+            {
+                var chest = c.GetComponentInParent<EndlessSurvival.Inventory.LootChest>();
+                if (chest == null || chest.GetComponentInParent<EnemyController>() != null) continue;
+                float d = (chest.transform.position - center).sqrMagnitude;
+                if (d < best) { best = d; squad.objective = chest.transform; }
             }
         }
 

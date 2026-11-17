@@ -65,6 +65,77 @@ namespace EndlessCombat.Combat
                     if (part != null && part.enabled && part.gameObject.activeInHierarchy)
                         Physics.IgnoreCollision(part, capsule, true);
             }
+
+            IgnoreVehicles();
+        }
+
+        /// <summary>Vehicles nearer than this get their body contacts with our body parts turned off.</summary>
+        public static float VehicleIgnoreRange = 40f;
+        /// <summary>Off only for the AI playtest's before/after comparison.</summary>
+        public static bool IgnoreVehicleContacts = true;
+        private static readonly List<Collider> s_vehicleCols = new List<Collider>();
+
+        /// <summary>
+        /// 17 Nov (user report: men beating on the truck threw it into the air and onto its side): the arm and weapon
+        /// colliders are kinematic bodies moved by the animation; a swing into the truck body pushed the 1800 kg truck
+        /// with unlimited force, several at once launched it. Body parts never touch a vehicle now. The capsule
+        /// (CharacterController) still does, so nobody walks through the truck, and the capsule does not push it.
+        /// Running people over is not affected (VehicleRam uses an overlap box, not contacts).
+        /// </summary>
+        private void IgnoreVehicles()
+        {
+            var all = EndlessSurvival.Vehicle.VehicleController.All;
+            if (!IgnoreVehicleContacts || _released || all.Count == 0 || _parts.Count == 0) return;
+            if (_capsule == null) _capsule = GetComponent<CharacterController>();
+            bool withCapsule = CapsulePassesVehicles && _capsule != null && _capsule.enabled;
+            float r2 = VehicleIgnoreRange * VehicleIgnoreRange;
+            Vector3 me = transform.position;
+            for (int v = all.Count - 1; v >= 0; v--)
+            {
+                var vehicle = all[v];
+                if (vehicle == null || (vehicle.transform.position - me).sqrMagnitude > r2) continue;
+                if (transform.IsChildOf(vehicle.transform)) continue; // the driver sits inside
+                vehicle.GetComponentsInChildren(false, s_vehicleCols);
+                foreach (Collider vc in s_vehicleCols)
+                {
+                    if (vc == null || vc.isTrigger || vc is WheelCollider || vc is CharacterController || !vc.enabled) continue;
+                    if (vc.GetComponentInParent<CharacterBodyColliders>() != null) continue; // a character inside the vehicle
+                    foreach (Collider part in _parts)
+                        if (part != null && part.enabled && part.gameObject.activeInHierarchy)
+                            Physics.IgnoreCollision(part, vc, true);
+                    if (withCapsule) Physics.IgnoreCollision(_capsule, vc, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enemies (set by EnemyController): the capsule does not touch vehicles either. A CharacterController is an
+        /// immovable body for PhysX; the AI playtest measured up to 6700 N·s per step from capsules hugging the truck
+        /// (it slid, tipped, or jumped 4 m when it moved into them). The enemy's own movement keeps him out of the
+        /// body box instead (EnemyController.KeepOutOfVehicles), with no force on the truck.
+        /// </summary>
+        public bool CapsulePassesVehicles;
+        private bool _released;
+
+        /// <summary>Died and went limp: the ragdoll touches vehicles again (no falling through the truck).</summary>
+        public void ReleaseVehicles()
+        {
+            if (_released) return;
+            _released = true;
+            var all = EndlessSurvival.Vehicle.VehicleController.All;
+            Vector3 me = transform.position;
+            float r2 = VehicleIgnoreRange * VehicleIgnoreRange;
+            foreach (var vehicle in all)
+            {
+                if (vehicle == null || (vehicle.transform.position - me).sqrMagnitude > r2) continue;
+                vehicle.GetComponentsInChildren(false, s_vehicleCols);
+                foreach (Collider vc in s_vehicleCols)
+                {
+                    if (vc == null || vc.isTrigger || vc is WheelCollider || vc is CharacterController) continue;
+                    foreach (Collider part in _parts)
+                        if (part != null) Physics.IgnoreCollision(part, vc, false);
+                }
+            }
         }
     }
 }

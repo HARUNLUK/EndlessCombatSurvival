@@ -1,42 +1,60 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EndlessCombat.AI
 {
     /// <summary>
-    /// What an enemy sees (Core_Feel_Plan stage 4: moved out of EnemyController, behaviour unchanged).
-    /// Sight: range (crouch and night shorten it), field of view (very close behind is noticed too), and a ray that
-    /// must reach the player without hitting cover. Hearing, suspicion and alerting stay in EnemyController.
+    /// Line of sight helpers (no allocation: RaycastNonAlloc and a collider to owner cache, Enemy_AI_Deep_Plan.md 23).
+    /// The sight formula itself is in EnemySenses.
     /// </summary>
     public static class EnemyPerception
     {
         private static int _mask = -1;
+        private static readonly RaycastHit[] Hits = new RaycastHit[24];
+        private static readonly Dictionary<int, EnemyController> OwnerCache = new Dictionary<int, EnemyController>();
+        private static readonly Dictionary<int, bool> CharacterCache = new Dictionary<int, bool>();
 
+        public static int Mask
+        {
+            get
+            {
+                if (_mask == -1) _mask = LayerMask.GetMask("Default", "Environment");
+                return _mask;
+            }
+        }
+
+        /// <summary>Old entry point (kept for callers outside the AI): sight of the player with the full formula.</summary>
         public static bool CanSee(EnemyController self, Transform target, out float clarity)
         {
             clarity = 0f;
-            if (target == null) return false;
-            Transform t = self.transform;
+            if (self == null || self.Senses == null || AITarget.Player == null) return false;
+            return self.Senses.CanSee(AITarget.Player, out clarity);
+        }
 
-            Vector3 eye = t.position + Vector3.up * self.eyeHeight;
-            Vector3 targetCenter = target.position + Vector3.up * 1.0f;
-            Vector3 toTarget = targetCenter - eye;
-            float dist = toTarget.magnitude;
+        public static EnemyController OwnerOf(Collider c)
+        {
+            if (c == null) return null;
+            int id = c.GetHashCode();
+            if (!OwnerCache.TryGetValue(id, out var e))
+            {
+                e = c.GetComponentInParent<EnemyController>();
+                OwnerCache[id] = e;
+            }
+            return e;
+        }
 
-            float range = self.detectionRange;
-            var stealth = Combat.PlayerStealthController.Instance;
-            if (stealth != null && stealth.IsCrouching) range *= stealth.crouchVisibilityMultiplier;
-            var cycle = EndlessSurvival.World.DayNightCycle.Instance;
-            if (cycle != null && cycle.IsNight) range *= 0.55f;
-            if (dist > range) return false;
-
-            float angle = Vector3.Angle(t.forward, toTarget);
-            if (angle > self.fieldOfViewAngle * 0.5f && dist > 1.8f) return false;
-
-            if (!ClearLine(eye, targetCenter, t, target)) return false;
-
-            float distFactor = 1f - Mathf.Clamp01(dist / range);
-            clarity = Mathf.Clamp01(distFactor * 1.6f);
-            return true;
+        /// <summary>A person (player or NPC): people are no cover.</summary>
+        public static bool IsCharacter(Collider c)
+        {
+            if (c == null) return false;
+            int id = c.GetHashCode();
+            if (!CharacterCache.TryGetValue(id, out bool v))
+            {
+                v = c.GetComponentInParent<Combat.CombatBody>() != null || c.GetComponentInParent<EnemyController>() != null
+                    || c.CompareTag("Player") || c.GetComponentInParent<CharacterController>() != null;
+                CharacterCache[id] = v;
+            }
+            return v;
         }
 
         /// <summary>
@@ -45,15 +63,15 @@ namespace EndlessCombat.AI
         /// </summary>
         public static bool ClearLine(Vector3 a, Vector3 b, Transform self, Transform target)
         {
-            if (_mask == -1) _mask = LayerMask.GetMask("Default", "Environment");
             Vector3 d = b - a;
             float dist = d.magnitude;
             if (dist < 0.01f) return true;
-            var hits = Physics.RaycastAll(a, d / dist, dist, _mask, QueryTriggerInteraction.Ignore);
+            int n = Physics.RaycastNonAlloc(a, d / dist, Hits, dist, Mask, QueryTriggerInteraction.Ignore);
             float nearest = float.MaxValue;
             Collider nearestCol = null;
-            foreach (var h in hits)
+            for (int i = 0; i < n; i++)
             {
+                var h = Hits[i];
                 if (self != null && h.collider.transform.IsChildOf(self)) continue;
                 if (h.distance < nearest)
                 {
@@ -62,28 +80,61 @@ namespace EndlessCombat.AI
                 }
             }
             if (nearestCol == null) return true;
-            return target != null && (nearestCol.CompareTag("Player") || nearestCol.transform.IsChildOf(target));
+            if (target == null) return false;
+            if (nearestCol.transform.IsChildOf(target)) return true;
+            // A collider moved by the target's rigidbody (vehicle parts) counts as the target
+            var rb = nearestCol.attachedRigidbody;
+            if (rb != null && (rb.transform == target || rb.transform.IsChildOf(target) || target.IsChildOf(rb.transform))) return true;
+            return target.CompareTag("Player") && nearestCol.CompareTag("Player");
         }
 
         /// <summary>Is the line from the player's eyes to a point blocked by something solid (a cover check).</summary>
         public static bool Covered(Vector3 point, Transform player, Transform self)
         {
-            if (_mask == -1) _mask = LayerMask.GetMask("Default", "Environment");
+            if (player == null) return false;
             Vector3 from = player.position + Vector3.up * 1.5f;
             Vector3 d = point - from;
             float dist = d.magnitude;
             if (dist < 0.5f) return false;
-            var hits = Physics.RaycastAll(from, d / dist, dist - 0.3f, _mask, QueryTriggerInteraction.Ignore);
-            foreach (var h in hits)
+            int n = Physics.RaycastNonAlloc(from, d / dist, Hits, dist - 0.3f, Mask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
             {
-                if (h.collider.transform.IsChildOf(player)) continue;
-                if (self != null && h.collider.transform.IsChildOf(self)) continue;
-                if (h.collider.GetComponentInParent<EnemyController>() != null && h.collider.GetComponentInParent<EnemyController>().HasRaisedShield) return true;
-                if (h.collider.GetComponentInParent<Combat.CombatBody>() != null) continue; // people are no cover
-                if (h.collider.attachedRigidbody != null && !h.collider.attachedRigidbody.isKinematic) continue;
+                var c = Hits[i].collider;
+                if (c.transform.IsChildOf(player)) continue;
+                if (self != null && c.transform.IsChildOf(self)) continue;
+                var owner = OwnerOf(c);
+                if (owner != null && owner.HasRaisedShield) return true;
+                if (IsCharacter(c)) continue; // people are no cover
+                if (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic) continue;
                 return true;
             }
             return false;
+        }
+
+        /// <summary>Same as Covered, from any eye point.</summary>
+        public static bool CoveredFrom(Vector3 point, Vector3 eye, Transform self)
+        {
+            Vector3 d = point - eye;
+            float dist = d.magnitude;
+            if (dist < 0.5f) return false;
+            int n = Physics.RaycastNonAlloc(eye, d / dist, Hits, dist - 0.3f, Mask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var c = Hits[i].collider;
+                if (self != null && c.transform.IsChildOf(self)) continue;
+                var owner = OwnerOf(c);
+                if (owner != null && owner.HasRaisedShield) return true;
+                if (IsCharacter(c)) continue;
+                if (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic) continue;
+                return true;
+            }
+            return false;
+        }
+
+        public static void ClearCaches()
+        {
+            OwnerCache.Clear();
+            CharacterCache.Clear();
         }
     }
 }

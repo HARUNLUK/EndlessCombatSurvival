@@ -92,10 +92,9 @@ namespace EndlessSurvival.World
             EnemyController.EnemyState highestState = EnemyController.EnemyState.Idle;
             float maxSuspicion = 0f;
 
-            var enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
-            foreach (var e in enemies)
+            foreach (var e in EnemyController.Active)
             {
-                if (e.IsDead) continue;
+                if (e == null || e.IsDead) continue;
                 float d = Vector3.Distance(e.transform.position, stealth.transform.position);
                 if (d < 45f)
                 {
@@ -104,11 +103,13 @@ namespace EndlessSurvival.World
                         highestState = EnemyController.EnemyState.Combat;
                         break;
                     }
+                    // Enemy_AI_Deep_Plan.md 12.2: they look for you but do not know where you are
+                    if (e.State == EnemyController.EnemyState.Searching) highestState = EnemyController.EnemyState.Searching;
                     if (e.suspicionMeter > maxSuspicion)
                     {
                         maxSuspicion = e.suspicionMeter;
                     }
-                    if (e.initialState == EnemyController.EnemyState.Suspicious || maxSuspicion > 25f)
+                    if (highestState != EnemyController.EnemyState.Searching && (e.State == EnemyController.EnemyState.Suspicious || maxSuspicion > 25f))
                     {
                         highestState = EnemyController.EnemyState.Suspicious;
                     }
@@ -121,6 +122,12 @@ namespace EndlessSurvival.World
                 _indicatorRoot.SetActive(true);
                 _stealthText.text = "! FARK EDİLDİ !";
                 _stealthText.color = new Color(1.0f, 0.25f, 0.25f, 1f);
+            }
+            else if (highestState == EnemyController.EnemyState.Searching)
+            {
+                _indicatorRoot.SetActive(true);
+                _stealthText.text = "? ARANIYORSUN";
+                _stealthText.color = new Color(1.0f, 0.6f, 0.2f, 1f);
             }
             else if (highestState == EnemyController.EnemyState.Suspicious || maxSuspicion > 20f)
             {

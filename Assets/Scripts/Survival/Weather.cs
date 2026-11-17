@@ -72,13 +72,19 @@ namespace EndlessSurvival.Survival
 
         private WeatherType _target = WeatherType.Clear;
 
-        /// <summary>Debug/test: switch to a weather at full strength right away (until the next weather segment).</summary>
-        public void DebugForce(WeatherType w)
+        /// <summary>
+        /// Debug/test: switch to a weather at full strength right away (until the next weather segment). hold: keep it
+        /// for good (test scenes: setting the hour started a new segment at once and it rained, so the camp guards
+        /// sheltered at home and the patrol stood still, 17 Nov stealth playtest).
+        /// </summary>
+        public void DebugForce(WeatherType w, bool hold = false)
         {
             _target = w;
             Current = w;
             Intensity = w == WeatherType.Clear ? 0f : 1f;
+            _held = hold;
         }
+        private bool _held;
         private long _segment = long.MinValue;
         private float _check;
         private ParticleSystem _rain, _snow;
@@ -119,6 +125,7 @@ namespace EndlessSurvival.Survival
 
         private void PickTarget()
         {
+            if (_held) return;
             var s = SurvivalSettings.Instance;
             double hours = GameClock.TotalHours + (DayNightCycle.Instance != null ? 0 : 0);
             long segment = (long)Math.Floor(hours / Mathf.Max(1f, s.weatherSegmentHours));

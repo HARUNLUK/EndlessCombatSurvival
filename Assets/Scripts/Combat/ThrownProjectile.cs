@@ -18,6 +18,9 @@ namespace EndlessCombat.Combat
         private Transform _thrower;
         private bool _landed;
         private float _spawnTime;
+        /// <summary>Where it was thrown from: the AI guesses the thrower's direction from it (not the exact place).</summary>
+        private Vector3 _origin;
+        private EndlessCombat.AI.AITarget ThrowerTarget => _thrower != null ? _thrower.GetComponentInParent<EndlessCombat.AI.AITarget>() : null;
         private static readonly Collider[] Buffer = new Collider[128];
 
         public static ThrownProjectile Launch(Kind kind, Vector3 origin, Vector3 velocity, Transform thrower, Color color)
@@ -45,6 +48,7 @@ namespace EndlessCombat.Combat
             projectile._kind = kind;
             projectile._thrower = thrower;
             projectile._spawnTime = Time.time;
+            projectile._origin = origin;
 
             // Do not collide with the thrower
             if (thrower != null)
@@ -53,6 +57,7 @@ namespace EndlessCombat.Combat
                 foreach (var c in thrower.GetComponentsInChildren<Collider>()) Physics.IgnoreCollision(own, c, true);
             }
 
+            if (kind == Kind.Grenade && thrower != null && thrower.GetComponent<PlayerThrower>() != null) AIMemory.LastPlayerGrenade = Time.time;
             if (kind == Kind.Grenade) projectile.StartCoroutine(projectile.FuseRoutine());
             else Destroy(go, 30f);
             return projectile;
@@ -60,12 +65,38 @@ namespace EndlessCombat.Combat
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (_kind != Kind.Rock || _landed) return;
+            if (_landed) return;
             if (Time.time - _spawnTime < 0.05f) return;
-
             _landed = true;
-            float radius = CombatContent.Instance.rockNoiseRadius;
             Vector3 spot = transform.position;
+
+            if (_kind == Kind.Grenade)
+            {
+                // Enemy_AI_Deep_Plan.md 13.8: a grenade on the ground is seen (needs sight) by everyone around
+                AIStimuli.Raise(new Stimulus
+                {
+                    kind = StimulusKind.GrenadeLanded, position = spot, radius = 18f, needsSight = true, certainty = 1f,
+                    source = ThrowerTarget, owner = this, sourceHint = _origin - spot,
+                    id = GetHashCode()
+                });
+                return;
+            }
+
+            float radius = CombatContent.Instance.rockNoiseRadius;
+
+            // An enemy's rock: hurts the player a little and staggers him (13.7), no distraction noise
+            var throwerEnemy = _thrower != null ? _thrower.GetComponent<EnemyController>() : null;
+            if (throwerEnemy != null)
+            {
+                var health = collision.collider.GetComponentInParent<EndlessSurvival.Inventory.PlayerHealth>();
+                if (health != null && !health.IsDead)
+                {
+                    Vector3 dir = (spot - _thrower.position).normalized;
+                    Damage.Deal(health, new DamageInfo(EnemyRockDamage, DamageType.Melee, spot, -dir) { Source = _thrower.gameObject, SourceDirection = -dir });
+                    CombatBody.Player?.Stagger(0.35f, new Vector3(dir.x, 0f, dir.z) * 1.5f);
+                }
+                return;
+            }
 
             // A rock that hits an enemy directly alerts that enemy to the thrower instead
             var enemy = collision.collider.GetComponentInParent<EnemyController>();
@@ -74,8 +105,17 @@ namespace EndlessCombat.Combat
                 enemy.HearSound(_thrower.position, radius);
             }
 
-            AlertEnemies(spot, radius);
+            // Distraction: no source; the hint points back at the thrower (rockBacktrace, 7.2)
+            Vector3 back = _thrower != null ? _thrower.position - spot : Vector3.zero;
+            back.y = 0f;
+            AIStimuli.Raise(new Stimulus
+            {
+                kind = StimulusKind.RockLand, position = spot, radius = radius, sourceHint = back, certainty = 0f
+            });
         }
+
+        /// <summary>Damage of a rock thrown by an enemy.</summary>
+        public static float EnemyRockDamage = 6f;
 
         private IEnumerator FuseRoutine()
         {
@@ -126,7 +166,13 @@ namespace EndlessCombat.Combat
             // Ragdolls of the enemies that just died get pushed in the frame after they switch to ragdoll
             StaticCoroutine.Run(PushRagdollsNextFrame(center, radius));
 
-            AlertEnemies(center, content.grenadeNoiseRadius);
+            AIStimuli.Raise(new Stimulus
+            {
+                kind = StimulusKind.Explosion, position = center, radius = content.grenadeNoiseRadius,
+                // The thrower and the direction the grenade came from (user bug report 16 Nov: without them everybody
+                // ran to the blast point and piled up there)
+                source = ThrowerTarget, sourceHint = _origin - center, certainty = ThrowerTarget != null ? 0.35f : 0f
+            });
             SpawnBlastVisual(center, radius);
             Destroy(gameObject);
         }
@@ -142,21 +188,6 @@ namespace EndlessCombat.Combat
             }
         }
 
-        private static void AlertEnemies(Vector3 origin, float radius)
-        {
-            var stealth = PlayerStealthController.Instance;
-            if (stealth != null)
-            {
-                stealth.AlertNearbyEnemies(origin, radius);
-                return;
-            }
-
-            foreach (var hit in Physics.OverlapSphere(origin, radius))
-            {
-                var enemy = hit.GetComponent<EnemyController>();
-                if (enemy != null && !enemy.IsDead) enemy.HearSound(origin, radius);
-            }
-        }
 
         private static void SpawnBlastVisual(Vector3 center, float radius)
         {

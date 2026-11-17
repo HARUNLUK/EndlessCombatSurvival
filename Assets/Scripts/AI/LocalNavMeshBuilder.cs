@@ -38,6 +38,9 @@ namespace EndlessCombat.AI
 
         public bool HasNavMesh { get; private set; }
 
+        /// <summary>A bake completed (the cover map is rebuilt in this box: Enemy_AI_Deep_Plan.md 15.2).</summary>
+        public static event System.Action<Bounds> BakeFinished;
+
         private NavMeshData _data;
         private NavMeshDataInstance _instance;
         private AsyncOperation _operation;
@@ -91,6 +94,7 @@ namespace EndlessCombat.AI
                 _operation = null;
                 HasNavMesh = true;
                 if (logBakes) Debug.Log($"[LocalNavMeshBuilder] Bake finished around {_lastCenter}");
+                BakeFinished?.Invoke(new Bounds(_lastCenter, bakeSize));
             }
 
             if (!TryGetCenter(out Vector3 center)) return;

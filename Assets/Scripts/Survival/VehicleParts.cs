@@ -375,6 +375,12 @@ namespace EndlessSurvival.Survival
             return local.x < 0f ? (int)WindowSlot.Left : (int)WindowSlot.Right;
         }
 
+        /// <summary>The window cage is fitted (no hand reaches the cabin, no opening breaks).</summary>
+        public bool Caged => Has(VehicleModType.WindowCage);
+
+        /// <summary>An enemy's club / fist on a window (Enemy_AI_Deep_Plan.md 18, car assault): glass and covers give way.</summary>
+        public void MeleeHitWindow(int slot, float chance) => HitWindow(slot, chance, false);
+
         private void HitWindow(int slot, float chance, bool bullet)
         {
             if (Has(VehicleModType.WindowCage)) return;
@@ -405,7 +411,16 @@ namespace EndlessSurvival.Survival
                         return;
                     }
                 }
-                if (local.y > 1.05f) HitWindow(SlotForLocalPoint(local), 0.4f, true);
+                if (local.y > 1.05f)
+                {
+                    // Enemy_AI_Deep_Plan.md 18.3: the bullet may go through the window into the driver
+                    int slot = SlotForLocalPoint(local);
+                    WindowState before = Windows[slot];
+                    HitWindow(slot, 0.4f, true);
+                    bool broke = before == WindowState.Intact && Windows[slot] == WindowState.Broken;
+                    Vector3 normal = (_vehicle.transform.position + Vector3.up - point).normalized;
+                    VehicleThreat.CabinHit(_vehicle, slot, before, broke, Has(VehicleModType.WindowCage), amount, point, normal);
+                }
                 if (front && local.y < 1.05f)
                 {
                     if (UnityEngine.Random.value < 0.3f) Radiator = Mathf.Max(0f, Radiator - 15f);
@@ -764,12 +779,11 @@ namespace EndlessSurvival.Survival
         /// <summary>Work noise (tools, metal): nearby enemies come to look. No sound file, only their hearing.</summary>
         public static void MakeNoise(Vector3 origin, float radius)
         {
-            CombatHooks.RaiseNoise(origin, radius);
-            foreach (var hit in Physics.OverlapSphere(origin, radius))
+            // The player is working there: a heard noise with a known source (Enemy_AI_Deep_Plan.md 6)
+            AIStimuli.Raise(new Stimulus
             {
-                var enemy = hit.GetComponent<EnemyController>();
-                if (enemy != null && !enemy.IsDead) enemy.HearSound(origin, radius);
-            }
+                kind = StimulusKind.Footstep, position = origin, radius = radius, source = AITarget.Player, certainty = 0.6f
+            });
         }
 
         // ================================================================== actions (Tab > Araç)

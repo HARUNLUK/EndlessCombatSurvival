@@ -36,6 +36,20 @@ namespace EndlessSurvival.Inventory
         public Vector3 InteractPosition => transform.position;
         public bool CanInteract => item != null && amount > 0;
 
+        /// <summary>Pickups in the world (the enemy AI looks for weapons: Enemy_AI_Deep_Plan.md 13.10).</summary>
+        public static readonly System.Collections.Generic.List<WorldPickup> All = new System.Collections.Generic.List<WorldPickup>();
+        public float SpawnTime { get; private set; }
+        /// <summary>An enemy is walking to take it (others leave it).</summary>
+        [System.NonSerialized] public Object claimedBy;
+
+        private void OnEnable()
+        {
+            if (!All.Contains(this)) All.Add(this);
+            SpawnTime = Time.time;
+        }
+
+        private void OnDisable() => All.Remove(this);
+
         private void Start()
         {
             ApplyVisual();
@@ -79,6 +93,8 @@ namespace EndlessSurvival.Inventory
         public string Interact(PlayerInventory user)
         {
             if (!CanInteract || user == null) return null;
+            // Enemy_AI_Deep_Plan.md 20.1: enemies in a fight remember that the player picks his dropped gun back up
+            if (fromHand && item != null && item.weaponPrefab != null) EndlessCombat.AI.EnemySquad.NoteWeaponRecovered();
 
             // A weapon / shield that fell from the hand (Combat_Action_Plan.md 5): back to its slot when the slot is
             // empty, with the rounds that were in its magazine

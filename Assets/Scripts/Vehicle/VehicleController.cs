@@ -254,6 +254,51 @@ namespace EndlessSurvival.Vehicle
         public static float StuckHelpDelay = 1.5f;
         public static int StuckHelpCount { get; private set; }
 
+        /// <summary>Every enabled vehicle (CharacterBodyColliders turns off body part contacts against these).</summary>
+        public static readonly System.Collections.Generic.List<VehicleController> All = new System.Collections.Generic.List<VehicleController>();
+
+        private void OnEnable()
+        {
+            if (!All.Contains(this)) All.Add(this);
+        }
+
+        private void OnDisable() => All.Remove(this);
+
+        /// <summary>
+        /// Living characters are never ground for the wheels and never "stuck" terrain (17 Nov: people standing at the
+        /// doors lifted and tipped the truck). A capsule or an animated (kinematic) body part of a character.
+        /// </summary>
+        /// <summary>People are never wheel ground and never stuck terrain (off only for the AI playtest's before/after comparison).</summary>
+        public static bool StuckHelpIgnoresPeople = true;
+
+        public static bool IsLivingCharacterCollider(Collider c)
+        {
+            if (c == null || !StuckHelpIgnoresPeople) return false;
+            if (c is CharacterController) return true;
+            var rb = c.attachedRigidbody;
+            return rb != null && rb.isKinematic && c.GetComponentInParent<CharacterBodyColliders>() != null;
+        }
+
+        private static readonly Collider[] s_blockBuffer = new Collider[32];
+
+        /// <summary>A person stands against the body (within 0.8 m): the truck is held by people, not stuck on terrain.</summary>
+        private bool PeopleAgainstBody()
+        {
+            BoxCollider body = GetComponent<BoxCollider>();
+            if (body == null) return false;
+            Vector3 s = transform.lossyScale;
+            Vector3 half = Vector3.Scale(body.size * 0.5f, new Vector3(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z))) + Vector3.one * 0.8f;
+            int n = Physics.OverlapBoxNonAlloc(transform.TransformPoint(body.center), half, s_blockBuffer, transform.rotation, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var c = s_blockBuffer[i];
+                if (c == null || c.transform.IsChildOf(transform) || !(c is CharacterController) || !c.enabled) continue;
+                if (c.CompareTag("Player")) continue;
+                return true;
+            }
+            return false;
+        }
+
         public float CurrentSpeedKmh => _rb != null ? _rb.linearVelocity.magnitude * 3.6f : 0f;
         public float ForwardSpeed => _rb != null ? Vector3.Dot(_rb.linearVelocity, transform.forward) : 0f;
         public Rigidbody Rigidbody => _rb;
@@ -299,7 +344,17 @@ namespace EndlessSurvival.Vehicle
 
         public int WheelCount => _wheels.Length;
 
-        public void TakeDamage(DamageInfo info) => TakeDamage(info.Amount, info.Point, info.Normal);
+        public void TakeDamage(DamageInfo info)
+        {
+            // Enemy_AI_Deep_Plan.md 18.2 / 18.3: the source is kept for the driver hit; enemy damage has a floor
+            EndlessCombat.AI.VehicleThreat.LastBullet = info;
+            EndlessCombat.AI.VehicleThreat.HasLastBullet = true;
+            float amount = info.Amount * bulletDamageMultiplier;
+            float applied = EndlessCombat.AI.VehicleThreat.ClampEnemyDamage(this, info, amount);
+            ApplyDamage(applied);
+            Damaged?.Invoke(amount, true, info.Point, 0f);
+            EndlessCombat.AI.VehicleThreat.HasLastBullet = false;
+        }
 
         public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
         {
@@ -543,6 +598,12 @@ namespace EndlessSurvival.Vehicle
             if (_rb.IsSleeping()) _rb.WakeUp();
             _stuckTimer += dt;
             if (_stuckTimer < StuckHelpDelay) return;
+            // Held by people at the doors (car assault): no hop, the hop threw the truck into the air among them
+            if (StuckHelpIgnoresPeople && PeopleAgainstBody())
+            {
+                _stuckTimer = 0f;
+                return;
+            }
             _stuckTimer = -1f; // one more try only after another full delay
             StuckHelpCount++;
             Vector3 dir = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * (_gear < 0 ? -1f : 1f);
@@ -860,6 +921,7 @@ namespace EndlessSurvival.Vehicle
             {
                 RaycastHit h = _hitBuffer[i];
                 if (h.collider.attachedRigidbody == _rb) continue;
+                if (IsLivingCharacterCollider(h.collider)) continue; // a wheel never stands on a person
                 if (Vector3.Dot(h.normal, -direction) < minCos) continue; // a wall, not ground
                 if (!found || h.distance < best.distance)
                 {

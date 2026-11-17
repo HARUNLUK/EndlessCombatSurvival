@@ -265,6 +265,7 @@ namespace EndlessCombat.Combat
 
             if (IsPlayerWeapon) CombatHooks.RaisePlayerFired();
             CombatHooks.RaiseWeaponFired(transform.position, IsPlayerWeapon);
+            EndlessCombat.AI.AIWeaponHooks.OnFired(this, muzzlePos, ignoreRoot);
             onShoot?.Invoke();
             Fired?.Invoke();
             return true;
@@ -310,6 +311,7 @@ namespace EndlessCombat.Combat
 
             // Draw visible bullet tracer line
             StartCoroutine(DrawTracerLine(muzzlePos, endPoint));
+            EndlessCombat.AI.AIWeaponHooks.OnPellet(this, startPos, endPoint, hasHit, hasHit ? hitInfo.collider : null);
 
             if (hasHit)
             {

@@ -520,10 +520,31 @@ namespace EndlessSurvival.Survival
 
         private static string SuspicionText(EnemyController e, out Color color)
         {
-            if (e.State == EnemyController.EnemyState.Combat) { color = new Color(1f, 0.35f, 0.3f); return "alarm"; }
-            if (e.State == EnemyController.EnemyState.Suspicious || e.suspicionMeter > 10f) { color = new Color(1f, 0.85f, 0.3f); return "şüpheli"; }
+            // Enemy_AI_Deep_Plan.md 24.1: state, then readiness / nerve / leader / name
+            string extra = Extra(e);
+            if (e.State == EnemyController.EnemyState.Combat) { color = new Color(1f, 0.35f, 0.3f); return "alarm" + extra; }
+            if (e.State == EnemyController.EnemyState.Searching) { color = new Color(1f, 0.6f, 0.25f); return "arıyor" + extra; }
+            if (e.State == EnemyController.EnemyState.Suspicious || e.suspicionMeter > 10f) { color = new Color(1f, 0.85f, 0.3f); return "şüpheli" + extra; }
             color = new Color(0.6f, 1f, 0.6f);
-            return "sakin";
+            return (e.Sleeping ? "uyuyor" : "sakin") + extra;
+        }
+
+        private static string Extra(EnemyController e)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (e.Actor != null)
+            {
+                switch (e.Actor.Readiness)
+                {
+                    case Readiness.Relaxed: sb.Append(" · rahat"); break;
+                    case Readiness.Wary: sb.Append(" · tetikte"); break;
+                    case Readiness.Ready: sb.Append(" · hazır"); break;
+                }
+            }
+            if (e.Nerve != null && e.Nerve.Level >= NerveLevel.Tense) sb.Append(" · ").Append(e.Nerve.LevelText);
+            if (e.IsLeader) sb.Append(" · lider");
+            sb.Append(" · ").Append(e.DisplayName);
+            return sb.ToString();
         }
 
         // ------------------------------------------------------------------ lens glint

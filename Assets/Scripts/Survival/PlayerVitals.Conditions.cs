@@ -414,7 +414,7 @@ namespace EndlessSurvival.Survival
                 float d = (e.transform.position - pos).sqrMagnitude;
                 if (d > 45f * 45f) continue;
                 if (e.IsAlerted) combat = true;
-                else if (e.State == EnemyController.EnemyState.Suspicious) noticed = true;
+                else if (e.State == EnemyController.EnemyState.Suspicious || e.State == EnemyController.EnemyState.Searching) noticed = true;
             }
             foreach (var a in AnimalController.All)
             {

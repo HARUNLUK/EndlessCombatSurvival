@@ -217,6 +217,7 @@ namespace EndlessSurvival.Survival
             if (prefabs == null || prefabs.Length == 0) return;
             int count = DifficultyCurve.CapHumans(DifficultyCurve.ScaleEnemyCount(rng.Range(2, 4), gate));
             Vector3 beyond = chunk.transform.forward; // the guards stand on the far side of the gate
+            var squad = EnemySquad.Create(SquadKind.Camp, gate + beyond * 6f); // Enemy_AI_Deep_Plan.md 12.1
             for (int i = 0; i < count; i++)
             {
                 var prefab = DifficultyCurve.PickEnemyPrefab(rng, prefabs, gate);
@@ -226,6 +227,7 @@ namespace EndlessSurvival.Survival
                 var go = Instantiate(prefab, p + Vector3.up * 0.1f, Quaternion.LookRotation(-beyond), root);
                 var enemy = go.GetComponent<EnemyController>();
                 if (enemy == null) continue;
+                squad.Add(enemy);
                 DifficultyCurve.ApplyToEnemy(enemy, gate);
                 enemy.initialState = i == 0 ? EnemyController.EnemyState.Idle : EnemyController.EnemyState.Patrolling;
             }
@@ -424,18 +426,28 @@ namespace EndlessSurvival.Survival
             // Early game: 1-2 people; later 2-3, more with the character level
             int baseCount = DifficultyCurve.EarlyGame ? rng.Range(1, 3) : rng.Range(2, 4);
             int count = DifficultyCurve.CapHumans(DifficultyCurve.ScaleEnemyCount(baseCount, center));
+            // Enemy_AI_Deep_Plan.md 21.5: on Normal and above some roadside groups lie in ambush (own stream: the
+            // chunk's other rolls stay the same)
+            bool ambush = AIDifficulty.Current != AIDifficulty.Tier.Easy && count >= 2
+                          && new SeededRandom(chunk.ChunkSeed).SubStream("ambush").Chance(0.15f);
+            var squad = EnemySquad.Create(ambush ? SquadKind.Ambush : SquadKind.Patrol, center);
+            Vector3 toRoad = road - center;
+            toRoad.y = 0f;
             for (int i = 0; i < count; i++)
             {
                 var prefab = DifficultyCurve.PickEnemyPrefab(rng, prefabs, center);
                 if (prefab == null) continue;
                 Vector3 offset = new Vector3(rng.Range(-3f, 3f), 0f, rng.Range(-3f, 3f));
                 if (!Ground(chunk, center + offset, road, out Vector3 p)) p = center;
-                var go = Instantiate(prefab, p + Vector3.up * 0.1f, Quaternion.Euler(0f, rng.Range(0f, 360f), 0f), root);
+                float yaw = rng.Range(0f, 360f);
+                Quaternion rot = ambush && toRoad.sqrMagnitude > 0.01f ? Quaternion.LookRotation(toRoad) : Quaternion.Euler(0f, yaw, 0f);
+                var go = Instantiate(prefab, p + Vector3.up * 0.1f, rot, root);
                 var enemy = go.GetComponent<EnemyController>();
                 if (enemy != null)
                 {
+                    squad.Add(enemy);
                     DifficultyCurve.ApplyToEnemy(enemy, center);
-                    enemy.initialState = EnemyController.EnemyState.Patrolling;
+                    enemy.initialState = ambush ? EnemyController.EnemyState.Idle : EnemyController.EnemyState.Patrolling;
                 }
             }
         }
