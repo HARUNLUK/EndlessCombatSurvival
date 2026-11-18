@@ -166,7 +166,7 @@ namespace EndlessCombat.Combat
             if (_animator == null) _animator = GetComponentInChildren<Animator>();
             if (_animator != null)
             {
-                _animator.SetBool("IsCrouching", _isCrouching);
+                _animator.SetBoolSafe("IsCrouching", _isCrouching);
             }
         }
 

@@ -52,6 +52,12 @@ namespace EndlessSurvival.Inventory
 
         /// <summary>A lit torch is in the left hand (Combat_Action_Plan.md 8).</summary>
         public bool TorchHeld => _torch != null && _torch.Held;
+        private PlayerBow _bow;
+        private bool _lastBow;
+        /// <summary>The bow is in both hands (Combat_Action_Plan.md 8).</summary>
+        public bool BowInHands => _bow != null && _bow.InHands;
+        public bool HasBow => _bow != null && _bow.HasBow;
+        public int ArrowCount => _bow != null ? _bow.Arrows : 0;
         private Animator _animator;
 
         private readonly WeaponController[] _weapons = new WeaponController[3];
@@ -172,7 +178,7 @@ namespace EndlessSurvival.Inventory
         }
 
         /// <summary>Shield on the left arm: worn, not put on the back (A on the map), no two handed weapon in the right hand.</summary>
-        public bool ShieldOnArm => _shield != null && _shield.HasShield && _shieldDrawn && !TorchHeld
+        public bool ShieldOnArm => _shield != null && _shield.HasShield && _shieldDrawn && !TorchHeld && !BowInHands
                                    && !(RightDrawn && TwoHandedWeapon(Active, _weapons[(int)Active]));
 
         private void ApplyGrip()
@@ -200,6 +206,7 @@ namespace EndlessSurvival.Inventory
             _inventory = GetComponent<PlayerInventory>();
             _shield = ShieldHolder.GetOrAdd(gameObject);
             _torch = TorchHolder.GetOrAdd(gameObject);
+            _bow = PlayerBow.GetOrAdd(gameObject);
             _animator = GetComponent<Animator>();
             if (_shooter != null) _shooter.ParkWeapon = Park;
         }
@@ -309,11 +316,13 @@ namespace EndlessSurvival.Inventory
             if (_shooter == null) return;
             if (_thrower == null) _thrower = GetComponent<PlayerThrower>();
             CancelPendingHolster();
+            if (code != PickBow && BowInHands) DropBow(); // the bow holds both hands: any other pick drops it
+            if (code >= PickLongGun && code <= PickMelee) _lastBow = false;
             switch (code)
             {
+                case PickBow: PickBowHands(); return;
                 case PickShield: PickShieldArm(); return;
                 case PickTorch: PickTorchHand(); return;
-                case PickBow: EndlessSurvival.Survival.SurvivalNotify.Show("Yay yok (yay henüz oyunda değil)", 1.5f); return;
                 case PickRock: TakeThrowable(PlayerThrower.Kind.Rock); return;
                 case PickGrenade: TakeThrowable(PlayerThrower.Kind.Grenade); return;
                 case PickThrowable: TakeThrowable(_thrower != null ? _thrower.NextKind() : PlayerThrower.Kind.None); return;
@@ -448,6 +457,55 @@ namespace EndlessSurvival.Inventory
             Changed?.Invoke();
         }
 
+        /// <summary>The bow slot changed (PlayerEquipment). The model goes on the back.</summary>
+        public void SetBow(ItemDefinition item)
+        {
+            if (_bow == null) _bow = PlayerBow.GetOrAdd(gameObject);
+            _bow.SetItem(item);
+            if (item == null) _lastBow = false;
+            ApplyGrip();
+            Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// Bow pick (Combat_Action_Plan.md 5, 8): both hands. A weapon / rock still in the right hand falls, the shield
+        /// on the arm and the torch fall too (not put away first). Holstered weapons stay where they are.
+        /// </summary>
+        private void PickBowHands()
+        {
+            if (_bow == null || !_bow.HasBow)
+            {
+                EndlessSurvival.Survival.SurvivalNotify.Show("Yay yuvası boş", 1.5f);
+                return;
+            }
+            if (_bow.InHands) return;
+            bool dropShield = ShieldOnArm;
+            if (_thrower != null && _thrower.HasItem) _thrower.DropHeld();
+            else if (RightDrawn) DropRight();
+            if (!_shooter.IsHolstered) _shooter.SetHolstered(true);
+            if (dropShield) DropShield();
+            if (TorchHeld) DropTorch();
+            _bow.Draw();
+            _lastBow = true;
+            PlayerCombatState.Of(gameObject)?.NoteDraw(PlayerBow.DrawTime);
+            ApplyGrip();
+            Changed?.Invoke();
+        }
+
+        /// <summary>The bow in the hands falls to the ground (another pick needs a hand).</summary>
+        public void DropBow()
+        {
+            if (_bow == null || !_bow.InHands) return;
+            if (_equipment == null) _equipment = GetComponent<PlayerEquipment>();
+            ItemDefinition item = _bow.Item;
+            _bow.Dropped();
+            if (item == null || _equipment == null || _inventory == null || _inventory.dropPickupPrefab == null) return;
+            _equipment.DropCarried(EquipSlot.Bow);
+            WorldPickup p = WorldPickup.Spawn(_inventory.dropPickupPrefab, item, 1, DropPoint(0f), null);
+            if (p != null) p.fromHand = true;
+            EndlessSurvival.Survival.SurvivalNotify.Show($"{item.DisplayName} yere düştü", 1.5f);
+        }
+
         /// <summary>The torch in the left hand falls to the ground (another pick needs the left hand).</summary>
         public void DropTorch()
         {
@@ -520,6 +578,14 @@ namespace EndlessSurvival.Inventory
                 _thrower.Stow();
                 return;
             }
+            if (BowInHands)
+            {
+                _bow.Stow(); // back on the back
+                PlayerCombatState.Of(gameObject)?.NoteDraw(PlayerBow.DrawTime * WeaponDefinition.HolsterFactor);
+                ApplyGrip();
+                Changed?.Invoke();
+                return;
+            }
             if (_holsterAt > 0f)
             {
                 CancelPendingHolster();
@@ -546,6 +612,7 @@ namespace EndlessSurvival.Inventory
             if (_shooter == null) return;
             CancelPendingHolster();
             if (!_shooter.IsHolstered) _shooter.SetHolstered(true);
+            if (BowInHands) _bow.Stow();
             ApplyGrip();
             Changed?.Invoke();
         }
@@ -555,6 +622,18 @@ namespace EndlessSurvival.Inventory
         {
             if (_shooter == null) return;
             CancelPendingHolster();
+            if (_lastBow && HasBow)
+            {
+                // The bow from the back (LB tap: nothing falls; the shield goes to the back, the torch is put out)
+                _shieldDrawn = false;
+                if (TorchHeld) _torch.PutOut();
+                if (!_shooter.IsHolstered) _shooter.SetHolstered(true);
+                _bow.Draw();
+                PlayerCombatState.Of(gameObject)?.NoteDraw(PlayerBow.DrawTime);
+                ApplyGrip();
+                Changed?.Invoke();
+                return;
+            }
             Slot slot = LastSlotToDraw();
             Active = slot;
             LastActive = slot;
@@ -644,7 +723,7 @@ namespace EndlessSurvival.Inventory
                     CancelPendingHolster();
                     state.ClearDraw();
                 }
-                else if (!RightDrawn && LastIsFirearm && state.Allows(CombatIntent.Swap)) DrawLast();
+                else if (!RightDrawn && !BowInHands && (LastIsFirearm || (_lastBow && HasBow)) && state.Allows(CombatIntent.Swap)) DrawLast();
             }
             _ltWas = lt;
 

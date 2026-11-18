@@ -60,6 +60,8 @@ namespace EndlessCombat.Combat
             if (kind == Kind.Grenade && thrower != null && thrower.GetComponent<PlayerThrower>() != null) AIMemory.LastPlayerGrenade = Time.time;
             if (kind == Kind.Grenade) projectile.StartCoroutine(projectile.FuseRoutine());
             else Destroy(go, 30f);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.ThrowRelease, origin, 1f, kind.ToString(),
+                thrower != null && thrower.GetComponent<PlayerThrower>() != null);
             return projectile;
         }
 
@@ -69,6 +71,7 @@ namespace EndlessCombat.Combat
             if (Time.time - _spawnTime < 0.05f) return;
             _landed = true;
             Vector3 spot = transform.position;
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.GrenadeBounce, spot, 1f, _kind.ToString());
 
             if (_kind == Kind.Grenade)
             {
@@ -128,6 +131,7 @@ namespace EndlessCombat.Combat
             var content = CombatContent.Instance;
             Vector3 center = transform.position;
             float radius = content.grenadeRadius;
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.Explosion, center, 1f, "grenade");
 
             int count = Physics.OverlapSphereNonAlloc(center, radius, Buffer, ~0, QueryTriggerInteraction.Ignore);
             var damaged = new HashSet<IDamageable>();

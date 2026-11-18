@@ -37,6 +37,17 @@ namespace EndlessCombat.Combat
         public CombatBody Body => _body;
         public bool IsAttacking => _body != null && _body.State == ActorState.Attacking;
 
+        /// <summary>A knife (short blade) is in the hand: RB can stealth kill.</summary>
+        public bool HoldsKnife
+        {
+            get
+            {
+                if (_shooter == null || _shooter.IsHolstered || _shooter.HandType != WeaponType.Melee) return false;
+                CurrentStats(out MeleeCategory category);
+                return category == MeleeCategory.Short;
+            }
+        }
+
         private void Awake()
         {
             _shooter = GetComponent<PlayerShooter>();

@@ -123,6 +123,7 @@ namespace EndlessCombat.AI
             // Urgent threats (grenade, charge) are said at once; news waits the shout delay
             float delay = m.tone == Tone.Red || kind == BarkKind.Surrender || kind == BarkKind.Fleeing ? 0.05f : p.shoutDelay;
             _pendingAt = Time.time + delay;
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.EnemyShout, _e.transform.position, 1f, kind.ToString());
             if (delay > 0.2f) _e.ShowBubble("...", new Color(1f, 1f, 1f, 0.45f), delay);
             return true;
         }

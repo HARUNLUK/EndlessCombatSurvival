@@ -18,6 +18,8 @@ namespace EndlessCombat.Combat.Editor
         [MenuItem("Tools/Combat/Setup Rifle Idle & Controller")]
         public static void ExecuteSetup()
         {
+            // 2026-11-18: clips and controllers were removed for the Survivor rebuild; stay quiet until they exist again
+            if (AssetImporter.GetAtPath(RifleIdleFbxPath) == null || AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath) == null) return;
             bool reimported = ConfigureFbx(RifleIdleFbxPath);
             ApplyClipToAnimatorController();
         }

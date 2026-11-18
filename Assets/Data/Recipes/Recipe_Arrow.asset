@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3593b2576c4e9f848982da28645bd500, type: 3}
+  m_Name: Recipe_Arrow
+  m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Survival.RecipeDefinition
+  displayName: Ok (3 adet)
+  description: "Bir dal ve bir ta\u015Ftan \xFC\xE7 ta\u015F u\xE7lu ok."
+  station: 0
+  inputs:
+  - item: {fileID: 11400000, guid: e941f540243df894383e95b3a9a1a451, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: ae1e544301340934ab8c9c9c3eef854d, type: 2}
+    amount: 1
+  tools: []
+  outputs:
+  - item: {fileID: 11400000, guid: b8edde488ebb14946aa318d7edbf0572, type: 2}
+    amount: 3
+  craftSeconds: 2.5
+  effect: 0
+  trainsStat: 7
+  natureBonusOutput: 0

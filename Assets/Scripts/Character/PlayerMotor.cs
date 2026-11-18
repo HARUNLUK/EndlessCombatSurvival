@@ -162,7 +162,7 @@ namespace EndlessCombat.Character
             Vector3 p = transform.position;
             p.y -= GroundedOffset;
             Grounded = Physics.CheckSphere(p, GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
-            if (_animator != null) _animator.SetBool(GroundedId, Grounded);
+            if (_animator != null) _animator.SetBoolSafe(GroundedId, Grounded);
         }
 
         private void JumpAndGravity(float dt)
@@ -170,17 +170,19 @@ namespace EndlessCombat.Character
             if (Grounded)
             {
                 _fallTimer = FallTimeout;
+                // Jump stays on while still rising: the ground check can still hit for a frame or two after launch,
+                // and the Animator leaves the jump state as soon as Grounded && !Jump.
                 if (_animator != null)
                 {
-                    _animator.SetBool(JumpId, false);
-                    _animator.SetBool(FreeFallId, false);
+                    if (_vertical <= 0f) _animator.SetBoolSafe(JumpId, false);
+                    _animator.SetBoolSafe(FreeFallId, false);
                 }
                 if (_vertical < 0f) _vertical = -2f;
                 if (ActionLocked) _input.jump = false;
                 if (_input.jump && _jumpTimer <= 0f)
                 {
                     _vertical = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-                    if (_animator != null) _animator.SetBool(JumpId, true);
+                    if (_animator != null) _animator.SetBoolSafe(JumpId, true);
                 }
                 if (_jumpTimer >= 0f) _jumpTimer -= dt;
             }
@@ -188,7 +190,7 @@ namespace EndlessCombat.Character
             {
                 _jumpTimer = JumpTimeout;
                 if (_fallTimer >= 0f) _fallTimer -= dt;
-                else if (_animator != null) _animator.SetBool(FreeFallId, true);
+                else if (_animator != null) _animator.SetBoolSafe(FreeFallId, true);
             }
             _input.jump = false;
             if (_vertical > -53f) _vertical += Gravity * dt;
@@ -251,9 +253,9 @@ namespace EndlessCombat.Character
         private void SetAnimator(float forward, float sideways, float dt)
         {
             if (_animator == null) return;
-            _animator.SetFloat(SpeedId, forward, 0.08f, dt);
-            if (_hasMoveX) _animator.SetFloat(MoveXId, sideways, 0.08f, dt);
-            _animator.SetFloat(MotionSpeedId, 1f);
+            _animator.SetFloatSafe(SpeedId, forward, 0.08f, dt);
+            if (_hasMoveX) _animator.SetFloatSafe(MoveXId, sideways, 0.08f, dt);
+            _animator.SetFloatSafe(MotionSpeedId, 1f);
         }
     }
 }

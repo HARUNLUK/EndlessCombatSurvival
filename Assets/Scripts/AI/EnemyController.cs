@@ -329,8 +329,14 @@ namespace EndlessCombat.AI
                 d.y = 0f;
                 return d;
             };
-            // Stealth kill works on an enemy that is not fighting (and on one that gave up)
-            _body.Unaware = () => currentState != EnemyState.Combat || Surrendered;
+            // Stealth kill works on an enemy that is not fighting, on one that gave up, and (2026-11-17) on a fighting
+            // one that has lost sight of the player for a while (it does not know you are behind it)
+            _body.Unaware = () =>
+            {
+                if (currentState != EnemyState.Combat || Surrendered) return true;
+                var pb = Belief != null && AITarget.Player != null ? Belief.Of(AITarget.Player) : null;
+                return pb == null || (!pb.SeenNow && pb.SinceSeen > CombatBody.StealthKillLostSight);
+            };
             _body.HitReceived -= OnHitReceived;
             _body.HitReceived += OnHitReceived;
             _body.SwingFinished -= OnSwingFinished;
@@ -434,7 +440,7 @@ namespace EndlessCombat.AI
         {
             if (_outOfAmmo) return;
             _outOfAmmo = true;
-            animator.SetBool("IsAiming", false);
+            animator.SetBoolSafe("IsAiming", false);
             _stowedGun = weapon;
             Transform socket = weapon != null ? weapon.transform.parent : null;
             if (weapon != null)
@@ -548,8 +554,8 @@ namespace EndlessCombat.AI
                 }
                 verticalVelocity = controller.isGrounded ? -2f : verticalVelocity + gravity * dt;
                 controller.Move(new Vector3(0f, verticalVelocity, 0f) * dt);
-                animator.SetBool("IsAiming", false);
-                animator.SetFloat("Speed", 0f);
+                animator.SetBoolSafe("IsAiming", false);
+                animator.SetFloatSafe("Speed", 0f);
                 _mover.TrackProgress(false);
                 UpdateStealthIndicator();
                 return;
@@ -577,7 +583,7 @@ namespace EndlessCombat.AI
             TickNerve(dt);
             if (Belief.Primary != null && Belief.Primary.SeenNow && Belief.Primary.target != null) target = Belief.Primary.target.SightTransform;
 
-            animator.SetFloat("MotionSpeed", 1f);
+            animator.SetFloatSafe("MotionSpeed", 1f);
             bool isMoving = false;
             float animSpeed = moveSpeed;
             verticalVelocity = controller.isGrounded ? -2f : verticalVelocity + gravity * dt;
@@ -593,7 +599,7 @@ namespace EndlessCombat.AI
             else if (currentState == EnemyState.Suspicious) UpdateSuspicious(ref moveVelocity, ref isMoving, ref animSpeed);
             else
             {
-                animator.SetBool("IsAiming", false);
+                animator.SetBoolSafe("IsAiming", false);
                 if (!Senses.SeesAny && Time.time >= _glintHoldUntil && Time.time - _lastSawSomething > SuspicionHold) suspicionMeter = Mathf.MoveTowards(suspicionMeter, 0f, suspicionDecayRate * dt);
                 if (_routineGoal.HasValue) UpdateRoutineWalk(ref moveVelocity, ref isMoving, ref animSpeed);
                 else if (currentState == EnemyState.Patrolling) UpdatePatrol(ref moveVelocity, ref isMoving, ref animSpeed);
@@ -608,7 +614,7 @@ namespace EndlessCombat.AI
                 moveVelocity = Vector3.zero;
             }
             transform.localScale = Vector3.one;
-            animator.SetBool("IsSitting", sitting);
+            animator.SetBoolSafe("IsSitting", sitting);
 
             if (_body != null)
             {
@@ -635,7 +641,7 @@ namespace EndlessCombat.AI
             moveVelocity.y = verticalVelocity;
             controller.Move(moveVelocity * dt);
             KeepOutOfVehicles();
-            animator.SetFloat("Speed", isMoving ? animSpeed : 0f);
+            animator.SetFloatSafe("Speed", isMoving ? animSpeed : 0f);
             UpdateStealthIndicator();
         }
 
@@ -1211,7 +1217,7 @@ namespace EndlessCombat.AI
 
         private void UpdateSuspicious(ref Vector3 moveVelocity, ref bool isMoving, ref float animSpeed)
         {
-            animator.SetBool("IsAiming", false);
+            animator.SetBoolSafe("IsAiming", false);
             float dt = Time.deltaTime;
             var b = Belief.Primary;
             if (Senses.SeesAny && b != null)
@@ -1258,7 +1264,7 @@ namespace EndlessCombat.AI
 
         private void UpdateSurrendered()
         {
-            animator.SetBool("IsAiming", false);
+            animator.SetBoolSafe("IsAiming", false);
             _brain?.Reset();
             if (AITarget.Player != null && (AITarget.Player.Position - transform.position).sqrMagnitude > 40f * 40f)
             {
@@ -1348,7 +1354,7 @@ namespace EndlessCombat.AI
                 // Robbery / ambush: aim, do not fire
                 var hb = _squad.BestBelief(this);
                 if (hb != null) Turn(hb.position - transform.position, 360f);
-                animator.SetBool("IsAiming", IsGunner);
+                animator.SetBoolSafe("IsAiming", IsGunner);
                 _brain.Reset();
                 return;
             }
@@ -1403,7 +1409,7 @@ namespace EndlessCombat.AI
                 Turn(face.Value - me, _brain.TurnSpeed);
             else if (moveDir.sqrMagnitude > 0.01f) Turn(moveDir, _brain.TurnSpeed);
 
-            animator.SetBool("IsAiming", shootPose || (gunner && Actor.Readiness == Readiness.Ready && b != null && b.SeenNow && !isMoving));
+            animator.SetBoolSafe("IsAiming", shootPose || (gunner && Actor.Readiness == Readiness.Ready && b != null && b.SeenNow && !isMoving));
             if (shootPose && isMoving)
             {
                 moveVelocity *= 0.7f;
@@ -1780,7 +1786,7 @@ namespace EndlessCombat.AI
 
         private void LateUpdate()
         {
-            if (IsDead || animator == null || !animator.GetBool("IsAiming")) return;
+            if (IsDead || animator == null || !animator.GetBoolSafe("IsAiming")) return;
             Transform spine = animator.GetBoneTransform(HumanBodyBones.Spine);
             if (spine == null) spine = animator.GetBoneTransform(HumanBodyBones.Chest);
             if (spine != null) spine.rotation = Quaternion.AngleAxis(aimRotationOffset, transform.up) * spine.rotation;
@@ -1852,6 +1858,8 @@ namespace EndlessCombat.AI
                 Die(info.ByPlayer, false, Vector3.zero);
                 return;
             }
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.EnemyHurt, transform.position,
+                Mathf.Clamp01(dmg / 40f), info.Type.ToString(), info.ByPlayer);
             if (!Surrendered) EnterCombat();
         }
 
@@ -1929,6 +1937,8 @@ namespace EndlessCombat.AI
         private void Die(bool byPlayer, bool vehicleHit, Vector3 vehicleImpulse)
         {
             IsDead = true;
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.EnemyDeath, transform.position, 1f,
+                vehicleHit ? "vehicle" : null, byPlayer);
             Barks.Cancel();
             if (_statusLabel != null) _statusLabel.gameObject.SetActive(false);
             if (_stealthIndicator != null) _stealthIndicator.text = "";
@@ -2055,8 +2065,8 @@ namespace EndlessCombat.AI
             if (animator == null) return false;
             var layer = EndlessSurvival.Survival.SurvivalAnimLayer.GetOrAdd(animator);
             if (layer == null || !layer.Available || layer.ClipLength(EndlessSurvival.Survival.SurvivalAnimClips.NpcDeath) <= 0f) return false;
-            animator.SetFloat("Speed", 0f);
-            animator.SetBool("IsAiming", false);
+            animator.SetFloatSafe("Speed", 0f);
+            animator.SetBoolSafe("IsAiming", false);
             layer.SetInstant(EndlessSurvival.Survival.SurvAnim.Death);
             var mainCol = GetComponent<Collider>();
             if (mainCol != null) mainCol.enabled = false;

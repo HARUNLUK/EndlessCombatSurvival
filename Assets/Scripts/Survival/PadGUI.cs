@@ -120,6 +120,7 @@ namespace EndlessSurvival.Survival
                             next = (next + step + st.count) % st.count;
                             if (next >= st.enabled.Count || st.enabled[next]) break;
                         }
+                        if (next != st.selected) EndlessCombat.Audio.GameSound.PlayUi(EndlessCombat.Audio.SoundId.UiMove);
                         st.selected = next;
                         st.scrollPending = true;
                     }
@@ -176,6 +177,7 @@ namespace EndlessSurvival.Survival
             if (Event.current.type != EventType.Layout) return false;
             _submit = false;
             _cur.skipFrame = Time.frameCount;
+            EndlessCombat.Audio.GameSound.PlayUi(EndlessCombat.Audio.SoundId.UiConfirm);
             return true;
         }
 

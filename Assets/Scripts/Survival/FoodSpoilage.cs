@@ -9,7 +9,7 @@ namespace EndlessSurvival.Survival
     /// <summary>
     /// 2.11: perishable items age in the backpack and the vehicle trunk (FIFO batches per item).
     /// A spoiled batch turns into its spoilsInto item (rotten food). Moving food between storages keeps its age.
-    /// 2.19: with the drying line mod, raw meat in the trunk dries while driving.
+    /// (2.19 drying line removed 2026-11-17.)
     /// </summary>
     public class FoodSpoilage : MonoBehaviour, ISurvivalSave
     {
@@ -35,7 +35,6 @@ namespace EndlessSurvival.Survival
         // Removed batches wait here briefly so a move to the other storage keeps the age
         private readonly List<(ItemDefinition item, Batch batch, float until)> _transit = new List<(ItemDefinition, Batch, float)>();
         private List<Batch> _pendingPlayer, _pendingVehicle;
-        private float _dryProgressHours;
         private float _tick;
 
         public string SaveKey => "spoilage";
@@ -61,7 +60,6 @@ namespace EndlessSurvival.Survival
             float hours = _accumHours + GameClock.DeltaHours;
             _accumHours = 0f;
             foreach (var t in _tracked) Process(t, hours);
-            UpdateDryingLine(hours);
         }
 
         private float _accumHours;
@@ -181,33 +179,6 @@ namespace EndlessSurvival.Survival
             var t = _tracked.Find(x => x.key == "player");
             if (t == null || !t.batches.TryGetValue(item, out var list) || list.Count == 0) return item.spoilHours;
             return Mathf.Max(0f, item.spoilHours - list[0].age);
-        }
-
-        private void UpdateDryingLine(float hours)
-        {
-            var mods = VehicleModifications.Instance;
-            var v = SurvivalDirector.Vehicle;
-            if (mods == null || v == null || !mods.IsInstalled(VehicleModType.DryingLine)) return;
-            if (v.CurrentSpeedKmh < 15f) return;
-            var stash = v.GetComponent<VehicleStorage>();
-            if (stash == null) return;
-
-            var s = SurvivalSettings.Instance;
-            var raw = s.Item("Item_RawMeat");
-            var dried = s.Item("Item_DriedMeat");
-            if (raw == null || dried == null || stash.Storage.GetCount(raw) <= 0)
-            {
-                _dryProgressHours = 0f;
-                return;
-            }
-            _dryProgressHours += hours;
-            if (_dryProgressHours < s.dryingLineHours) return;
-            _dryProgressHours = 0f;
-            if (stash.Storage.Remove(raw, 1) > 0)
-            {
-                stash.Storage.Add(dried, 1);
-                SurvivalNotify.Show("Kurutma ipinde bir et kurudu (bagaj)");
-            }
         }
 
         // ---------------- save ----------------

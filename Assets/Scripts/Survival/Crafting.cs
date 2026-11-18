@@ -271,6 +271,7 @@ namespace EndlessSurvival.Survival
                 stats.Train(r.trainsStat, gain);
             }
 
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.CraftDone, transform.position, 1f, r.name, true);
             SurvivalNotify.Show($"Yapıldı: {r.DisplayName}{(saved ? " (malzeme artırdın)" : "")}", new Color(0.7f, 1f, 0.7f), 3f);
         }
 

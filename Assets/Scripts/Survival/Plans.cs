@@ -32,7 +32,7 @@ namespace EndlessSurvival.Survival
         /// <summary>Vehicle mods that need a plan. The simple ones (rope, spare tire mount, blanket, battery wrap, drying line) do not.</summary>
         public static readonly VehicleModType[] ModPlans =
         {
-            VehicleModType.RoofLightbar, VehicleModType.RadiatorGrille, VehicleModType.WaterTank, VehicleModType.RainTarp, VehicleModType.DewCollector,
+            VehicleModType.RoofLightbar, VehicleModType.RadiatorGrille, // water tank, rain tarp, dew collector removed 2026-11-17
             VehicleModType.SnowChains, VehicleModType.ExternalFuelTanks, VehicleModType.OffroadTires, VehicleModType.Bullbar,
             VehicleModType.WindowCage, VehicleModType.DoorPlates, VehicleModType.RoofRack,
         };

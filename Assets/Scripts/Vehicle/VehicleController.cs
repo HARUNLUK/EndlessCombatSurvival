@@ -374,6 +374,7 @@ namespace EndlessSurvival.Vehicle
         {
             if (amount <= 0f || IsBroken) return;
             ApplyDamage(amount);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.VehicleImpact, point, Mathf.Clamp01(impactSpeedMs / 20f), null, isDriven);
             Damaged?.Invoke(amount, false, point, impactSpeedMs);
         }
 

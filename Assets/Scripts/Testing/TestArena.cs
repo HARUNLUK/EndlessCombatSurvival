@@ -42,6 +42,7 @@ namespace EndlessSurvival.Testing
             Instance = this;
             Active = true;
             SurvivalTest.ForceForSession(true);
+            PlayerHealth.CannotDie = mode == Mode.Combat; // action test: the player cannot die (2026-11-17)
 
             var chunks = FindAnyObjectByType<ChunkManager>();
             if (chunks != null) chunks.enabled = false;
@@ -54,6 +55,7 @@ namespace EndlessSurvival.Testing
             if (Instance != this) return;
             Instance = null;
             Active = false;
+            PlayerHealth.CannotDie = false;
         }
 
         private IEnumerator Start()
@@ -86,8 +88,13 @@ namespace EndlessSurvival.Testing
             if (WeatherSystem.Instance != null) WeatherSystem.Instance.DebugForce(WeatherType.Clear, true);
             ResetPlayer();
             ResetVehicle();
+            if (mode == Mode.Combat)
+            {
+                GiveFullKit();
+                StartScenario(SavedScenario);
+            }
             // NPCs from the spawn markers placed in the scene (hierarchy: TestArena > NPCs > squad > NPC)
-            if (!SpawnFromMarkers() && mode == Mode.Stealth) SpawnCamp();
+            else if (!SpawnFromMarkers() && mode == Mode.Stealth) SpawnCamp();
             SurvivalNotify.Show(Title + ": test düğmeleri ayar panelinde (L3 + R3 / F1), \"Test\" sayfası. Burada kayıt yapılmaz.", new Color(0.6f, 0.9f, 1f), 8f);
         }
 
@@ -550,6 +557,158 @@ namespace EndlessSurvival.Testing
             return best;
         }
 
+        // ================================================================== action test: full kit, scenarios (2026-11-17)
+
+        /// <summary>
+        /// What the combat scene tests. Group: the squads from the scene's markers (the old behaviour). Duel: one
+        /// enemy of the chosen kind on open ground south of the start, alerted; a new one comes when it dies.
+        /// The choice is kept between runs (PlayerPrefs) and changed on the tuning panel, page "Test".
+        /// </summary>
+        public enum Scenario { Group = 0, Duel = 1 }
+
+        [Header("Action test (combat scene)")]
+        [Tooltip("Scenario at the first run; later runs start with the last one picked on the panel")]
+        public Scenario startScenario = Scenario.Group;
+        [Tooltip("Duel: enemy kind at the first run")]
+        public Kind startDuelKind = Kind.Rifle;
+
+        private const string ScenarioKey = "testArena.scenario", DuelKindKey = "testArena.duelKind", DuelRespawnKey = "testArena.duelRespawn";
+        private static readonly Vector3 DuelPlayerStart = new Vector3(0f, 0.2f, -14f);
+        private static readonly Vector3 DuelEnemyStart = new Vector3(0f, 0f, -32f);
+
+        private Scenario _scenario;
+        private Kind _duelKind;
+        private EnemyController _duelEnemy;
+        private float _duelRespawnAt = -1f;
+
+        private Scenario SavedScenario => (Scenario)PlayerPrefs.GetInt(ScenarioKey, (int)startScenario);
+        private Kind SavedDuelKind => (Kind)PlayerPrefs.GetInt(DuelKindKey, (int)startDuelKind);
+        private static bool DuelRespawn => PlayerPrefs.GetInt(DuelRespawnKey, 1) == 1;
+
+        private static string KindName(Kind k)
+        {
+            switch (k)
+            {
+                case Kind.Rifle: return "tüfekli";
+                case Kind.Pistol: return "tabancalı";
+                case Kind.Knife: return "bıçaklı";
+                case Kind.Bat: return "sopalı";
+                case Kind.ShieldMelee: return "kalkanlı (sopa)";
+                default: return "kalkanlı (tabanca)";
+            }
+        }
+
+        private string ScenarioText => _scenario == Scenario.Group ? "Grup savaşı (sahnedeki işaretler)"
+            : $"Birebir: {KindName(_duelKind)}{(DuelRespawn ? ", ölünce yenisi gelir" : "")}";
+
+        /// <summary>Starts a scenario: clears the enemies, places the player, spawns the scenario's enemies.</summary>
+        private void StartScenario(Scenario s, Kind? duelKind = null)
+        {
+            _scenario = s;
+            _duelKind = duelKind ?? SavedDuelKind;
+            PlayerPrefs.SetInt(ScenarioKey, (int)s);
+            PlayerPrefs.SetInt(DuelKindKey, (int)_duelKind);
+            ClearSpawned();
+            _duelEnemy = null;
+            _duelRespawnAt = -1f;
+            if (s == Scenario.Group)
+            {
+                ResetPlayer();
+                if (!SpawnFromMarkers()) SpawnWave(Kind.Rifle, Kind.Pistol, Kind.Knife, Kind.Bat);
+            }
+            else
+            {
+                PlacePlayer(DuelPlayerStart, 180f);
+                SpawnDuelEnemy();
+            }
+            SurvivalNotify.Show("Senaryo: " + ScenarioText, new Color(0.6f, 0.9f, 1f), 4f);
+        }
+
+        /// <summary>For the automatic play test (NightPlaytest part "bow"); does not change the saved choice.</summary>
+        public void DebugStartDuel() { var s = SavedScenario; var k = SavedDuelKind; StartScenario(Scenario.Duel, Kind.Rifle); PlayerPrefs.SetInt(ScenarioKey, (int)s); PlayerPrefs.SetInt(DuelKindKey, (int)k); }
+        public void DebugStartGroup() { var s = SavedScenario; StartScenario(Scenario.Group); PlayerPrefs.SetInt(ScenarioKey, (int)s); }
+
+        private void SpawnDuelEnemy()
+        {
+            var squad = EnemySquad.Create(SquadKind.Raid, DuelEnemyStart);
+            _duelEnemy = SpawnEnemy(_duelKind, DuelEnemyStart, EnemyController.EnemyState.Combat, 0f, squad);
+        }
+
+        private void Update()
+        {
+            if (mode != Mode.Combat || _scenario != Scenario.Duel) return;
+            if (_duelEnemy != null && !_duelEnemy.IsDead) return;
+            if (!DuelRespawn) return;
+            if (_duelRespawnAt < 0f) { _duelRespawnAt = Time.time + 3f; return; }
+            if (Time.time < _duelRespawnAt) return;
+            _duelRespawnAt = -1f;
+            ClearSpawned(); // the body of the last one
+            SpawnDuelEnemy();
+            SurvivalNotify.Show("Birebir: yeni rakip (" + KindName(_duelKind) + ")", 2f);
+        }
+
+        private void PlacePlayer(Vector3 at, float yaw)
+        {
+            var player = SurvivalDirector.Player;
+            if (player == null || SurvivalDirector.PlayerInVehicle) return;
+            var cc = player.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+            player.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+            if (cc != null) cc.enabled = true;
+            var health = player.GetComponent<PlayerHealth>();
+            if (health != null && !health.IsDead) health.Heal(9999f);
+        }
+
+        /// <summary>
+        /// Every weapon on the body, in its slot (2026-11-17): long gun, pistol, melee, shield, bow; torches, arrows,
+        /// rocks, grenades and full ammo in the bag, and the other weapons of each kind in the bag to swap.
+        /// Nothing in the hands at the start; the shield on the arm.
+        /// </summary>
+        private void GiveFullKit()
+        {
+            var player = SurvivalDirector.Player;
+            if (player == null) return;
+            var inv = player.GetComponent<PlayerInventory>();
+            var eq = player.GetComponent<PlayerEquipment>();
+            var settings = SurvivalSettings.Instance;
+            if (inv == null || eq == null || settings == null) return;
+
+            void Have(string name, int count)
+            {
+                ItemDefinition it = settings.Item(name);
+                if (it == null) return;
+                int missing = count - inv.Storage.GetCount(it);
+                if (missing > 0) inv.Storage.Add(it, missing);
+            }
+            void Wear(string name, EquipSlot slot)
+            {
+                ItemDefinition it = settings.Item(name);
+                if (it == null || eq.Get(slot) == it) return;
+                Have(name, 1);
+                eq.Equip(it);
+            }
+
+            Wear("Item_AssaultRifle", EquipSlot.LongGun);
+            Wear("Item_Pistol", EquipSlot.Pistol);
+            Wear("Item_WoodenClub", EquipSlot.Melee);
+            Wear("Item_WoodenShield", EquipSlot.Shield);
+            Wear("Item_Bow", EquipSlot.Bow);
+            foreach (var spare in new[] { "Item_Smg", "Item_HuntingRifle", "Item_Knife", "Item_BaseballBat", "Item_RiotShield" }) Have(spare, 1);
+            Have("Item_Torch", 3);
+            Have("Item_Arrow", 60);
+            Have("Item_Rock", 10);
+            Have("Item_Grenade", 6);
+            inv.SetAmmo(EndlessCombat.Combat.AmmoKind.Rifle, 600);
+            inv.SetAmmo(EndlessCombat.Combat.AmmoKind.Pistol, 400);
+            inv.SetAmmo(EndlessCombat.Combat.AmmoKind.Shotgun, 120);
+            foreach (var slot in new[] { PlayerLoadout.Slot.LongGun, PlayerLoadout.Slot.Pistol })
+            {
+                var w = eq.Loadout != null ? eq.Loadout.Weapon(slot) : null;
+                if (w != null && w.IsFirearm) w.RestoreMagazine(999);
+            }
+            eq.Loadout?.StowAll();
+        }
+
         // ================================================================== tuning panel page "Test"
 
         private void RegisterTuning()
@@ -596,6 +755,22 @@ namespace EndlessSurvival.Testing
 
             // Driving
             EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Sürüş: dubaları ve kasaları yeniden diz", () => Instance?.SpawnCones());
+
+            // Action test: scenario, kit
+            EndlessCombat.Tuning.TuningPanel.RegisterReadout(P, "Senaryo", () => Instance == null || Instance.mode != Mode.Combat ? "-" : Instance.ScenarioText);
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Senaryo: grup savaşı (sahnedeki işaretler)", () => Instance?.StartScenario(Scenario.Group));
+            foreach (Kind k in System.Enum.GetValues(typeof(Kind)))
+            {
+                Kind kind = k;
+                EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Senaryo: birebir - " + KindName(kind), () => Instance?.StartScenario(Scenario.Duel, kind));
+            }
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Birebir: ölünce yenisi gelsin (aç / kapa)", () =>
+            {
+                PlayerPrefs.SetInt(DuelRespawnKey, DuelRespawn ? 0 : 1);
+                SurvivalNotify.Show(DuelRespawn ? "Birebir: rakip ölünce yenisi gelir" : "Birebir: yeni rakip gelmez", 2f);
+            });
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Senaryoyu baştan başlat", () => Instance?.StartScenario(Instance._scenario));
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Tam teçhizat ver (bütün silahlar yuvalarda)", () => Instance?.GiveFullKit());
         }
     }
 }

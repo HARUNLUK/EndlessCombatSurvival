@@ -183,6 +183,8 @@ namespace EndlessSurvival.Vehicle
 
             // 2. Enable vehicle drive controls
             vehicleController.SetDriving(true);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.VehicleEnter, transform.position, 1f, null, true);
+            if (vehicleController.engineOn) EndlessCombat.Audio.GameSound.SetLoop(EndlessCombat.Audio.SoundId.VehicleEngineLoop, transform, true);
 
             // 3. Switch camera from player to vehicle
             if (playerCamera != null)
@@ -214,6 +216,8 @@ namespace EndlessSurvival.Vehicle
 
             // 1. Disable driving
             vehicleController.SetDriving(false);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.VehicleExit, transform.position, 1f, null, true);
+            EndlessCombat.Audio.GameSound.SetLoop(EndlessCombat.Audio.SoundId.VehicleEngineLoop, transform, false);
 
             // 2. Reposition player safely next to the vehicle and re-enable
             _currentPlayer.transform.SetParent(null);

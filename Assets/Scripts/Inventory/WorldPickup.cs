@@ -119,6 +119,7 @@ namespace EndlessSurvival.Inventory
 
             int taken = user.AddItem(item, amount);
             if (taken <= 0) return "Çanta çok ağır";
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.ItemPickup, transform.position, 1f, item.name, true);
 
             string message = $"Alındı: {item.DisplayName} x{taken}";
             // Into the bag (its slot was taken): the dropped gun's magazine goes to the ammo

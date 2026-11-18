@@ -570,7 +570,7 @@ namespace EndlessSurvival.Inventory
                 ItemDefinition worn = equipment.Get(slot);
                 if (worn == null)
                     equipRows[i].Show($"{TurkishText.Slot(slot)}: (boş)", new ItemRowUI.RowButton(null, false));
-                else if (slot == EquipSlot.Shield || slot == EquipSlot.LongGun || slot == EquipSlot.Pistol || slot == EquipSlot.Melee)
+                else if (slot == EquipSlot.Shield || slot == EquipSlot.Bow || slot == EquipSlot.LongGun || slot == EquipSlot.Pistol || slot == EquipSlot.Melee)
                     equipRows[i].Show($"{TurkishText.Slot(slot)}: {worn.DisplayName}", new ItemRowUI.RowButton("Çıkar", true));
                 else
                     equipRows[i].Show($"{TurkishText.Slot(slot)}: {worn.DisplayName} (+{worn.armor:0})", new ItemRowUI.RowButton("Çıkar", true));

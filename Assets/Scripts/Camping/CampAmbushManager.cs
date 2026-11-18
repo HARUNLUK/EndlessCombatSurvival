@@ -77,6 +77,7 @@ namespace EndlessSurvival.Camping
                 return;
             }
             Instance = this;
+            NightThreats.RegisterTuning();
             LoadDefaultAssets();
             CreateUI();
         }
@@ -128,9 +129,18 @@ namespace EndlessSurvival.Camping
         {
             // Enemy_AI_Deep_Plan.md 19.4: no dice any more. Someone must be near and the camp must be visible
             // (fire, openness, roof, sleeping in the vehicle). Nobody around: a safe night.
-            if (!AbstractGroups.CampThreat(campPosition, out int count)) return false;
-            TriggerAmbush(campPosition, count);
-            return true;
+            if (AbstractGroups.CampThreat(campPosition, out int count))
+            {
+                TriggerAmbush(campPosition, count);
+                return IsAmbushActive;
+            }
+            // 2026-11-17: wandering raiders (NightThreats): a visible camp by the road gets found more often
+            if (Random.value < NightThreats.WanderRaid(campPosition))
+            {
+                TriggerAmbush(campPosition, Random.Range(2, 4));
+                return IsAmbushActive;
+            }
+            return false;
         }
 
         /// <summary>

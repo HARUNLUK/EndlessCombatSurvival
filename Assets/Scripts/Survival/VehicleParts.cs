@@ -65,7 +65,17 @@ namespace EndlessSurvival.Survival
 
         public string SaveKey => "vehicleparts";
 
-        private void Awake() => Instance = this;
+        private void Awake()
+        {
+            Instance = this;
+            const string P = "Araç";
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Hararet: bozuk radyatör etkisi", () => HeatFromRadiator, v => HeatFromRadiator = v, 0f, 100f, 5f, this);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Hararet: gaz + bozuk radyatör çarpanı", () => ThrottleHeatFromRadiator, v => ThrottleHeatFromRadiator = v, 0f, 5f, 0.25f, this);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Hararet: radyatör kaybı (her hararette %)", () => OverheatRadiatorLoss, v => OverheatRadiatorLoss = v, 0f, 10f, 0.5f, this);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Soğuma (motor kapalı, derece / sn)", () => CoolPerSecond, v => CoolPerSecond = v, 0.1f, 5f, 0.1f, this);
+            EndlessCombat.Tuning.TuningPanel.Register(P, "Soğuma (uyku / bekleme, derece / saat)", () => CoolPerGameHour, v => CoolPerGameHour = v, 0f, 200f, 5f, this);
+            EndlessCombat.Tuning.TuningPanel.RegisterAction(P, "Radyatörü %100 yap, motoru soğut", () => { Radiator = 100f; EngineHeat = 40f; _overheated = false; }, this);
+        }
         private void OnEnable() => SurvivalDirector.Instance?.Register(this);
 
         private void OnDisable()
@@ -284,14 +294,31 @@ namespace EndlessSurvival.Survival
 
         // ================================================================== radiator and heat
 
+        // 2026-11-17 (user: "always overheats, cools far too late, sleeping does not help"): a damaged radiator heats
+        // less (it was 70 / x3, a radiator under ~55 % overheated in normal driving), an overheat costs the radiator
+        // 1 % instead of 4 % (the old spiral), the engine cools faster, and game time jumps (sleep, waiting) cool it.
+        public static float HeatFromRadiator = 45f, ThrottleHeatFromRadiator = 2f, OverheatRadiatorLoss = 1f;
+        public static float CoolPerSecond = 0.6f, CoolPerGameHour = 40f;
+        private double _lastClock = -1;
+
         private void UpdateEngineHeat(float dt)
         {
             float ambient = PlayerVitals.ComputeAmbient(_vehicle.transform.position);
+
+            // Sleep / waiting moves the game clock in one jump: an engine that is off cools for that time
+            double clock = GameClock.TotalHours;
+            if (_lastClock >= 0 && clock - _lastClock > 0.1 && !EngineRunning)
+            {
+                EngineHeat = Mathf.MoveTowards(EngineHeat, ambient, CoolPerGameHour * (float)(clock - _lastClock));
+                if (_overheated && EngineHeat <= RestartBelow) _overheated = false;
+            }
+            _lastClock = clock;
+
             if (EngineRunning)
             {
                 float eff = Radiator / 100f;
                 float throttle = _vehicle.Throttle;
-                float target = 60f + (1f - eff) * 70f + throttle * 10f * (1f + (1f - eff) * 3f);
+                float target = 60f + (1f - eff) * HeatFromRadiator + throttle * 10f * (1f + (1f - eff) * ThrottleHeatFromRadiator);
                 float rate = target > EngineHeat ? 0.6f : 0.4f;
                 EngineHeat = Mathf.MoveTowards(EngineHeat, target, rate * dt);
 
@@ -302,14 +329,14 @@ namespace EndlessSurvival.Survival
                 {
                     _overheated = true;
                     _vehicle.engineOn = false;
-                    Radiator = Mathf.Max(0f, Radiator - 4f);
+                    Radiator = Mathf.Max(0f, Radiator - OverheatRadiatorLoss);
                     _vehicle.ApplyDamage(3f);
                     SurvivalNotify.Warn("Motor hararet yaptı ve durdu! Soğumasını bekle, radyatörü değiştir");
                 }
             }
             else
             {
-                EngineHeat = Mathf.MoveTowards(EngineHeat, ambient, 0.35f * dt);
+                EngineHeat = Mathf.MoveTowards(EngineHeat, ambient, CoolPerSecond * dt);
                 if (_overheated && EngineHeat <= RestartBelow) _overheated = false;
             }
         }
@@ -1005,7 +1032,7 @@ namespace EndlessSurvival.Survival
 
             if (!_vehicle.engineOn) lines.Add(("Motor kapalı: " + EndlessCombat.Combat.GameInput.Hint("[R]", "X") + " marş", warn));
             Color heatC = EngineHeat > 90f ? bad : EngineHeat > 80f ? warn : ok;
-            lines.Add(($"Hararet {Mathf.RoundToInt(EngineHeat)}   Akü %{Mathf.RoundToInt(BatteryCharge)} ({Mathf.RoundToInt(BatteryTemp)}°C)", heatC));
+            lines.Add(($"Hararet {Mathf.RoundToInt(EngineHeat)}   Radyatör %{Mathf.RoundToInt(Radiator)}   Akü %{Mathf.RoundToInt(BatteryCharge)} ({Mathf.RoundToInt(BatteryTemp)}°C)", heatC));
             string flats = "";
             for (int i = 0; i < 4; i++) if (IsFlat(i)) flats += (flats.Length > 0 ? ", " : "") + TireNames[i];
             if (flats.Length > 0) lines.Add(("Patlak lastik: " + flats, bad));

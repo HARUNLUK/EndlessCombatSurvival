@@ -342,7 +342,7 @@ namespace EndlessSurvival.Survival
             if (sitting != null && sitting.IsSitting) return SurvAnim.KneelHold; // campfire: kneel instead of the old sit
 
             bool moving = _inputs != null && _inputs.move.sqrMagnitude > 0.01f;
-            bool aiming = _hasAimParam && _animator != null && _animator.GetBool("IsAiming");
+            bool aiming = _hasAimParam && _animator != null && _animator.GetBoolSafe("IsAiming");
             if (vitals != null && !aiming)
             {
                 if (vitals.Exhausted && !moving) return SurvAnim.Breath;
@@ -374,7 +374,7 @@ namespace EndlessSurvival.Survival
                 {
                     _talk = _talk == 1 ? 2 : 1;
                     _nextSwitch = Time.time + Random.Range(4f, 7f);
-                    _animator.SetInteger(TalkParam, _talk);
+                    _animator.SetIntegerSafe(TalkParam, _talk);
                 }
                 // Face the player while talking
                 var p = SurvivalDirector.PlayerPosition - trader.transform.position;
@@ -385,7 +385,7 @@ namespace EndlessSurvival.Survival
             else if (_talk != 0)
             {
                 _talk = 0;
-                _animator.SetInteger(TalkParam, 0);
+                _animator.SetIntegerSafe(TalkParam, 0);
             }
         }
     }

@@ -100,6 +100,7 @@ namespace EndlessCombat.Combat
                 box.size = Vector3.one;
                 Destroy(pieces, 20f);
             }
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.ShieldBreak, transform.position, 1f, item != null ? item.name : null);
             Broken?.Invoke(item);
         }
         /// <summary>The shield model on the body (null without a shield).</summary>

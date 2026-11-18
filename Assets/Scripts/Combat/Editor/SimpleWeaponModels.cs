@@ -47,6 +47,7 @@ namespace EndlessCombat.Combat.Editor
             Held("Item_Torch", "Held_Torch", BuildTorch);
             Held("Item_Rock", "Held_Rock", BuildRock);
             Held("Item_Grenade", "Held_Grenade", BuildGrenade);
+            Report.Append(BowSetup.Build(Mat, SavePrefab)); // bow, arrow, quiver, recipe (2026-11-17)
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -166,6 +167,15 @@ namespace EndlessCombat.Combat.Editor
         }
 
         // ------------------------------------------------------------------ held model prefabs
+
+        private static GameObject SavePrefab(string prefabName, System.Action<Transform> build)
+        {
+            var go = new GameObject(prefabName);
+            build(go.transform);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(go, $"{SimpleDir}/{prefabName}.prefab");
+            Object.DestroyImmediate(go);
+            return prefab;
+        }
 
         private static void Held(string itemName, string prefabName, System.Action<Transform> build)
         {
@@ -429,6 +439,9 @@ namespace EndlessCombat.Combat.Editor
                 case "Rock": c = new Color(0.5f, 0.5f, 0.47f); smooth = 0.15f; break;
                 case "RockDark": c = new Color(0.38f, 0.38f, 0.36f); smooth = 0.1f; break;
                 case "Olive": c = new Color(0.27f, 0.33f, 0.19f); smooth = 0.3f; break;
+                case "Leather": c = new Color(0.4f, 0.26f, 0.15f); smooth = 0.3f; break;
+                case "Feather": c = new Color(0.85f, 0.82f, 0.75f); smooth = 0.1f; break;
+                case "FeatherDark": c = new Color(0.55f, 0.16f, 0.12f); smooth = 0.1f; break;
                 default: c = Color.magenta; break;
             }
             string path = $"{MatDir}/Mat_Simple_{key}.mat";

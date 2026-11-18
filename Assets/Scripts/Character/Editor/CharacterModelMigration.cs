@@ -265,7 +265,9 @@ namespace EndlessCombat.Character.Editor
             return Matrix4x4.TRS(pos, rot, Vector3.one);
         }
 
-        private static void Swap(Animator anim, GameObject model, Avatar avatar, Material material)
+        /// <summary>Puts another humanoid body under anim (sockets, colliders and references carried over).
+        /// material null keeps the model's own materials. Also used by SurvivorCharacterSetup.</summary>
+        internal static void Swap(Animator anim, GameObject model, Avatar avatar, Material material)
         {
             Transform character = anim.transform;
             Avatar oldAvatar = anim.avatar;
@@ -298,6 +300,7 @@ namespace EndlessCombat.Character.Editor
             foreach (Transform top in newTop)
             {
                 foreach (Transform t in top.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = character.gameObject.layer;
+                if (material != null)
                 foreach (Renderer r in top.GetComponentsInChildren<Renderer>(true))
                 {
                     var mats = new Material[r.sharedMaterials.Length];
@@ -457,7 +460,7 @@ namespace EndlessCombat.Character.Editor
             }
         }
 
-        private static Material BodyMaterial(string name, Color color)
+        internal static Material BodyMaterial(string name, Color color)
         {
             if (!AssetDatabase.IsValidFolder("Assets/Materials/Character")) AssetDatabase.CreateFolder("Assets/Materials", "Character");
             string path = "Assets/Materials/Character/" + name + ".mat";

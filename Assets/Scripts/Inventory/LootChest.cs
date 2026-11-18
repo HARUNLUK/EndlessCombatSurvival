@@ -101,6 +101,7 @@ namespace EndlessSurvival.Inventory
             if (ui == null) return "Envanter ekranı kurulmamış";
 
             ui.OpenChest(this);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.ContainerOpen, transform.position, 1f, name, true);
             return null;
         }
 

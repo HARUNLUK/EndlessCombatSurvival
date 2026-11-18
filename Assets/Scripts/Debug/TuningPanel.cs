@@ -29,7 +29,13 @@ namespace EndlessCombat.Tuning
     [DefaultExecutionOrder(-1000)]
     public class TuningPanel : MonoBehaviour
     {
-        public static readonly string[] Pages = { "Kamera", "Karakter", "Araç", "Düşman" };
+        /// <summary>
+        /// Pages in order: the four fixed ones, then every other page the first time a row registers on it
+        /// (Dövüş, Düşman AI, Test, Performans...). Before 2026-11-17 the list was fixed to the four, so rows on any
+        /// other page were never shown.
+        /// </summary>
+        private static readonly List<string> PageList = new List<string> { "Kamera", "Karakter", "Araç", "Düşman" };
+        public static IReadOnlyList<string> Pages => PageList;
 
         private enum Kind { Number, Toggle, Choice, Readout, Action }
 
@@ -123,6 +129,7 @@ namespace EndlessCombat.Tuning
         private static Row Add(string page, string name, Kind kind, UnityEngine.Object owner)
         {
             EnsureLoaded();
+            if (!PageList.Contains(page)) PageList.Add(page);
             string key = Key(page, name);
             if (!ByKey.TryGetValue(key, out Row r))
             {
@@ -300,7 +307,7 @@ namespace EndlessCombat.Tuning
             if ((pad != null && pad.leftShoulder.wasPressedThisFrame) || (kb != null && kb.pageUpKey.wasPressedThisFrame)) pageStep = -1;
             if (pageStep != 0)
             {
-                _page = (_page + pageStep + Pages.Length) % Pages.Length;
+                _page = (_page + pageStep + PageList.Count) % PageList.Count;
                 _row = 0;
                 return;
             }
@@ -396,7 +403,7 @@ namespace EndlessCombat.Tuning
         private static List<Row> PageRows(int page)
         {
             PageBuffer.Clear();
-            string p = Pages[page];
+            string p = PageList[Mathf.Clamp(page, 0, PageList.Count - 1)];
             // Value rows first (in registration order), action rows at the end
             foreach (var r in Rows)
                 if (r.page == p && r.Alive && r.kind != Kind.Action) PageBuffer.Add(r);
@@ -444,16 +451,18 @@ namespace EndlessCombat.Tuning
             float h = 70f + Mathf.Min(rows.Count, visible) * rowH + 60f;
             Fill(new Rect(x, y, w, h), new Color(0f, 0f, 0f, 0.78f));
 
-            // Tabs
-            float tx = x + 10f;
-            for (int i = 0; i < Pages.Length; i++)
+            // Tabs: the current page in the middle, its neighbours on both sides (there can be more pages than fit)
+            int n = PageList.Count;
+            _page = Mathf.Clamp(_page, 0, n - 1);
+            var cur = new Rect(x + 170f, y + 8f, 180f, 26f);
+            Fill(cur, new Color(1f, 0.8f, 0.3f, 0.35f));
+            GUI.Label(cur, " " + PageList[_page], _title);
+            if (n > 1)
             {
-                var tr = new Rect(tx, y + 8f, 120f, 26f);
-                if (i == _page) Fill(tr, new Color(1f, 0.8f, 0.3f, 0.35f));
-                GUI.Label(tr, " " + Pages[i], i == _page ? _title : _label);
-                tx += 125f;
+                GUI.Label(new Rect(x + 10f, y + 8f, 155f, 26f), "< " + PageList[(_page - 1 + n) % n], _label);
+                GUI.Label(new Rect(x + 360f, y + 8f, 150f, 26f), PageList[(_page + 1) % n] + " >", _label);
             }
-            GUI.Label(new Rect(x + 10f, y + 38f, w - 20f, 22f), "Ayar paneli   LB / RB sayfa", _hint);
+            GUI.Label(new Rect(x + 10f, y + 38f, w - 20f, 22f), $"Ayar paneli   LB / RB sayfa   ({_page + 1} / {n})", _hint);
 
             int first = Mathf.Clamp(_row - visible / 2, 0, Mathf.Max(0, rows.Count - visible));
             float ry = y + 62f;

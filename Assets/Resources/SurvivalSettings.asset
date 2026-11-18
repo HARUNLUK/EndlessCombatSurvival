@@ -87,6 +87,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9a988e12f6d7a124a8695fb75d868321, type: 2}
   - {fileID: 11400000, guid: 6aeb4fc439dd3e042b3d3539e0a205fc, type: 2}
   - {fileID: 11400000, guid: 2c9268ffab1afbd40ba9843e81fa5f86, type: 2}
+  - {fileID: 11400000, guid: 86b88ef6dc486554590766dd0440d0a8, type: 2}
+  - {fileID: 11400000, guid: b8edde488ebb14946aa318d7edbf0572, type: 2}
   recipes:
   - {fileID: 11400000, guid: 34015f7e441e50e4f968fc3289f16be8, type: 2}
   - {fileID: 11400000, guid: 145443fa0958980418ddbfbf1579d4a5, type: 2}
@@ -117,6 +119,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8bd63079bc8a7d1499e8c97e0f47afb6, type: 2}
   - {fileID: 11400000, guid: 11c386e347e94944fb1b8ea840ae537a, type: 2}
   - {fileID: 11400000, guid: 1b47765b9e124ff4193d5e886358d868, type: 2}
+  - {fileID: 11400000, guid: 7c2f9aa67ce658a409291d4a3ff76471, type: 2}
   pickupPrefab: {fileID: 4753128589801956333, guid: ece485f30819638429c3d2d56ad9fb75, type: 3}
   chestPrefab: {fileID: 8276443001971815938, guid: 8fe5b518c641f1d43a28a37c1e32406e, type: 3}
   humanEnemyPrefabs:
@@ -127,7 +130,6 @@ MonoBehaviour:
   houseLoot: {fileID: 11400000, guid: 18b1d83dd669b4e4283ba86185326f71, type: 2}
   gasStationLoot: {fileID: 11400000, guid: dbbae579eaae3a34bbd34bb8bf7ca6a4, type: 2}
   wreckLoot: {fileID: 11400000, guid: bf164bd5f4d33b648b1503d49ea48367, type: 2}
-  corpseLoot: {fileID: 11400000, guid: c695a741898ba9b4b91cb9fd935f1536, type: 2}
   traderStock:
   - {fileID: 11400000, guid: c291f8490d7c5944ca33027e6dd372e0, type: 2}
   - {fileID: 11400000, guid: 37543bc3acfe8764ebcd26e5ae31cad4, type: 2}
@@ -277,9 +279,38 @@ MonoBehaviour:
   enemyDamageBonusAtMax: 0.4
   lootExtraRollsAtMax: 2
   fuelScarcityAtMax: 0.55
+  startFuelFraction: 0.6
+  startPistolRounds: 9
+  spawnRoadBarricades: 0
+  barricadeSeconds: 26
+  barricadeToolMultiplier: 0.6
+  barricadeNoiseRadius: 35
+  barricadeGuardChance: 0.08
+  barricadeGuardChanceAtMax: 0.6
+  safeZoneEveryKm: 12
+  safeZoneFuelPrice: 0.8
+  safeZoneRepairPrice: 0.6
+  safeZonePlanPrice: 120
+  prepPointsPerZone: 1
+  prepPointsPerSafeZone: 8
+  safeZoneTowPrice: 60
+  safeZoneTowFuel: 12
+  safeZoneTowHealth: 25
+  difficultyGrowthPastMax: 0.6
+  characterDifficultyWeight: 0.6
+  earlyGameLevel: 0.15
+  earlyGameMaxHumans: 2
+  earlyGameAnimalShare: 0.85
+  loneCamperShare: 0.6
+  loneCamperShareLate: 0.15
+  corpseChance: 0.35
+  roadNoteChance: 0.12
+  corpseLoot: {fileID: 11400000, guid: c695a741898ba9b4b91cb9fd935f1536, type: 2}
   encounterChance: 0.55
   nightWolfCheckSeconds: 90
   nightWolfChance: 0.18
   traderChance: 0.12
+  enemyCampFrequency: 0.1
+  gasStationShare: 0.15
   traderMarkup: 1.6
   traderSellBack: 0.5

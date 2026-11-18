@@ -136,6 +136,9 @@ namespace EndlessSurvival.Inventory
 
             Damaged?.Invoke(finalDamage);
             RefreshUI();
+            if (_current > 0f)
+                EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.PlayerHurt, transform.position,
+                    Mathf.Clamp01(finalDamage / 40f), info.Type.ToString(), true);
 
             if (_current <= 0f) Die();
         }
@@ -220,10 +223,26 @@ namespace EndlessSurvival.Inventory
             healthText.text = $"HEALTH: {Mathf.CeilToInt(_current)} / {Mathf.CeilToInt(maxHealth)}    ARMOR: {armor:0}{bleedTag}";
         }
 
+        /// <summary>Action test scene (TestArena, 2026-11-17): the player cannot die; health refills at zero instead.</summary>
+        public static bool CannotDie;
+        private float _cannotDieNoteAt = -99f;
+
         private void Die()
         {
             if (IsDead) return;
+            if (CannotDie)
+            {
+                _current = maxHealth;
+                RefreshUI();
+                if (Time.time - _cannotDieNoteAt > 4f)
+                {
+                    _cannotDieNoteAt = Time.time;
+                    EndlessSurvival.Survival.SurvivalNotify.Show("Test sahnesi: ölmezsin, can doldu", 2f);
+                }
+                return;
+            }
             IsDead = true;
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.PlayerDeath, transform.position, 1f, null, true);
 
             var actor = GetComponent<CombatBody>();
             if (actor != null) actor.Kill();

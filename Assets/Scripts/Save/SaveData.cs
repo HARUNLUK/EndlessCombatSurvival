@@ -9,6 +9,8 @@ namespace EndlessSurvival.Save
     {
         public string saveTimestamp;
         public string gameVersion = "1.0";
+        /// <summary>File format version (SaveMigration.RunVersion). Stays 0 in files from before versioning, so no initial value here.</summary>
+        public int saveVersion;
 
         [Header("World & Seed")]
         public string masterSeed;

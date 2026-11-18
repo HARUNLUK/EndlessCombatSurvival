@@ -51,7 +51,8 @@ namespace EndlessCombat.Combat
         private void Update()
         {
             var content = CombatContent.Instance;
-            if (content.footstepClips == null || content.footstepClips.Length == 0 || _source == null) return;
+            if (content == null) return;
+            // Steps are counted even without clips: GameSound gets every step for the future sound player
 
             Vector3 pos = transform.position;
             Vector3 delta = pos - _lastPosition;
@@ -68,8 +69,11 @@ namespace EndlessCombat.Combat
             if (!grounded) _airTime += dt;
             else
             {
-                if (!_wasGrounded && _airTime > 0.35f && content.landingClip != null)
-                    Play(content.landingClip, content.footstepVolume * 1.2f);
+                if (!_wasGrounded && _airTime > 0.35f)
+                {
+                    EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.Footstep, pos, 1f, "land", isPlayer);
+                    if (content.landingClip != null) Play(content.landingClip, content.footstepVolume * 1.2f);
+                }
                 _airTime = 0f;
             }
             _wasGrounded = grounded;
@@ -87,7 +91,9 @@ namespace EndlessCombat.Combat
             _distance = 0f;
 
             float gaitVolume = gait == 0 ? content.gaitVolume.x : gait == 1 ? content.gaitVolume.y : content.gaitVolume.z;
-            Play(NextClip(content), content.footstepVolume * gaitVolume);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.Footstep, pos, gaitVolume,
+                gait == 0 ? "walk" : gait == 1 ? "run" : "sprint", isPlayer);
+            if (content.footstepClips != null && content.footstepClips.Length > 0) Play(NextClip(content), content.footstepVolume * gaitVolume);
         }
 
         private int Gait(float speed)
@@ -118,7 +124,7 @@ namespace EndlessCombat.Combat
 
         private void Play(AudioClip clip, float volume)
         {
-            if (clip == null) return;
+            if (clip == null || _source == null) return;
             _source.pitch = Random.Range(0.92f, 1.08f);
             _source.PlayOneShot(clip, Mathf.Clamp01(volume * HearingFocus.FocusGain));
         }

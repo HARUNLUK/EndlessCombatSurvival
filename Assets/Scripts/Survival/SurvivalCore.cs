@@ -210,6 +210,7 @@ namespace EndlessSurvival.Survival
         public static void Show(string text, Color color, float seconds)
         {
             if (string.IsNullOrEmpty(text)) return;
+            EndlessCombat.Audio.GameSound.PlayUi(EndlessCombat.Audio.SoundId.Notification);
             // Same text twice in a row only refreshes the timer
             for (int i = 0; i < Entries.Count; i++)
             {

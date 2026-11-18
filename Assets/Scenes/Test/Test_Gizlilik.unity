@@ -66905,6 +66905,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndlessSurvival.Testing.TestArena
   mode: 1
+  startScenario: 0
+  startDuelKind: 0
 --- !u!4 &1847743036
 Transform:
   m_ObjectHideFlags: 0
@@ -76868,7 +76870,7 @@ Animator:
   m_GameObject: {fileID: 4416926083307104768}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
-  m_Controller: {fileID: 9100000, guid: 40db3173a05ae3242b1c182a09b0a183, type: 2}
+  m_Controller: {fileID: 9100000, guid: 6e69cc03fe2200648b7a7222e61f5070, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

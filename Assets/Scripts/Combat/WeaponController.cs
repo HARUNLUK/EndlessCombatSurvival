@@ -220,6 +220,7 @@ namespace EndlessCombat.Combat
             if (!infiniteAmmo && currentAmmo <= 0)
             {
                 PlaySound(emptySound);
+                EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.WeaponDryFire, transform.position, 1f, name, IsPlayerWeapon);
                 nextFireTime = Time.time + GetShotInterval();
                 return false;
             }
@@ -240,6 +241,7 @@ namespace EndlessCombat.Combat
 
             // Audio
             PlaySound(shootSound);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.WeaponFire, transform.position, 1f, name, IsPlayerWeapon);
 
             Vector3 muzzlePos = MuzzlePoint.position;
             Vector3 startPos = traceOrigin ?? muzzlePos;
@@ -310,7 +312,7 @@ namespace EndlessCombat.Combat
 #endif
 
             // Draw visible bullet tracer line
-            StartCoroutine(DrawTracerLine(muzzlePos, endPoint));
+            DrawTracerLine(muzzlePos, endPoint);
             EndlessCombat.AI.AIWeaponHooks.OnPellet(this, startPos, endPoint, hasHit, hasHit ? hitInfo.collider : null);
 
             if (hasHit)
@@ -331,6 +333,9 @@ namespace EndlessCombat.Combat
 
                 // Impact particle effect
                 SpawnImpactEffect(hitInfo.point, hitInfo.normal);
+                var surface = hitInfo.collider != null ? hitInfo.collider.sharedMaterial : null;
+                EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.BulletImpact, hitInfo.point, 1f,
+                    surface != null ? surface.name : null, IsPlayerWeapon);
             }
             return hitInfo;
         }
@@ -434,6 +439,7 @@ namespace EndlessCombat.Combat
             onReloadStart?.Invoke();
             ReloadStarted?.Invoke();
             PlaySound(reloadSound);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.WeaponReloadStart, transform.position, 1f, name, IsPlayerWeapon);
 
             yield return new WaitForSeconds(reloadDuration * Mathf.Max(0.1f, ReloadTimeMultiplier));
 
@@ -452,6 +458,7 @@ namespace EndlessCombat.Combat
             reloadCoroutine = null;
 
             NotifyAmmoChanged();
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.WeaponReloadEnd, transform.position, 1f, name, IsPlayerWeapon);
             onReloadComplete?.Invoke();
             ReloadFinished?.Invoke();
         }
@@ -460,32 +467,17 @@ namespace EndlessCombat.Combat
         {
             if (impactPrefab != null)
             {
-                GameObject impact = Instantiate(impactPrefab, position + (normal * 0.01f), Quaternion.LookRotation(normal));
-                Destroy(impact, 2f);
+                // Pooled: the same copies are reused instead of Instantiate + Destroy per hit
+                EndlessCombat.Pooling.PrefabPool.Spawn(impactPrefab, position + (normal * 0.01f), Quaternion.LookRotation(normal), 2f);
             }
         }
 
-        private IEnumerator DrawTracerLine(Vector3 start, Vector3 end)
+        private static readonly Color TracerColor = new Color(1f, 0.85f, 0.4f, 0.8f);
+
+        /// <summary>Visible bullet line for 0.04 s (pooled line renderers, one shared material).</summary>
+        private void DrawTracerLine(Vector3 start, Vector3 end)
         {
-            GameObject tracerObj = new GameObject("BulletTracer");
-            LineRenderer lr = tracerObj.AddComponent<LineRenderer>();
-            lr.startWidth = 0.04f;
-            lr.endWidth = 0.02f;
-            lr.positionCount = 2;
-            lr.SetPosition(0, start);
-            lr.SetPosition(1, end);
-
-            // Unlit yellowish tracer material
-            Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit");
-            if (unlitShader == null) unlitShader = Shader.Find("Sprites/Default");
-            Material tracerMat = new Material(unlitShader);
-            tracerMat.color = new Color(1f, 0.85f, 0.4f, 0.8f);
-            lr.material = tracerMat;
-
-            yield return new WaitForSeconds(0.04f);
-
-            Destroy(tracerMat);
-            Destroy(tracerObj);
+            EndlessCombat.Pooling.BulletTracers.Show(start, end, 0.04f, TracerColor);
         }
 
         private void PlaySound(AudioClip clip)

@@ -266,7 +266,7 @@ namespace EndlessSurvival.Survival
             bool pad = EndlessCombat.Combat.GameInput.UsingPad;
 
             float w = 230f, h = 54f, x = Screen.width - w - 14f, y = Screen.height - 128f - h;
-            if (loadout != null) DrawSlotStrip(loadout, x, y - 24f, w, pad);
+            // The slot strip above the card was removed (user, 2026-11-17): the LB selection map shows the slots
             SurvivalGUI.Fill(new Rect(x, y, w, h), CardBg);
             SurvivalGUI.Fill(new Rect(x + w - 3f, y, 3f, h), new Color(0.95f, 0.8f, 0.5f, 0.8f));
 
@@ -303,24 +303,6 @@ namespace EndlessSurvival.Survival
             if (mag <= 0) GUI.Label(new Rect(x + 8f, y + 22f, w - 120f, 24f), reserve > 0 ? (EndlessCombat.Combat.GameInput.UsingPad ? "X doldur" : "[R] doldur") : "Mermi yok", SurvivalGUI.Small);
         }
 
-        /// <summary>Three small slot chips above the weapon card: long gun, pistol, melee (the one in the hand lit).</summary>
-        private static void DrawSlotStrip(PlayerLoadout loadout, float x, float y, float w, bool pad)
-        {
-            string[] keys = pad ? new[] { "Y", "X", "RB" } : new[] { "1", "2", "3" };
-            Color[] colors = { new Color(0.95f, 0.71f, 0.19f), new Color(0.37f, 0.71f, 0.94f), new Color(0.9f, 0.42f, 0.35f) };
-            float cw = (w - 8f) / 3f;
-            for (int i = 0; i < 3; i++)
-            {
-                var slot = (PlayerLoadout.Slot)i;
-                var it = loadout.Item(slot);
-                bool active = loadout.Active == slot && !loadout.IsStowed;
-                var r = new Rect(x + i * (cw + 4f), y, cw, 20f);
-                SurvivalGUI.Fill(r, active ? new Color(colors[i].r, colors[i].g, colors[i].b, 0.55f) : new Color(0f, 0f, 0f, 0.45f));
-                SurvivalGUI.Fill(new Rect(r.x, r.yMax - 2f, r.width, 2f), new Color(colors[i].r, colors[i].g, colors[i].b, it != null || i == 2 ? 0.9f : 0.25f));
-                string label = it != null ? it.DisplayName : (i == 2 ? "Yumruk" : "-");
-                GUI.Label(new Rect(r.x + 4f, r.y + 2f, r.width - 6f, 18f), keys[i] + " " + label, SurvivalGUI.Small);
-            }
-        }
 
         // ---------------- bottom right: driving (speed, gear, fuel, hull) ----------------
 

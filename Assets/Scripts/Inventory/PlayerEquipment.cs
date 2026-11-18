@@ -70,7 +70,7 @@ namespace EndlessSurvival.Inventory
             get
             {
                 float w = 0f;
-                foreach (var s in new[] { EquipSlot.LongGun, EquipSlot.Pistol, EquipSlot.Melee, EquipSlot.Shield })
+                foreach (var s in new[] { EquipSlot.LongGun, EquipSlot.Pistol, EquipSlot.Melee, EquipSlot.Shield, EquipSlot.Bow })
                     if (_slots[(int)s] != null) w += _slots[(int)s].weight;
                 return w;
             }
@@ -220,7 +220,7 @@ namespace EndlessSurvival.Inventory
             if (item == null || !item.IsEquippable) return false;
             if (item.category == ItemCategory.Weapon && item.weaponPrefab == null) return false;
             EquipSlot slot = item.CarrySlot;
-            if (slot != EquipSlot.LongGun && slot != EquipSlot.Pistol && slot != EquipSlot.Melee && slot != EquipSlot.Shield) return false;
+            if (slot != EquipSlot.LongGun && slot != EquipSlot.Pistol && slot != EquipSlot.Melee && slot != EquipSlot.Shield && slot != EquipSlot.Bow) return false;
             if (_slots[(int)slot] != null) return false;
             _slots[(int)slot] = item;
             ApplySlot(slot);
@@ -235,6 +235,7 @@ namespace EndlessSurvival.Inventory
                 Loadout.SetSlot(PlayerLoadout.SlotOf(slot), _slots[(int)slot]);
             else if (slot == EquipSlot.Weapon) { }
             else if (slot == EquipSlot.Shield) ApplyShield(_slots[(int)slot]);
+            else if (slot == EquipSlot.Bow) Loadout.SetBow(_slots[(int)slot]);
             else ApplyApparelVisuals(slot, _slots[(int)slot]);
         }
 

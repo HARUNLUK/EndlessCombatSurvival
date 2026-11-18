@@ -42,7 +42,8 @@ namespace EndlessSurvival.Inventory
         Shield,  // left arm (category Apparel, equipSlot Shield); numbers in ItemDefinition.shield
         LongGun, // back: one long, two handed firearm
         Pistol,  // right hip
-        Melee    // left hip (heavy ones crossed on the back)
+        Melee,   // left hip (heavy ones crossed on the back)
+        Bow      // back with the quiver, two hands (category Apparel, equipSlot Bow; PlayerBow, 2026-11-17)
     }
 
     /// <summary>Ammunition kinds. Each firearm uses one; the player keeps one pool per kind.</summary>
@@ -89,6 +90,7 @@ namespace EndlessSurvival.Inventory
         [Tooltip("Shield numbers (only used when Equip Slot is Shield). worldScale is the shield size: width, height, thickness")]
         public EndlessCombat.Combat.ShieldStats shield;
         public bool IsShield => equipSlot == EquipSlot.Shield && category == ItemCategory.Apparel;
+        public bool IsBow => equipSlot == EquipSlot.Bow && category == ItemCategory.Apparel;
 
         [Tooltip("Ammo items: which pool the rounds go to. Weapons: leave None, the kind comes from the weapon prefab.")]
         public AmmoType ammoType = AmmoType.None;

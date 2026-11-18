@@ -423,7 +423,6 @@ namespace EndlessSurvival.Survival
             }
             bool near = home.CanUseVehicle;
             Line("Araç", $"Can {Mathf.RoundToInt(vehicle.currentHealth)} / {Mathf.RoundToInt(vehicle.maxHealth)}, yakıt {Mathf.RoundToInt(vehicle.currentFuel)} / {Mathf.RoundToInt(vehicle.maxFuel)}" + (near ? "" : "  (uzaktasın)"));
-            if (VehicleHome.Has(VehicleModType.WaterTank)) Line("Su deposu", $"{home.TankWater:0} / {VehicleHome.TankCapacity:0} şişe");
 
             // Fuel, repair and upgrades (they used to sit under the backpack list)
             var upkeep = vehicle.GetComponent<VehicleMaintenance>();
@@ -447,9 +446,6 @@ namespace EndlessSurvival.Survival
             GUI.enabled = near;
             GUILayout.BeginHorizontal();
             if (PadGUI.Button("Araçta uyu", GUILayout.Width(160))) _message = home.SleepInVehicle();
-            GUI.enabled = near && VehicleHome.Has(VehicleModType.WaterTank);
-            if (PadGUI.Button("Temiz suyu depoya boşalt", GUILayout.Width(200))) _message = home.PourIntoTank();
-            if (PadGUI.Button("Depodan şişe doldur", GUILayout.Width(180))) _message = home.FillFromTank();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             GUILayout.Label("Araçta uyumak kamp kurmadan olur; daha az dinlendirir ama baskına karşı daha güvenlidir. Bagaj: Çanta sekmesi (sağ sütun). Tamir kiti: Üretim sekmesi > Araç.", SurvivalGUI.Small);

@@ -93,6 +93,7 @@ namespace EndlessSurvival.Survival
                 case EquipSlot.Feet: return "Ayaklar";
                 case EquipSlot.Weapon: return "Silah";
                 case EquipSlot.Shield: return "Kalkan";
+                case EquipSlot.Bow: return "Yay";
                 case EquipSlot.LongGun: return "Uzun namlu";
                 case EquipSlot.Pistol: return "Tabanca";
                 case EquipSlot.Melee: return "Yakın dövüş";

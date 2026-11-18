@@ -357,12 +357,12 @@ namespace EndlessSurvival.Survival.Editor
             Add(() => Up(GamepadButton.LeftShoulder), after);
         }
 
-        /// <summary>LB held (the selection map opens) + one button, then LB released.</summary>
-        private static void LbPick(GamepadButton b, double after)
+        /// <summary>LB held (the selection map opens), the cursor put on a card, then LB released (takes it, Combat_Action_Plan.md 3b).</summary>
+        private static void LbPick(int pick, double after)
         {
             Add(() => Down(GamepadButton.LeftShoulder), 0.45);
             Add(() => Log.WriteLine($"   map open={GameInput.SelectMapOpen}"), 0.0);
-            Tap(b, 0.15);
+            Add(() => P<WeaponSelectMap>().PointAt(pick), 0.15);
             Add(() => Up(GamepadButton.LeftShoulder), after);
         }
 
@@ -435,11 +435,83 @@ namespace EndlessSurvival.Survival.Editor
                 if (P<PlayerLoadout>().ShieldOnArm) P<PlayerLoadout>().Pick(PlayerLoadout.PickShield); // shield to the back
             });
 
-            // The selection map (placeholder look) with the torch cell
+            // The selection map (3b look): pistol in the hand, shield on the arm; the cursor on the melee card
+            // (the pistol would drop) and on the long gun (pistol and shield would drop), back on the pistol before
+            // LB is released so nothing changes
+            Add(() =>
+            {
+                Draw(PlayerLoadout.Slot.Pistol);
+                if (!P<PlayerLoadout>().ShieldOnArm) P<PlayerLoadout>().Pick(PlayerLoadout.PickShield);
+            }, 1.0);
             Add(() => Down(GamepadButton.LeftShoulder), 0.5);
             Add(() => Screen("m16_map"), 0.3);
+            Add(() => P<WeaponSelectMap>().PointAt(PlayerLoadout.PickMelee), 0.2);
+            Add(() => Screen("m16b_map_drop"), 0.3);
+            Add(() => P<WeaponSelectMap>().PointAt(PlayerLoadout.PickLongGun), 0.2);
+            Add(() => Screen("m16c_map_two_hands"), 0.3);
+            // One melee card and one throwable card; right stick left / right changes the weapon in them (3b, 17 Kasım)
+            Add(() => P<WeaponSelectMap>().PointAtMelee("Item_BaseballBat"), 0.2);
+            Add(() => Screen("m16d_map_melee_variant"), 0.3);
+            Add(() => P<WeaponSelectMap>().PointAt(PlayerLoadout.PickGrenade), 0.2);
+            Add(() => Screen("m16e_map_throwable"), 0.3);
+            Add(() => P<WeaponSelectMap>().PointAt(PlayerLoadout.PickPistol), 0.2);
             Add(() => Up(GamepadButton.LeftShoulder), 0.4);
+            Add(() => Log.WriteLine($"   after the map: hand={P<PlayerLoadout>().Active} drawn={P<PlayerLoadout>().RightDrawn} shieldArm={P<PlayerLoadout>().ShieldOnArm}"), 0.1);
             Add(() => Log.WriteLine("models: end " + EquipSummary()), 0.1);
+        }
+
+        /// <summary>
+        /// Action test kit + bow (2026-11-17): in Test_Savas the full kit is on the body at the start (TestArena);
+        /// the bow is drawn, pulled with RT and fired at an enemy; the player takes lethal damage (cannot die there);
+        /// the duel scenario spawns one enemy.
+        /// </summary>
+        private static void AddBowPart()
+        {
+            Add(() =>
+            {
+                MoveToClearSpot();
+                Log.WriteLine("bow: start " + EquipSummary() + $" arrows={P<PlayerLoadout>()?.ArrowCount} cannotDie={PlayerHealth.CannotDie}");
+                Equip("Item_Bow");
+                Give("Item_Arrow", 20);
+                P<PlayerLoadout>()?.StowAll();
+            }, 0.8);
+            Add(() => MShot("b01_bow_on_back"), 0.1);
+            Add(() => { PickClean(PlayerLoadout.PickBow); Log.WriteLine($"   bow picked: inHands={P<PlayerLoadout>().BowInHands}"); }, 1.0);
+            Add(() => MShot("b02_bow_in_hand"), 0.1);
+            Add(() => { ClearEnemies(); SpawnEnemyAtCrosshair("Enemy", EnemyController.EnemyState.Idle); }, 1.0);
+            Add(() => LT(1f), 0.4);
+            Add(() => RT(1f), 1.0);
+            Add(() => { Log.WriteLine($"   pull={P<EndlessCombat.Combat.PlayerBow>()?.Pull01:0.00}"); MShot("b03_bow_pulled"); Screen("b03b_bow_aim"); }, 0.1);
+            Add(() => { int a = P<PlayerLoadout>().ArrowCount; RT(0f); Log.WriteLine($"   fired, arrows before={a}"); }, 0.8);
+            Add(() =>
+            {
+                Log.WriteLine($"   arrows after={P<PlayerLoadout>().ArrowCount} arrowsInWorld={Object.FindObjectsByType<EndlessCombat.Combat.ArrowProjectile>(FindObjectsSortMode.None).Length} enemyHp={(_enemy != null ? (_enemy.Health01 * 100f).ToString("0") + "%" : "-")}");
+                Screen("b04_after_shot");
+                LT(0f);
+            }, 0.3);
+            Add(() =>
+            {
+                var h = P<PlayerHealth>();
+                if (h == null) return;
+                var t = h.transform;
+                h.TakeDamage(new DamageInfo(5000f, DamageType.Bullet, t.position + Vector3.up * 1.2f, t.forward) { SourceDirection = t.forward });
+                Log.WriteLine($"   lethal hit: dead={h.IsDead} hp={h.CurrentHealth:0} (cannotDie={PlayerHealth.CannotDie})");
+            }, 0.5);
+            Add(() =>
+            {
+                var arena = EndlessSurvival.Testing.TestArena.Instance;
+                if (arena == null) { Log.WriteLine("   no TestArena: duel not checked"); return; }
+                arena.DebugStartDuel();
+                Log.WriteLine("   duel started");
+            }, 2.0);
+            Add(() =>
+            {
+                int n = 0; foreach (var e in EnemyController.Active) if (e != null && !e.IsDead) n++;
+                Log.WriteLine($"   duel: alive enemies={n}");
+                Screen("b05_duel");
+                EndlessSurvival.Testing.TestArena.Instance?.DebugStartGroup();
+            }, 1.0);
+            Add(() => Log.WriteLine("bow: end " + EquipSummary()), 0.1);
         }
 
         private static void ModelState(string name, System.Action act)
@@ -583,10 +655,7 @@ namespace EndlessSurvival.Survival.Editor
             Add(() => P<PlayerInventory>().AddItem(PlayerThrower.ItemOf(PlayerThrower.Kind.Rock), 3), 0.1);
             LbTap(0.9); // rifle to its holster
             Add(() => Check("R4a LB tap holsters", P<PlayerShooter>().IsHolstered, $"holstered={P<PlayerShooter>().IsHolstered} cs={CS?.Current}"), 0.1);
-            Add(() => Down(GamepadButton.LeftShoulder), 0.45); // RT on the map: rock (the trigger is an axis)
-            Add(() => RT(1f), 0.15);
-            Add(() => RT(0f), 0.1);
-            Add(() => Up(GamepadButton.LeftShoulder), 0.5);
+            LbPick(PlayerLoadout.PickRock, 0.5); // the rock card on the map
             Add(() =>
             {
                 _ammo0 = P<PlayerThrower>().Count(PlayerThrower.Kind.Rock);
@@ -612,7 +681,7 @@ namespace EndlessSurvival.Survival.Editor
             SpendRounds();
             Tap(GamepadButton.West, 0.3);
             Add(() => { _ammo0 = HandWeapon != null ? HandWeapon.CurrentAmmo : -1; Log.WriteLine($"   R5 reloading={HandWeapon?.IsReloading} mag={_ammo0}"); }, 0.0);
-            LbPick(GamepadButton.West, 0.6); // X on the map: pistol
+            LbPick(PlayerLoadout.PickPistol, 0.6); // the pistol card on the map
             Add(() =>
             {
                 var l = P<PlayerLoadout>();
@@ -662,7 +731,7 @@ namespace EndlessSurvival.Survival.Editor
 
             // R13: holstered first, then another pick: nothing drops
             LbTap(0.7);
-            LbPick(GamepadButton.RightShoulder, 0.8); // RB on the map: melee (club)
+            LbPick(PlayerLoadout.PickMelee, 0.8); // the melee card on the map (club)
             Add(() =>
             {
                 var l = P<PlayerLoadout>();
@@ -891,6 +960,8 @@ namespace EndlessSurvival.Survival.Editor
             if (Part("rules")) AddRulesPart();
 
             if (Part("models")) AddModelsPart();
+
+            if (Part("bow")) AddBowPart();
 
             if (Part("enemy"))
             {

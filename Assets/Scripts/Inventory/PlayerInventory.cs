@@ -200,7 +200,11 @@ namespace EndlessSurvival.Inventory
             if (!item.IsConsumable) return null;
 
             if (item.category == ItemCategory.Food || item.category == ItemCategory.Drink)
+            {
+                EndlessCombat.Audio.GameSound.Play(item.category == ItemCategory.Food ? EndlessCombat.Audio.SoundId.Eat : EndlessCombat.Audio.SoundId.Drink,
+                    transform.position, 1f, item.name, true);
                 return UseSurvivalItem(item);
+            }
 
             var health = GetComponent<PlayerHealth>();
             if (health == null) return "Şu an kullanılamaz";

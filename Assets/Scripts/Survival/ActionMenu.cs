@@ -60,7 +60,7 @@ namespace EndlessSurvival.Survival
             GUI.depth = -60; // above the HUD cards and prompts
             if (!PadGUI.Begin(this)) return;
 
-            float w = 330f, h = 336f + 38f + (_nearFresh ? 38f : 0f);
+            float w = 330f, h = 336f + (_nearFresh ? 38f : 0f);
             var rect = new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
             SurvivalGUI.Fill(new Rect(0, 0, Screen.width, Screen.height), new Color(0f, 0f, 0f, 0.35f));
             GUI.Box(rect, GUIContent.none, SurvivalGUI.Panel);
@@ -74,12 +74,7 @@ namespace EndlessSurvival.Survival
             if (PadGUI.Button("Balık tut (su başında)", GUILayout.Height(34))) Do(() => SKeys.Inject(Key.H));
             if (PadGUI.Button("Kamp ateşi kur", GUILayout.Height(34))) Do(Campfire);
             if (_nearFresh && PadGUI.Button("Sudan iç", GUILayout.Height(34))) Do(DrinkFromWater);
-
-            string dewBlock = DewCollecting.BlockReason();
-            bool prevEnabled = GUI.enabled;
-            GUI.enabled = prevEnabled && dewBlock == null;
-            if (PadGUI.Button(dewBlock == null ? "Çiy topla" : $"Çiy topla ({dewBlock})", GUILayout.Height(34))) Do(Dew);
-            GUI.enabled = prevEnabled;
+            // "Çiy topla" removed 2026-11-17 (cut list)
             if (PadGUI.Button("Kapat", GUILayout.Height(30))) Close();
 
             GUILayout.Label(PadGUI.Show ? "Yön tuşu: seç   A: yap   B: kapat" : "Tıkla ya da Q ile kapat", SurvivalGUI.Small);
@@ -108,13 +103,6 @@ namespace EndlessSurvival.Survival
             if (water == null) return;
             string msg = water.TryDirectDrink(out bool started);
             if (!string.IsNullOrEmpty(msg) && !started) SurvivalNotify.Warn(msg);
-        }
-
-        private static void Dew()
-        {
-            string msg = DewCollecting.TryStart();
-            if (!string.IsNullOrEmpty(msg)) SurvivalNotify.Warn(msg);
-            else SurvivalNotify.Show("Çiy toplanıyor (yerinden oynama)");
         }
 
         private static void Campfire()

@@ -35,6 +35,24 @@ namespace EndlessCombat.Combat
         public static float ShieldMoveScale = 1f;
         /// <summary>Heavy strike (RT, Combat_Action_Plan.md 6): length, damage, stagger, push and stamina multipliers.</summary>
         public static float HeavyTime = 1.6f, HeavyDamage = 1.8f, HeavyStagger = 1.6f, HeavyKnockback = 1.5f, HeavyStamina = 2f;
+        /// <summary>
+        /// Stealth kill: the attacker must stand at more than this angle from the target's facing (100 = a 160 degree
+        /// cone behind it; was 110 = 140 degrees until 2026-11-17, the user's back stabs from slightly aside failed).
+        /// </summary>
+        public static float StealthKillAngle = 100f;
+        /// <summary>Stealth kill on a fighting enemy that has not seen the player for this many seconds (it lost you).</summary>
+        public static float StealthKillLostSight = 2.5f;
+        /// <summary>Raised on a stealth kill (attacker, victim): the place for a special kill animation later.</summary>
+        public static event Action<CombatBody, CombatBody> StealthKilled;
+
+        /// <summary>Would a knife strike from this attacker position kill this body at once (same test as ReceiveMelee)?</summary>
+        public bool StealthKillPossibleFrom(Vector3 attackerPos)
+        {
+            if (State == ActorState.Dead || Unaware == null || !Unaware()) return false;
+            Vector3 toAttacker = attackerPos - transform.position;
+            toAttacker.y = 0f;
+            return toAttacker.sqrMagnitude > 0.0001f && Vector3.Angle(transform.forward, toAttacker) > StealthKillAngle;
+        }
         private static bool _tuningRegistered;
 
         public static void RegisterTuning()
@@ -52,6 +70,8 @@ namespace EndlessCombat.Combat
             Tuning.TuningPanel.Register(P, "Ağır vuruş: hasar çarpanı", () => HeavyDamage, v => HeavyDamage = v, 1f, 4f, 0.05f);
             Tuning.TuningPanel.Register(P, "Ağır vuruş: sendeletme çarpanı", () => HeavyStagger, v => HeavyStagger = v, 1f, 4f, 0.05f);
             Tuning.TuningPanel.Register(P, "Ağır vuruş: kondisyon çarpanı", () => HeavyStamina, v => HeavyStamina = v, 1f, 4f, 0.05f);
+            Tuning.TuningPanel.Register(P, "Sessiz öldürme: arka açı (büyük = dar)", () => StealthKillAngle, v => StealthKillAngle = v, 60f, 150f, 5f);
+            Tuning.TuningPanel.Register(P, "Sessiz öldürme: seni kaybettiyse (sn)", () => StealthKillLostSight, v => StealthKillLostSight = v, 0.5f, 10f, 0.5f);
         }
 
         [Header("Identity")]
@@ -223,6 +243,8 @@ namespace EndlessCombat.Combat
             float speed = Mathf.Clamp(clipLen / length, 0.3f, 4f);
             MeleeCategory stateCat = butt ? MeleeCategory.Fists : category;
             _body?.PlayFullBody(MeleeAnimationSet.AttackState(stateCat, heavyClip ? MeleeAnimationSet.MoveHeavy : MeleeAnimationSet.MoveLight1), speed);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.MeleeSwing, transform.position, heavy ? 1f : 0.7f,
+                butt ? "butt" : category.ToString(), team == CombatTeam.Player);
             return true;
         }
 
@@ -288,9 +310,10 @@ namespace EndlessCombat.Combat
             {
                 Vector3 toAttacker = attackerPos - transform.position;
                 toAttacker.y = 0f;
-                if (toAttacker.sqrMagnitude > 0.0001f && Vector3.Angle(transform.forward, toAttacker) > 110f)
+                if (toAttacker.sqrMagnitude > 0.0001f && Vector3.Angle(transform.forward, toAttacker) > StealthKillAngle)
                 {
                     ApplyDamage(MeleeInfo(100000f, attacker, point, attackDir));
+                    StealthKilled?.Invoke(attacker, this); // a special animation can hook here later
                     HitReceived?.Invoke(HitResult.Hit, attacker);
                     return HitResult.Hit;
                 }
@@ -302,11 +325,14 @@ namespace EndlessCombat.Combat
                 float through = damage - blocked;
                 _shield.Wear(blocked);
                 if (through > 0.01f) ApplyDamage(MeleeInfo(through, attacker, point, attackDir));
+                EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.ShieldBlock, point, 1f, "melee", team == CombatTeam.Player);
                 HitReceived?.Invoke(HitResult.Blocked, attacker);
                 return HitResult.Blocked;
             }
 
             ApplyDamage(MeleeInfo(damage, attacker, point, attackDir));
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.MeleeHit, point, 1f,
+                attacker != null ? attacker.CurrentCategory.ToString() : null, attacker != null && attacker.team == CombatTeam.Player);
             bool dead = State == ActorState.Dead || (_damageable != null && _damageable.IsDead);
             if (!dead) Stagger(staggerTime, attackDir * stats.knockback);
             HitReceived?.Invoke(HitResult.Hit, attacker);
@@ -332,6 +358,8 @@ namespace EndlessCombat.Combat
             float blocked = damage * Mathf.Clamp01(absorb);
             if (blocked <= 0f) return damage;
             _shield.Wear(blocked);
+            EndlessCombat.Audio.GameSound.Play(EndlessCombat.Audio.SoundId.ShieldBlock, info.Point, 1f,
+                info.Type == DamageType.Bullet ? "bullet" : "other", team == CombatTeam.Player);
             return damage - blocked;
         }
 

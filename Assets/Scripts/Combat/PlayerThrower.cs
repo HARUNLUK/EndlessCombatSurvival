@@ -383,7 +383,7 @@ namespace EndlessCombat.Combat
                 _style.normal.textColor = new Color(1f, 1f, 1f, 0.85f);
             }
 
-            string text = GameInput.UsingPad ? $"LB basılı + RT: fırlatılabilir   Taş x{rocks}   El bombası x{grenades}"
+            string text = GameInput.UsingPad ? $"LB basılı: seçim haritası   Taş x{rocks}   El bombası x{grenades}"
                                              : $"[T] Taş x{rocks}    [G] El bombası x{grenades}";
             if (_held != Kind.None)
                 text = (GameInput.UsingPad ? "Elde: " : "Elde: ") + (_held == Kind.Rock ? "Taş" : "El bombası")

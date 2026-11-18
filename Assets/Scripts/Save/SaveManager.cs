@@ -156,7 +156,7 @@ namespace EndlessSurvival.Save
             try
             {
                 if (!HasSaveFile()) return null;
-                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(SaveFilePath));
+                var data = SaveMigration.ReadSafe<SaveData>(SaveFilePath);
                 return data != null ? data.masterSeed : null;
             }
             catch (Exception)
@@ -167,15 +167,15 @@ namespace EndlessSurvival.Save
 
         public bool HasSaveFile()
         {
-            return File.Exists(SaveFilePath);
+            return SaveMigration.ExistsWithBackup(SaveFilePath);
         }
 
         public void DeleteSave()
         {
             if (EndlessSurvival.Testing.TestArena.Active) return;
-            if (File.Exists(SaveFilePath))
+            if (SaveMigration.ExistsWithBackup(SaveFilePath))
             {
-                File.Delete(SaveFilePath);
+                SaveMigration.DeleteWithBackup(SaveFilePath);
                 Debug.Log("[SaveManager] Kayıt dosyası silindi.");
             }
         }
@@ -357,9 +357,9 @@ namespace EndlessSurvival.Save
                 CollectingSave?.Invoke(data);
 
                 // JSON'a Çevir ve Kaydet
+                data.saveVersion = SaveMigration.RunVersion;
                 string json = JsonUtility.ToJson(data, true);
-                Directory.CreateDirectory(Path.GetDirectoryName(SaveFilePath));
-                File.WriteAllText(SaveFilePath, json);
+                SaveMigration.WriteSafe(SaveFilePath, json);
                 BankProfile(false);
 
                 if (!silent) ShowNotification("OYUN KAYDEDİLDİ", new Color(0.15f, 0.55f, 0.25f, 0.95f));
@@ -389,13 +389,15 @@ namespace EndlessSurvival.Save
 
             try
             {
-                string json = File.ReadAllText(SaveFilePath);
-                SaveData data = JsonUtility.FromJson<SaveData>(json);
+                SaveData data = SaveMigration.ReadSafe<SaveData>(SaveFilePath, out bool fromBackup);
                 if (data == null)
                 {
                     Debug.LogError("[SaveManager] Kayıt dosyası çözümlenemedi.");
+                    ShowNotification("KAYIT OKUNAMADI", new Color(0.75f, 0.15f, 0.15f, 0.95f));
                     return false;
                 }
+                SaveMigration.MigrateRun(data);
+                if (fromBackup) ShowNotification("KAYIT BOZUKTU, YEDEK YÜKLENDİ", new Color(0.7f, 0.4f, 0.1f, 0.95f));
 
                 StartCoroutine(ApplyLoadRoutine(data));
                 return true;

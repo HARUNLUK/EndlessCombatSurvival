@@ -122,7 +122,8 @@ namespace EndlessCombat.Character
 
             // Look
             Vector2 l = Vector2.zero;
-            if (cursorInputForLook)
+            // The LB selection map uses the right stick to move its cursor (Combat_Action_Plan.md 3b): the camera stays
+            if (cursorInputForLook && !EndlessCombat.Combat.GameInput.SelectMapOpen)
             {
                 if (pad != null)
                 {
@@ -156,7 +157,7 @@ namespace EndlessCombat.Character
             look = l * LookSensitivity;
 
             // Jump
-            // The LB selection map uses A to pick (Combat_Action_Plan.md 3): no jump while it is up
+            // No jump while the LB selection map is up (Combat_Action_Plan.md 3b)
             if (blocked || EndlessCombat.Combat.GameInput.SelectMapOpen) jump = false;
             else if ((pad != null && pad.buttonSouth.wasPressedThisFrame) || (kb != null && kb.spaceKey.wasPressedThisFrame)) jump = true;
 

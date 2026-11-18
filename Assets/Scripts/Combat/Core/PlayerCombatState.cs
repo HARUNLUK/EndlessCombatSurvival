@@ -52,6 +52,7 @@ namespace EndlessCombat.Combat
         private readonly List<BufferedPress> _buffer = new List<BufferedPress>(8);
         private PlayerShooter _shooter;
         private PlayerThrower _thrower;
+        private PlayerBow _bow;
         private CombatBody _body;
         private ShieldHolder _shield;
         private IDamageable _health;
@@ -139,6 +140,7 @@ namespace EndlessCombat.Combat
         {
             if (_shooter == null) _shooter = GetComponent<PlayerShooter>();
             if (_thrower == null) _thrower = GetComponent<PlayerThrower>();
+            if (_bow == null) _bow = GetComponent<PlayerBow>();
             if (_body == null) _body = GetComponent<CombatBody>();
             if (_shield == null) _shield = GetComponent<ShieldHolder>();
             if (_health == null)
@@ -163,7 +165,7 @@ namespace EndlessCombat.Combat
             // or the quick strike (left click). RB is always the quick strike with what is in the hand.
             // LB (tap: holster, hold: selection map) is read by WeaponSelectMap, which calls Press().
             bool firearm = _shooter != null && _shooter.HoldsFirearm;
-            bool throwable = _thrower != null && _thrower.HasItem;
+            bool throwable = (_thrower != null && _thrower.HasItem) || (_bow != null && _bow.InHands); // the bow reads RT itself (PlayerBow)
             if (GameInput.LightAttackPressed) Push(CombatIntent.Strike);
             // LT held with the weapon in its holster: LT is drawing the gun, so RT is a shot (it waits for the draw), not a fist strike
             bool gunIntent = firearm || (_shooter != null && _shooter.IsHolstered && GameInput.AimHeld);

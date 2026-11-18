@@ -14,9 +14,9 @@ namespace EndlessSurvival.Vehicle
         RoofRack,           // Tavan Zırh Kafesi & Portbagaj
         RoofLightbar,       // Tavan Projektörü / Sis Spot Barı
         ExternalFuelTanks,  // Harici Yedek Yakıt Bidonları
-        WaterTank,          // Su deposu (Paket 2.19)
-        RainTarp,           // Yağmur brandası: yağmurda depoya su toplar
-        DryingLine,         // Kurutma ipi: sürerken et kurur
+        WaterTank,          // ÇIKARILDI 2026-11-17 (değer kayıtlar için duruyor, IsRemoved)
+        RainTarp,           // ÇIKARILDI 2026-11-17
+        DryingLine,         // ÇIKARILDI 2026-11-17
         // Paket 6 (araç hayatta kalma)
         RadiatorGrille,     // Radyatör ızgarası: ön darbede radyatör daha az hasar alır
         WindowCage,         // Cam kafesi: camlar kırılmaz
@@ -26,7 +26,7 @@ namespace EndlessSurvival.Vehicle
         SnowChains,         // Kar zinciri: karda tutuş, asfaltta yavaşlatır
         BatteryInsulation,  // Akü yalıtımı: soğukta marş tutar
         CabinInsulation,    // Battaniye ve yalıtım: kabin ısısını tutar
-        DewCollector        // Çiy toplayıcı: sabah serinliğinde depoya su biriktirir (yağmur brandasıyla birlikte takılmaz)
+        DewCollector        // ÇIKARILDI 2026-11-17
     }
 
     [Serializable]
@@ -109,9 +109,9 @@ namespace EndlessSurvival.Vehicle
         /// <summary>Package 2.19 mods are merged into lists saved before they existed.</summary>
         private void EnsureSurvivalMods()
         {
-            AddIfMissing(VehicleModType.WaterTank, "Su Deposu", "Bagaja bağlanan 40 litrelik su bidonu.", "Temiz su taşır (Tab > Araç).", 3, "RubberHose", 1);
-            AddIfMissing(VehicleModType.RainTarp, "Yağmur Brandası", "Tavan portbagajına gerilen huni şeklinde branda.", "Yağmurda, sürerken bile su deposuna su toplar.", 2, "Cloth", 3);
-            AddIfMissing(VehicleModType.DryingLine, "Kurutma İpi", "Kabin arkasına gerilen et kurutma ipi.", "Sürerken bagajdaki çiğ et kurur.", 1, "Cloth", 1);
+            // 2026-11-17 (cut list): water tank, rain tarp, drying line and dew collector are out of the game. The enum
+            // values stay (saves hold mod names); lists saved with them drop them here.
+            modifications.RemoveAll(m => m == null || IsRemoved(m.type));
 
             // Paket 6
             AddIfMissing(VehicleModType.RadiatorGrille, "Radyatör Izgarası", "Panjurun önüne vidalanmış kalın tel ızgara.",
@@ -130,13 +130,15 @@ namespace EndlessSurvival.Vehicle
                 "Akü geç soğur; soğukta marş daha kolay tutar.", 0, "Cloth", 3);
             AddIfMissing(VehicleModType.CabinInsulation, "Battaniye ve Yalıtım", "Kapı içlerine ve tavana gerilmiş battaniyeler.",
                 "Kabin ısısı daha yüksek olur ve motor kapalıyken daha geç soğur.", 0, "Blanket", 2);
-            AddIfMissing(VehicleModType.DewCollector, "Çiy Toplayıcı", "Sabah serinliğinde su tankına çiy biriktirir. Yağmur brandasıyla aynı anda takılamaz.",
-                "Sabah 05:00-08:30 arası yağmur yokken su deposu dolar (sabah başına yaklaşık 4 şişe).", 2, "Cloth", 3);
 
             // The bullbar no longer "crushes" through collision callbacks: the ram system (VehicleRam) does it
             var bullbar = GetModItem(VehicleModType.Bullbar);
             if (bullbar != null) bullbar.statBenefit = "Çarpma hasarını %70 azaltır";
         }
+
+        /// <summary>Mods removed from the game on 2026-11-17 (never offered, never installed).</summary>
+        public static bool IsRemoved(VehicleModType t) =>
+            t == VehicleModType.WaterTank || t == VehicleModType.RainTarp || t == VehicleModType.DryingLine || t == VehicleModType.DewCollector;
 
         private void AddIfMissing(VehicleModType type, string name, string desc, string benefit, int scrap, string keyword, int keywordCost)
         {
@@ -243,18 +245,6 @@ namespace EndlessSurvival.Vehicle
                 }
 
                 ConsumeMaterials(item, inv, stash);
-            }
-
-            // Rain tarp and dew collector exclude each other: the older one is removed without a refund
-            if (type == VehicleModType.DewCollector && IsInstalled(VehicleModType.RainTarp))
-            {
-                UninstallModification(VehicleModType.RainTarp);
-                if (!freeCost) EndlessSurvival.Survival.SurvivalNotify.Show("Yağmur brandası söküldü");
-            }
-            else if (type == VehicleModType.RainTarp && IsInstalled(VehicleModType.DewCollector))
-            {
-                UninstallModification(VehicleModType.DewCollector);
-                if (!freeCost) EndlessSurvival.Survival.SurvivalNotify.Show("Çiy toplayıcı söküldü");
             }
 
             item.isInstalled = true;
@@ -792,8 +782,7 @@ namespace EndlessSurvival.Vehicle
             foreach (var mod in modifications)
             {
                 bool shouldBeInstalled = installedModNames.Contains(mod.type.ToString());
-                // A save with both exclusive mods keeps only the first (rain tarp)
-                if (mod.type == VehicleModType.DewCollector && installedModNames.Contains(VehicleModType.RainTarp.ToString())) shouldBeInstalled = false;
+                if (IsRemoved(mod.type)) shouldBeInstalled = false; // removed 2026-11-17 (an old save may still name it)
                 if (shouldBeInstalled)
                 {
                     InstallModification(mod.type, freeCost: true);

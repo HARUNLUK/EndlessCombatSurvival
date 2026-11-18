@@ -120,7 +120,7 @@ namespace EndlessCombat.Combat
             if (_hasAimParam && aiming != _shownAim)
             {
                 _shownAim = aiming;
-                _animator.SetBool(_aimHash, aiming);
+                _animator.SetBoolSafe(_aimHash, aiming);
             }
 
             // Rest poses: two handed melee carry (HandGripIK holds the left hand on it), pistol past the raised shield
@@ -151,14 +151,14 @@ namespace EndlessCombat.Combat
             }
             // Rifle: not again while the firing state still plays
             AnimatorStateInfo info = _animator.layerCount > 1 ? _animator.GetCurrentAnimatorStateInfo(1) : default;
-            if (!info.IsName("Firing Rifle")) _animator.SetTrigger(_fireHash);
+            if (!info.IsName("Firing Rifle")) _animator.SetTriggerSafe(_fireHash);
         }
 
         private void OnReloadStarted()
         {
             if (_animator == null || _shooter == null) return;
             if (_shooter.HandType == WeaponType.Pistol) _combat?.SetTrigger(CombatAnimator.PistolReload);
-            else _animator.SetTrigger(_reloadHash);
+            else _animator.SetTriggerSafe(_reloadHash);
         }
 
         private void OnThrow(float seconds)

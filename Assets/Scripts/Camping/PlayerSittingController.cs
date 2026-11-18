@@ -48,7 +48,7 @@ namespace EndlessSurvival.Camping
             if (_animator == null) _animator = GetComponentInChildren<Animator>();
             if (_animator != null)
             {
-                _animator.SetBool("IsSitting", true);
+                _animator.SetBoolSafe("IsSitting", true);
             }
 
             if (faceDirection.HasValue && faceDirection.Value != Vector3.zero)
@@ -72,7 +72,7 @@ namespace EndlessSurvival.Camping
             if (_animator == null) _animator = GetComponentInChildren<Animator>();
             if (_animator != null)
             {
-                _animator.SetBool("IsSitting", false);
+                _animator.SetBoolSafe("IsSitting", false);
             }
         }
 

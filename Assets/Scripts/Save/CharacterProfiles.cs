@@ -9,6 +9,8 @@ namespace EndlessSurvival.Save
     [Serializable]
     public class CharacterProfile
     {
+        /// <summary>File format version (SaveMigration.ProfileVersion); 0 in files from before versioning.</summary>
+        public int profileVersion;
         public string name;
         public string created;
         /// <summary>Base stat values in StatType order; empty until the first journey is saved.</summary>
@@ -53,8 +55,8 @@ namespace EndlessSurvival.Save
         public static string RunPath(int slot) => Path.Combine(SlotDir(slot), "run.json");
         public static string ActiveRunPath => RunPath(Active);
 
-        public static bool Exists(int slot) => slot >= 0 && File.Exists(ProfilePath(slot));
-        public static bool HasRun(int slot) => File.Exists(RunPath(slot));
+        public static bool Exists(int slot) => slot >= 0 && SaveMigration.ExistsWithBackup(ProfilePath(slot));
+        public static bool HasRun(int slot) => SaveMigration.ExistsWithBackup(RunPath(slot));
 
         /// <summary>Reads a slot without selecting it (null when empty or unreadable).</summary>
         public static CharacterProfile Peek(int slot)
@@ -62,15 +64,14 @@ namespace EndlessSurvival.Save
             MigrateLegacy();
             if (slot == Active && Current != null) return Current;
             if (!Exists(slot)) return null;
-            try
+            var p = SaveMigration.ReadSafe<CharacterProfile>(ProfilePath(slot));
+            if (p == null)
             {
-                return JsonUtility.FromJson<CharacterProfile>(File.ReadAllText(ProfilePath(slot)));
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[Profiles] Slot {slot} could not be read: {ex.Message}");
+                Debug.LogWarning($"[Profiles] Slot {slot} could not be read (backup too).");
                 return null;
             }
+            SaveMigration.MigrateProfile(p);
+            return p;
         }
 
         public static CharacterProfile Create(int slot, string name)
@@ -118,7 +119,7 @@ namespace EndlessSurvival.Save
             if (EndlessSurvival.Testing.TestArena.Active) return; // dying in a test scene must not end the real journey
             try
             {
-                if (File.Exists(RunPath(slot))) File.Delete(RunPath(slot));
+                SaveMigration.DeleteWithBackup(RunPath(slot)); // the backup goes too, or a dead journey could come back
             }
             catch (Exception ex)
             {
@@ -153,8 +154,8 @@ namespace EndlessSurvival.Save
             if (EndlessSurvival.Testing.TestArena.Active) return; // test scenes never touch the character files
             try
             {
-                Directory.CreateDirectory(SlotDir(slot));
-                File.WriteAllText(ProfilePath(slot), JsonUtility.ToJson(p, true));
+                p.profileVersion = SaveMigration.ProfileVersion;
+                SaveMigration.WriteSafe(ProfilePath(slot), JsonUtility.ToJson(p, true));
             }
             catch (Exception ex)
             {

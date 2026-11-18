@@ -8,15 +8,13 @@ using EndlessSurvival.World;
 namespace EndlessSurvival.Survival
 {
     /// <summary>
-    /// 2.19 vehicle as home: water tank (rain tarp fills it), sleeping in the vehicle (less rest, safer),
+    /// 2.19 vehicle as home: sleeping in the vehicle (less rest, safer; the water tank, rain tarp, drying line and dew
+    /// collector were removed on 2026-11-17),
     /// plus the grip changes from weather (4.2) and the Driving stat (4.4).
     /// </summary>
     public class VehicleHome : MonoBehaviour, ISurvivalSave
     {
         public static VehicleHome Instance { get; private set; }
-
-        public const float TankCapacity = 40f;
-        public float TankWater { get; private set; }
 
         private VehicleController _vehicle;
         private float _baseForwardGrip = -1f, _baseSidewaysGrip = -1f;
@@ -49,25 +47,8 @@ namespace EndlessSurvival.Survival
                 _baseSidewaysGrip = _vehicle.sidewaysGrip;
             }
 
-            // Rain tarp fills the tank (needs the water tank)
-            var w = WeatherSystem.Instance;
-            if (w != null && w.RainIntensity > 0.05f && Has(VehicleModType.RainTarp) && Has(VehicleModType.WaterTank))
-                TankWater = Mathf.Min(TankCapacity, TankWater + w.RainIntensity * 4f * GameClock.DeltaHours);
-
-            // Dew collector: morning coolness fills the tank when it does not rain
-            var cycle = DayNightCycle.Instance;
-            if (cycle != null && Has(VehicleModType.DewCollector) && Has(VehicleModType.WaterTank)
-                && cycle.CurrentHour >= DewStartHour && cycle.CurrentHour < DewEndHour
-                && (w == null || w.RainIntensity <= 0.05f))
-                TankWater = Mathf.Min(TankCapacity, TankWater + DewLitersPerHour * GameClock.DeltaHours);
-
-            ApplyGrip(w);
+            ApplyGrip(WeatherSystem.Instance);
         }
-
-        // Dew collector settings
-        private const float DewStartHour = 5f;
-        private const float DewEndHour = 8.5f;
-        private const float DewLitersPerHour = 1.2f;
 
         private void ApplyGrip(WeatherSystem w)
         {
@@ -87,57 +68,9 @@ namespace EndlessSurvival.Survival
 
         private float _lastGripMult = 1f;
 
-        // ---------------- water tank ----------------
+        // Water tank, rain tarp, drying line and dew collector were removed on 2026-11-17 (cut list).
 
         public bool CanUseVehicle => SurvivalDirector.NearVehicleStorage() != null;
-
-        /// <summary>Pours clean water bottles from the backpack into the tank.</summary>
-        public string PourIntoTank()
-        {
-            if (!Has(VehicleModType.WaterTank)) return "Su deposu modu takılı değil";
-            var inv = SurvivalDirector.Inventory;
-            if (inv == null) return null;
-            var s = SurvivalSettings.Instance;
-            var bottle = s.Item("Item_EmptyBottle");
-            int poured = 0;
-            foreach (var name in new[] { "Item_BoiledWater", "Item_WaterBottle" })
-            {
-                var water = s.Item(name);
-                if (water == null) continue;
-                while (inv.Storage.GetCount(water) > 0 && TankWater + 1f <= TankCapacity)
-                {
-                    inv.Storage.Remove(water, 1);
-                    if (bottle != null) inv.Storage.Add(bottle, 1);
-                    TankWater += 1f;
-                    poured++;
-                }
-            }
-            return poured > 0 ? $"Depoya {poured} şişe su boşaltıldı" : "Boşaltılacak temiz su yok (ya da depo dolu)";
-        }
-
-        /// <summary>Fills empty bottles from the tank.</summary>
-        public string FillFromTank()
-        {
-            if (!Has(VehicleModType.WaterTank)) return "Su deposu modu takılı değil";
-            var inv = SurvivalDirector.Inventory;
-            var s = SurvivalSettings.Instance;
-            var bottle = s.Item("Item_EmptyBottle");
-            var water = s.Item("Item_WaterBottle");
-            if (inv == null || bottle == null || water == null) return null;
-            int filled = 0;
-            while (TankWater >= 1f && inv.Storage.GetCount(bottle) > 0)
-            {
-                inv.Storage.Remove(bottle, 1);
-                if (inv.Storage.Add(water, 1) <= 0)
-                {
-                    inv.Storage.Add(bottle, 1);
-                    break;
-                }
-                TankWater -= 1f;
-                filled++;
-            }
-            return filled > 0 ? $"{filled} şişe depodan dolduruldu" : "Boş şişe yok ya da depo boş";
-        }
 
         // ---------------- sleeping in the vehicle ----------------
 
@@ -155,6 +88,8 @@ namespace EndlessSurvival.Survival
             bool ambushed = false;
             if (CampAmbushManager.Instance != null && UnityEngine.Random.value < 0.5f)
                 ambushed = CampAmbushManager.Instance.RollAmbushOnSleep(SurvivalDirector.PlayerPosition);
+            // No fire next to the vehicle: animals may be around when you wake (NightThreats, 2026-11-17)
+            if (!ambushed) NightThreats.RollAnimals(SurvivalDirector.PlayerPosition, true);
 
             var player = SurvivalDirector.Player;
             if (player != null)
@@ -172,19 +107,16 @@ namespace EndlessSurvival.Survival
 
         // ---------------- save ----------------
 
+        // The save key stays so old saves load; the old tank value is read and ignored (water tank removed).
         [Serializable]
         private class Data
         {
             public float tank;
         }
 
-        public string CaptureJson() => JsonUtility.ToJson(new Data { tank = TankWater });
+        public string CaptureJson() => JsonUtility.ToJson(new Data());
 
-        public void RestoreJson(string json)
-        {
-            var d = JsonUtility.FromJson<Data>(json);
-            if (d != null) TankWater = Mathf.Clamp(d.tank, 0f, TankCapacity);
-        }
+        public void RestoreJson(string json) { }
     }
 
     /// <summary>
